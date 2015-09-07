@@ -3,7 +3,6 @@
 	<classpathentry exported="true" kind="con" path="org.eclipse.xtend.XTEND_CONTAINER"/>
 	<classpathentry kind="src" path="xtend-gen"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/AndroidCommon"/>
 	<classpathentry kind="lib" path="/Users/maan/Library/Android/sdk/platforms/android-22/android.jar" sourcepath="/Users/maan/Library/Android/sdk/sources/android-22"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/LatteAnnotations"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
