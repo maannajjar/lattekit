@@ -1,6 +1,5 @@
 package io.lattekit.android
 
-import android.animation.ValueAnimator
 import android.graphics.Color
 import io.lattekit.LatteView
 import io.lattekit.Layout
