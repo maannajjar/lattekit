@@ -11,7 +11,6 @@ annotation LatteView {
 	String[] variants = #[]
 }
 
-
 class LatteViewProcessor extends AbstractClassProcessor {
 	
 	override doTransform(MutableClassDeclaration annotatedClass, extension TransformationContext context) {
@@ -29,7 +28,6 @@ class LatteViewProcessor extends AbstractClassProcessor {
 			variantList = variantListParam 
 		}
 		
-	
 		val initMethod = annotatedClass.findDeclaredMethod("init",String.newTypeReference());
 		variantList.forEach [ LatteViewUtil::addVariantMethods(context, annotatedClass,it,initMethod?.simpleName); ]
 		

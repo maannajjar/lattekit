@@ -32,12 +32,12 @@ class TestViewController extends View {
 	
 	var touchStyle = new Style() => [
 		backgroundColor = Color.parseColor("#FFEBEE");
-		borderWidth = 3
+		borderWidth = 10
 		borderColor = Color.WHITE
 		marginTop = 50
 		elevation = 0
-		translationY = 2;
-		translationX = 2;
+		translationY = 10;
+		translationX = 10;
 	]
 	
 	
@@ -61,17 +61,22 @@ class TestViewController extends View {
 		cornerRadius = 50
 		elevation = 5
 		translationY = 0;
+		paddingLeft = 20;
+		paddingRight = 20;
 	]
-	
+	var helloStyleB = new Style() => [
+		backgroundColor = "#BBDEFB";
+		elevation = 30
+	]
 	
 	@Layout
 	override render() '''
-		<RelativeLayout width={match_parent} height={match_parent}>
-			<Button id="Button1" alignParentStart={true} style={style} touchedStyle={touchStyle} label="Hi there" onTap={self.setMyAnchor("Button1")}/>
+		<LinearLayout width={match_parent} height={match_parent}>
+			<Button id="Button1" style={style} touchedStyle={touchStyle} label="Hi there" onTap={self.setMyAnchor("Button1")}/>
 			<Button id="Button2" alignParentEnd={true} style={style} touchedStyle={touchStyle} label="Button 2" onTap={self.setMyAnchor("Button2")}/>
 			
-			<Button below="Button1" style={helloStyle}  touchedStyle={touchStyle}  alignStart={@anchor} label="Hello 2"/>
-		</RelativeLayout>
+			<Button below="Button1" style={helloStyle}  touchedStyle={helloStyleB}  alignStart={@anchor} label="Hello 2"/>
+		</LinearLayout>
 	'''
 
 	def void setMyAnchor(String a) {

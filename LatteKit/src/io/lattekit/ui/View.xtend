@@ -17,6 +17,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
 import android.animation.StateListAnimator
+import android.view.MotionEvent
 
 public abstract class View {
 	
@@ -33,11 +34,13 @@ public abstract class View {
 	
 	
 	
-	@Accessors public Style style = new Style => [
+	Style _style = new Style => [
 		backgroundColor = Color.WHITE
 	]
 	@Accessors public Style touchedStyle;
 	@Accessors public Style disabledStyle;
+	Style _resolvedTouchedStyle;
+	Style _resolvedDisabledStyle;
 	
 	@Accessors public boolean enabled = true;
 	
@@ -59,17 +62,46 @@ public abstract class View {
 	View latteView;
 	
 	
-	
 	protected (View)=>void attributesProc;
 	protected (View)=>void layoutProc;
 	private boolean isRendering = false;
 	
 	
+	def setStyle(Style style) {
+		this._style = style.clone();
+		_resolvedTouchedStyle = null;
+		_resolvedDisabledStyle = null;
+		onStateChanged("style");	
+	}
+	def getStyle() {
+		return _style;
+	}
+	def setTouchedStyle(Style style) {
+		this.touchedStyle = style.clone();
+		onStateChanged("touchedStyle");	
+	}
+	def setDisabledStyle(Style style) {
+		this.disabledStyle = style.clone();
+		onStateChanged("disabledStyle");	
+	}
+	
+	def getResolvedTouchedStyle() {
+		if (touchedStyle == null) return style;
+		if (_resolvedTouchedStyle == null) _resolvedTouchedStyle = touchedStyle.inheritsFrom(style);
+		return _resolvedTouchedStyle
+	}
+	
+	def getResolvedDisabledStyle() {
+		if (disabledStyle == null) return style;
+		if (_resolvedDisabledStyle == null) _resolvedDisabledStyle = disabledStyle.inheritsFrom(style);
+		return _resolvedDisabledStyle
+	}
+	
 	def getActiveStyle() {
 		if (!enabled && disabledStyle != null) {
-			return disabledStyle.inheritsFrom(style)
+			return resolvedDisabledStyle
 		} else if (androidView != null && androidView.isPressed && touchedStyle != null) {
-			return touchedStyle.inheritsFrom(style);
+			return resolvedTouchedStyle;
 		}
 		return style;
 	}
@@ -81,6 +113,12 @@ public abstract class View {
 			updateStateListAnimator()
 			
 			activeStyle.applyStyle(androidView)
+			androidView.onTouchListener = [ v, e|
+				if (e.action == MotionEvent.ACTION_UP) {
+					style.createAnimatorFrom(resolvedTouchedStyle, androidView).start
+				}
+				return false;
+			]
 			
 			if (onTap != null) {
 				androidView.onClickListener = [ onTap.apply(this) ];
@@ -93,8 +131,9 @@ public abstract class View {
 		var stateAnimator = new StateListAnimator();
 		
 		if (touchedStyle != null) {
-			stateAnimator.addState(#[ R.attr.state_enabled, R.attr.state_pressed], touchedStyle.inheritsFrom(style).createAnimatorFrom(style, androidView))
-			stateAnimator.addState(#[ R.attr.state_enabled, -R.attr.state_pressed], style.createAnimatorFrom(touchedStyle.inheritsFrom(style), androidView))
+			stateAnimator.addState(#[ R.attr.state_enabled, R.attr.state_pressed], resolvedTouchedStyle.createAnimatorFrom(style, androidView))
+//			stateAnimator.addState(#[ R.attr.state_active, R.attr.state_enabled, -R.attr.state_pressed], style.createAnimatorFrom(resolvedTouchedStyle, androidView))
+			Log.d("Latte", style +" : creating animator for "+this);
 		}
 		
 		androidView.stateListAnimator = stateAnimator;
@@ -106,7 +145,7 @@ public abstract class View {
 		val List<Integer> colorList = newArrayList
 		if (touchedStyle != null) {
 			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
-			colorList += Style::asColor(touchedStyle.inheritsFrom(style).backgroundColor)
+			colorList += Style::asColor(resolvedTouchedStyle.backgroundColor)
 		}
 		
 		colorStates += #[R.attr.state_enabled, -R.attr.state_pressed]
@@ -114,24 +153,24 @@ public abstract class View {
 		
 		if (disabledStyle != null) {
 			colorStates += #[ -R.attr.state_enabled ]
-			colorList += Style::asColor(disabledStyle.inheritsFrom(style).backgroundColor)
+			colorList += Style::asColor(resolvedDisabledStyle.backgroundColor)
 		}
 		
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			val StateListDrawable  sld = new StateListDrawable();
 			if (disabledStyle != null) {
-				sld.addState(#[-R.attr.state_enabled], disabledStyle.inheritsFrom(style).drawable)
+				sld.addState(#[-R.attr.state_enabled], resolvedDisabledStyle.drawable)
 			}
 			sld.addState(#[], style.getDrawable())
 			androidView.background =  new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, style.shapeDrawable);				
 		} else {
 			var StateListDrawable  sld = new StateListDrawable();
 			if (touchedStyle != null) {
-				sld.addState(#[ R.attr.state_enabled, R.attr.state_pressed], touchedStyle.inheritsFrom(style).getDrawable())
+				sld.addState(#[ R.attr.state_enabled, R.attr.state_pressed], resolvedTouchedStyle.getDrawable())
 			}
 			sld.addState(#[ R.attr.state_enabled, -R.attr.state_pressed], style.getDrawable())
 			if (disabledStyle != null) {
-				sld.addState(#[ -R.attr.state_enabled ], disabledStyle.inheritsFrom(style).getDrawable())	
+				sld.addState(#[ -R.attr.state_enabled ], resolvedDisabledStyle.getDrawable())	
 			}
 			androidView.background = sld;
 		}
@@ -146,14 +185,14 @@ public abstract class View {
 		var List<Integer> colorList = newArrayList
 		if (touchedStyle != null) {
 			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed]
-			colorList += Style::asColor(touchedStyle.inheritsFrom(style).textColor)
+			colorList += Style::asColor(resolvedTouchedStyle.textColor)
 		}
 		colorStates += #[R.attr.state_enabled, -R.attr.state_pressed ]
 		colorList += Style::asColor(style.textColor)
 		
 		if (disabledStyle != null) {
 			colorStates += #[ -R.attr.state_enabled ]
-			colorList += Style::asColor(disabledStyle.inheritsFrom(style).textColor)
+			colorList += Style::asColor(resolvedDisabledStyle.textColor)
 		}
 		if (androidView instanceof TextView) {
 			val int[][] colorStatesArray = intArray(colorStates.size);
