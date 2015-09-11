@@ -16,14 +16,13 @@ public class Button extends LatteView {
 	override applyAttributes() {
 		super.applyAttributes()
 		var android.widget.Button myButton = androidView as android.widget.Button;
-		myButton.text = ""+System.identityHashCode(this);//getLabel();
+		myButton.text = getLabel();
 	}
 
 
 	override View createAndroidView(Activity a) {
 		if (androidView == null) {
 			androidView = new android.widget.Button(a);
-			applyAttributes();
 		}
 		
 		return androidView;

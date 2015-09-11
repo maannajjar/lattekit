@@ -26,19 +26,39 @@ class TestViewController extends LatteView {
 		marginLeft = 30
 		marginRight = 30
 		cornerRadius = 100
-		elevation = 5
+		
+		elevation = 15
 		translationY = 0;
+		transitions = #[
+			#[ "width", 200, null,0],
+			#[ "cornerRadius", 300, null,0],
+			#[ "borderWidth", 300, null,0],
+			#[ "translationX", 200, null,100],
+			#[ "translationY", 200, null,100],
+			#[ "elevation", 600, null,1000]
+		]		
 	]
 	
 	var touchStyle = new Style() => [
 		backgroundColor = "#B71C1C";
-		borderWidth = 10
+		borderWidth = 20
 		cornerRadius = 10
-		borderColor = Color.WHITE
-		marginTop = 50
+		it.width = 500
 		elevation = 0
+		borderColor = "#B71C1C"
+		marginTop = 30
+		marginLeft = 30
+		marginRight = 30
 		translationY = 10;
 		translationX = 10;
+		transitions = #[
+			#[ "width", 200, null,0],
+			#[ "cornerRadius", 300, null,0],
+			#[ "borderWidth", 300, null,0],
+			#[ "translationX", 200, null,100],
+			#[ "translationY", 200, null,100],
+			#[ "elevation", 300, null,1000]
+		]
 	]
 	
 	

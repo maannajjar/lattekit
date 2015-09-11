@@ -1,8 +1,7 @@
 package io.lattekit.ui
 
+import android.animation.Animator
 import android.animation.AnimatorSet
-import android.animation.IntEvaluator
-import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -12,15 +11,20 @@ import android.graphics.drawable.GradientDrawable.Orientation
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
 import io.lattekit.StyleProperty
+import java.util.ArrayList
+import java.util.List
+import android.view.ViewGroup
 
 class Style {
 	
 	var GradientDrawable currentDrawable;
 	var boolean isPrivate = false;
+	
 	@StyleProperty public Object backgroundColor = Color.WHITE;
 	@StyleProperty public Object borderColor = Color.WHITE;
 	@StyleProperty public Object textColor = Color.BLACK;
@@ -46,6 +50,12 @@ class Style {
 	@StyleProperty public Integer paddingLeft = 30;
 	@StyleProperty public Integer paddingRight = 30;
 	
+	@StyleProperty public List<List<Object>> transitions;
+	
+	@StyleProperty public Integer width = ViewGroup.LayoutParams.WRAP_CONTENT;
+	@StyleProperty public Integer height = ViewGroup.LayoutParams.WRAP_CONTENT;
+	
+	
 	def Style inheritsFrom(Style parentStyle) {
 		var myStyle = new Style();
 		
@@ -69,6 +79,12 @@ class Style {
 		myStyle.paddingBottom = _paddingBottom.otherwise(parentStyle.paddingBottom)
 		myStyle.paddingLeft = _paddingLeft.otherwise(parentStyle.paddingLeft)
 		myStyle.paddingRight = _paddingRight.otherwise(parentStyle.paddingRight)
+		
+		myStyle.width = _width.otherwise(parentStyle.width)
+		myStyle.height = _height.otherwise(parentStyle.height)
+		
+		myStyle.transitions = _transitions.otherwise(new ArrayList<List<Object>>()) as List<List<Object>>
+		
 		return myStyle
 	}
 	
@@ -92,6 +108,9 @@ class Style {
 		this.paddingBottom = form._paddingBottom
 		this.paddingLeft = form._paddingLeft
 		this.paddingRight = form._paddingRight
+		this.width = form._width
+		this.height = form._height
+		this.transitions = form._transitions
 	}
 	
 	override Style clone() {
@@ -103,32 +122,93 @@ class Style {
 	
 	def createAnimatorFrom(Style startStyle,LatteView latteView) {
 		var animSet = new AnimatorSet();
-		// ObjectAnimator.ofObject(androidView,"elevation",new IntEvaluator(),startStyle.elevation.otherwise(0), elevation.otherwise(0))
-		val androidView = latteView.androidView;
-		var animator1 = ValueAnimator.ofInt(startStyle.borderWidth, borderWidth)
-		animator1.addUpdateListener([ 
-			borderWidth = animatedValue as Integer
-			applyStyle(androidView)
-		]);
-		animator1.duration = 100;
+		val List<String> transitionProperties = if (transitions != null) transitions.map[it.get(0) as String] else #[];
+
+		var immediateAnim =  ValueAnimator.ofInt(0,1);
+		immediateAnim.addUpdateListener([
+			if (animatedValue == 0) {
+				_properties.filter[!transitionProperties.contains(it)].forEach[
+					Log.d("Latte"," Setting "+it+"("+transitionProperties.contains(it) +") to "+this.getProperty(it))
+					startStyle.setProperty(it, this.getProperty(it));
+				]
+				startStyle.updateDrawable();
+				startStyle.applyStyle(latteView.androidView)
+				
+			}
+		])
+		immediateAnim.setDuration(1);
 		
-		var animator2 = ObjectAnimator.ofObject(androidView,"translationY",new IntEvaluator(),startStyle.translationY.otherwise(0), translationY.otherwise(0))
-		animator2.duration = 100;
 		
-		var animator3 = ObjectAnimator.ofObject(androidView,"translationX",new IntEvaluator(),startStyle.translationX.otherwise(0), translationX.otherwise(0))
-		animator3.duration = 100;
+		var List<Animator> allAnims = newArrayList();
+		allAnims += immediateAnim;
+		if (transitions != null) {
+			allAnims += transitions.map[
+				val propName = it.get(0) as String;
+				val duration = it.get(1) as Integer;
+				val delay = it.get(3) as Integer;
+				
+				var startValue = startStyle.getProperty(propName);
+				var myValue = this.getProperty(propName);
+				var ValueAnimator anim = null;
+							
+				if (startValue.class == Integer) {
+					anim = ValueAnimator.ofInt(startValue as Integer, myValue as Integer);
+					
+					anim.addUpdateListener([ 
+						if (latteView.activeStyle == this) {
+							startStyle.setProperty(propName, animatedValue as Integer);
+							startStyle.updateDrawable();
+							startStyle.applyStyle(latteView.androidView)
+						}
+					]);
 		
-		
-		var animator4 = ValueAnimator.ofInt(startStyle.cornerRadius, cornerRadius)
-		animator4.addUpdateListener([ 
-			startStyle.cornerRadius = animatedValue as Integer
-			startStyle.updateDrawable();
+					
+				} else if (startValue.class == Float) {
+					anim = ValueAnimator.ofFloat(startValue as Float, myValue as Float);
+					
+					anim.addUpdateListener([
+						if (latteView.activeStyle == this) { 
+							startStyle.setProperty(propName, animatedValue as Float);
+							startStyle.updateDrawable();
+							startStyle.applyStyle(latteView.androidView)
+						}
+					]);
+				}
+				if (anim != null) {
+					anim.setDuration(duration)
+					anim.startDelay = delay
+				}
+				
+				return anim;
+			].filterNull
+		}
 			
-		]);
-		animator4.duration = 300;
+		// ObjectAnimator.ofObject(androidView,"elevation",new IntEvaluator(),startStyle.elevation.otherwise(0), elevation.otherwise(0))
+//		val androidView = latteView.androidView;
+//		var animator1 = ValueAnimator.ofInt(startStyle.borderWidth, borderWidth)
+//		animator1.addUpdateListener([ 
+//			startStyle.borderWidth = animatedValue as Integer
+//			startStyle.applyStyle(androidView)
+//		]);
+//		animator1.duration = 100;
+//		
+//		var animator2 = ObjectAnimator.ofObject(androidView,"translationY",new IntEvaluator(),startStyle.translationY.otherwise(0), translationY.otherwise(0))
+//		animator2.duration = 100;
+//		
+//		var animator3 = ObjectAnimator.ofObject(androidView,"translationX",new IntEvaluator(),startStyle.translationX.otherwise(0), translationX.otherwise(0))
+//		animator3.duration = 100;
+//		
+//		
+//		var animator4 = ValueAnimator.ofInt(startStyle.cornerRadius, cornerRadius)
+//		animator4.addUpdateListener([ 
+//			startStyle.cornerRadius = animatedValue as Integer
+//			startStyle.updateDrawable();
+//			
+//		]);
+//		animator4.duration = 300;
+//		
 		
-		
-		animSet.playTogether(animator1 ,animator2,animator3,animator4)
+		animSet.playTogether(allAnims)
 		
 		return animSet
 	}
@@ -179,7 +259,9 @@ class Style {
 		androidView.setPadding(pLeft,pTop,pRight,pBottom);
 		
 		// Layout Params
-    	var LayoutParams lp = androidView.layoutParams 
+    	var LayoutParams lp = androidView.layoutParams
+    	lp.width = width
+    	lp.height = height
     	if (lp instanceof MarginLayoutParams) {
 	    	if (margin != null) {
 	    		lp.leftMargin = margin
@@ -201,6 +283,7 @@ class Style {
 	    		lp.topMargin = marginTop
 	    	}
     	}
+    	androidView.layoutParams = lp;
     	
     	return lp;
     }

@@ -4,18 +4,21 @@ import android.R
 import android.animation.StateListAnimator
 import android.app.Activity
 import android.content.res.ColorStateList
+import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.StateListDrawable
 import android.os.Build
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import android.widget.FrameLayout
 import android.widget.TextView
 import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
-import static io.lattekit.xtend.ArrayLiterals2.*
+import static extension io.lattekit.xtend.ArrayLiterals2.*
 
 public abstract class LatteView {
 	
@@ -119,28 +122,23 @@ public abstract class LatteView {
 		} else if (touched && touchedStyle != null) {
 			return resolvedTouchedStyle;
 		}
-		return style;
+		return if (normalStyle == null) new Style() else normalStyle;
 	}
 	def void applyAttributes() {
 		if (androidView != null) {
 			androidView.enabled = enabled;
-			updateBackgroundDrawable()
-			
+			updateBackgroundDrawable()			
 			updateTextColorDrawable()
-//			updateStateListAnimator()
-			
 			activeStyle.applyStyle(androidView)
 			androidView.onTouchListener = [ v, e|
 				if (enabled && touchedStyle != null) { 
 					if (e.action == MotionEvent.ACTION_DOWN) {
 						touched = true;
 						Log.d("Latte", "Active style "+activeStyle +" vs "+touchedStyle)
-//						updateBackgroundDrawable 						
 						resolvedTouchedStyle.createAnimatorFrom(_style, this).start
 					} else if (e.action == MotionEvent.ACTION_UP) {
 						touched = false;
 						Log.d("Latte", "Active style "+activeStyle +" vs "+touchedStyle)
-//						updateBackgroundDrawable 
 						normalStyle.createAnimatorFrom(_style, this).start
 					}
 				}
@@ -175,36 +173,36 @@ public abstract class LatteView {
 		
 	}
 	def updateBackgroundDrawable() {
-		Log.d("Latte","MY RADIUS IS " + style.cornerRadius)
-		this.androidView.background = style.drawable;
+//		Log.d("Latte","MY RADIUS IS " + style.cornerRadius)
+//		this.androidView.background = style.drawable;
 //		
-//		var List<List<Integer>> colorStates = newArrayList
-//		val List<Integer> colorList = newArrayList
-//		if (touchedStyle != null) {
-//			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
-//			colorList += Style::asColor(resolvedTouchedStyle.backgroundColor)
-//		}
-//		
-//		colorStates += #[R.attr.state_enabled, -R.attr.state_pressed]
-//		colorList += Style::asColor(style.backgroundColor)
-//		
-//		if (disabledStyle != null) {
-//			colorStates += #[ -R.attr.state_enabled ]
-//			colorList += Style::asColor(resolvedDisabledStyle.backgroundColor)
-//		}
-//		
-////		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//			val StateListDrawable  sld = new StateListDrawable();
-//			if (disabledStyle != null) {
-//				sld.addState(#[-R.attr.state_enabled], resolvedDisabledStyle.drawable)
-//			}
-//
-//			sld.addState(#[], style.drawable)
-//			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { 
-//				androidView.background = new android.graphics.drawable.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, style.shapeDrawable);
-//			} else {			
-//				androidView.background =  new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, style.shapeDrawable);
-//			}		
+		var List<List<Integer>> colorStates = newArrayList
+		val List<Integer> colorList = newArrayList
+		if (touchedStyle != null) {
+			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
+			colorList += Style::asColor(resolvedTouchedStyle.backgroundColor)
+		}
+		
+		colorStates += #[R.attr.state_enabled, -R.attr.state_pressed]
+		colorList += Style::asColor(style.backgroundColor)
+		
+		if (disabledStyle != null) {
+			colorStates += #[ -R.attr.state_enabled ]
+			colorList += Style::asColor(resolvedDisabledStyle.backgroundColor)
+		}
+		
+//		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			val StateListDrawable  sld = new StateListDrawable();
+			if (disabledStyle != null) {
+				sld.addState(#[-R.attr.state_enabled], resolvedDisabledStyle.drawable)
+			}
+
+			sld.addState(#[], style.drawable)
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { 
+				androidView.background = new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, style.shapeDrawable);
+			} else {			
+				androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, style.shapeDrawable);
+			}		
 //		} else {
 //			var StateListDrawable  sld = new StateListDrawable();
 //			if (touchedStyle != null) {
@@ -373,7 +371,7 @@ public abstract class LatteView {
 	
 	def View getRootAndroidView() {
 		if (this.androidView == null) {
-			return this.latteView.rootAndroidView
+			return this.subviews.get(0).rootAndroidView
 		}
 		return this.androidView
 	}
@@ -393,7 +391,7 @@ public abstract class LatteView {
 		if (this.androidView.id == -1 && this.id != null) {
 			this.androidView.id = this.id.hashCode
 		}
-		if (androidView != null && lp != null) {
+		if (androidView != null) {
 			androidView.layoutParams = lp;
 		}
 		applyAttributes
@@ -428,7 +426,7 @@ public abstract class LatteView {
 		latteView = render();
 		if (latteView != null) {
 			latteView.processNode(this, null, null, null);
-			var nativeView = buildAndroidViewTree(a, null);
+			var nativeView = buildAndroidViewTree(a, new FrameLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT));
 			a.setContentView(nativeView);	
 		}
 		
