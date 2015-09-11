@@ -1,0 +1,9 @@
+LatteKit/bin/*
+LatteKit/xtend-gen/*
+
+LatteDroid/bin/*
+LatteDroid/xtend-gen/*
+
+LatteAnnotations/bin/*
+LatteAnnotations/xtend-gen/*
+
