@@ -7,7 +7,7 @@ import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableTypeDeclaration
 
 @Active(typeof(LatteViewProcessor))
-annotation LatteView {
+annotation Latte {
 	String[] variants = #[]
 }
 
@@ -21,7 +21,7 @@ class LatteViewProcessor extends AbstractClassProcessor {
 		]
 		var variantList = #[ className ];
 		var variantListParam = annotatedClass.annotations.findFirst[ a|
-			a.annotationTypeDeclaration == LatteView.newTypeReference().type
+			a.annotationTypeDeclaration == Latte.newTypeReference().type
 		].getStringArrayValue("variants")
 		
 		if (variantListParam.size > 0) {
@@ -40,7 +40,7 @@ class LatteViewProcessor extends AbstractClassProcessor {
 class LatteViewUtil {
 
 	def static addVariantMethods(extension TransformationContext context, MutableTypeDeclaration viewType, String variantName,String processingMethod) {
-		val parentTypeRef = findTypeGlobally("io.lattekit.ui.View").newTypeReference();
+		val parentTypeRef = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference();
 
 
 		val StringTypeRef = String.newTypeReference();		

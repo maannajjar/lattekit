@@ -1,20 +1,20 @@
 package io.lattekit.android
 
-import io.lattekit.LatteView
+import io.lattekit.Latte
 import io.lattekit.Layout
 import io.lattekit.State
 import io.lattekit.ui.Button
-import io.lattekit.ui.View
+import io.lattekit.ui.LatteView
 
 import static extension io.lattekit.ui.Button.*
 import static extension io.lattekit.ui.LinearLayout.*
 
-@LatteView
-class VirtualGroup extends View {
+@Latte
+class VirtualGroup extends LatteView {
 	
 	@State var int totalButtons = 3; 
 	@State var int totalRows = 1; 
-	@State var (View)=>void onButtonTap
+	@State var (LatteView)=>void onButtonTap
 	 
 	
 	@Layout

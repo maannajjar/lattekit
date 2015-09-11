@@ -47,7 +47,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 		layoutParser.parseLayout(context, annotatedMethod.declaringType,  importList, layoutSource);
 		
-		annotatedMethod.returnType = findTypeGlobally("io.lattekit.ui.View").newTypeReference;
+		annotatedMethod.returnType = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference;
 		annotatedMethod.body = '''
 			«layoutParser.renderBody»
 		''';

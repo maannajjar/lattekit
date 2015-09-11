@@ -12,13 +12,15 @@ import android.graphics.drawable.GradientDrawable.Orientation
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
-import android.util.Log
+import android.view.View
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
 import io.lattekit.StyleProperty
 
 class Style {
 	
+	var GradientDrawable currentDrawable;
+	var boolean isPrivate = false;
 	@StyleProperty public Object backgroundColor = Color.WHITE;
 	@StyleProperty public Object borderColor = Color.WHITE;
 	@StyleProperty public Object textColor = Color.BLACK;
@@ -70,34 +72,39 @@ class Style {
 		return myStyle
 	}
 	
+	def void cloneFrom(Style form) {
+		this.backgroundColor = form._backgroundColor
+		this.borderColor = form._borderColor
+		this.textColor = form._textColor
+		this.backgroundDrawable = form._backgroundDrawable
+		this.cornerRadius = form._cornerRadius
+		this.borderWidth = form._borderWidth
+		this.margin = form._margin
+		this.marginTop = form._marginTop
+		this.marginBottom = form._marginBottom
+		this.marginLeft = _marginLeft
+		this.marginRight = form._marginRight
+		this.elevation = form._elevation
+		this.translationX = form._translationX
+		this.translationY = form._translationY
+		this.padding = form._padding
+		this.paddingTop = form._paddingTop
+		this.paddingBottom = form._paddingBottom
+		this.paddingLeft = form._paddingLeft
+		this.paddingRight = form._paddingRight
+	}
+	
 	override Style clone() {
-		var myStyle = new Style()		
-		myStyle.backgroundColor = _backgroundColor
-		myStyle.borderColor = _borderColor
-		myStyle.textColor = _textColor
-		myStyle.backgroundDrawable = _backgroundDrawable
-		myStyle.cornerRadius = _cornerRadius
-		myStyle.borderWidth = _borderWidth
-		myStyle.margin = _margin
-		myStyle.marginTop = _marginTop
-		myStyle.marginBottom = _marginBottom
-		myStyle.marginLeft = _marginLeft
-		myStyle.marginRight = _marginRight
-		myStyle.elevation = _elevation
-		myStyle.translationX = _translationX
-		myStyle.translationY = _translationY
-		myStyle.padding = _padding
-		myStyle.paddingTop = _paddingTop
-		myStyle.paddingBottom = _paddingBottom
-		myStyle.paddingLeft = _paddingLeft
-		myStyle.paddingRight = _paddingRight
+		var myStyle = new Style()	
+		myStyle.cloneFrom(this);
+		myStyle.isPrivate = true;	
 		return myStyle
 	}
 	
-	def createAnimatorFrom(Style startStyle, android.view.View androidView) {
+	def createAnimatorFrom(Style startStyle,LatteView latteView) {
 		var animSet = new AnimatorSet();
 		// ObjectAnimator.ofObject(androidView,"elevation",new IntEvaluator(),startStyle.elevation.otherwise(0), elevation.otherwise(0))
-		
+		val androidView = latteView.androidView;
 		var animator1 = ValueAnimator.ofInt(startStyle.borderWidth, borderWidth)
 		animator1.addUpdateListener([ 
 			borderWidth = animatedValue as Integer
@@ -111,7 +118,17 @@ class Style {
 		var animator3 = ObjectAnimator.ofObject(androidView,"translationX",new IntEvaluator(),startStyle.translationX.otherwise(0), translationX.otherwise(0))
 		animator3.duration = 100;
 		
-		animSet.playTogether(animator1 ,animator2,animator3)
+		
+		var animator4 = ValueAnimator.ofInt(startStyle.cornerRadius, cornerRadius)
+		animator4.addUpdateListener([ 
+			startStyle.cornerRadius = animatedValue as Integer
+			startStyle.updateDrawable();
+			
+		]);
+		animator4.duration = 300;
+		
+		
+		animSet.playTogether(animator1 ,animator2,animator3,animator4)
 		
 		return animSet
 	}
@@ -125,11 +142,17 @@ class Style {
 	}
 	
 	def Drawable getDrawable() {
-		var drawable = new GradientDrawable(Orientation.BOTTOM_TOP, #[backgroundColor.asColor, backgroundColor.asColor]);
-	    drawable.setStroke(borderWidth, borderColor.asColor);
-	    drawable.setCornerRadius(cornerRadius);
-	    return drawable;
+		if (currentDrawable == null) {
+			currentDrawable = new GradientDrawable(Orientation.BOTTOM_TOP, #[backgroundColor.asColor, backgroundColor.asColor]);
+		}
+		updateDrawable();
+		return currentDrawable;
 	    
+    }
+    
+    def updateDrawable() {
+		currentDrawable.setStroke(borderWidth, borderColor.asColor);
+	    currentDrawable.setCornerRadius(cornerRadius);
     }
     
     def getShapeDrawable() {
@@ -140,8 +163,8 @@ class Style {
     	return new ShapeDrawable(shape);
     }
         
-    def applyStyle(android.view.View androidView) {
-
+    def applyStyle(View androidView) {
+		
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			androidView.elevation = elevation;
 		}

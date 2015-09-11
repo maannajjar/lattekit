@@ -1,13 +1,13 @@
 package io.lattekit.ui
 
 import android.app.Activity
+import android.view.View
 import android.widget.LinearLayout.LayoutParams
-import io.lattekit.LatteView
+import io.lattekit.Latte
 import io.lattekit.State
 
-@LatteView(
-)
-public class LinearLayout extends View {
+@Latte
+public class LinearLayout extends LatteView {
 	
 	@State String orientation;
 	def void init() {
@@ -23,7 +23,7 @@ public class LinearLayout extends View {
 		}
 	}
 	
-	override android.view.View createAndroidView(Activity a) {
+	override View createAndroidView(Activity a) {
 		if (androidView == null) {
 			androidView = new android.widget.LinearLayout(a);
 			applyAttributes();

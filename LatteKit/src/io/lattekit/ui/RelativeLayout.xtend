@@ -2,11 +2,12 @@ package io.lattekit.ui
 
 import android.app.Activity
 import android.util.Log
-import io.lattekit.LatteView
+import android.view.View
+import io.lattekit.Latte
 import java.util.HashMap
 
-@LatteView
-public class RelativeLayout extends View {
+@Latte
+public class RelativeLayout extends LatteView {
 	
 	
 	def void init() {
@@ -17,7 +18,7 @@ public class RelativeLayout extends View {
 		var view = androidView as android.widget.RelativeLayout;
 	}
 	
-	override android.view.View createAndroidView(Activity a) {
+	override View createAndroidView(Activity a) {
 		if (androidView == null) {
 			androidView = new android.widget.RelativeLayout(a);
 			applyAttributes();
@@ -48,7 +49,7 @@ public class RelativeLayout extends View {
 		]		
 	}
 	
-	def addLayoutRules(View virtualView, HashMap<String,Integer> viewIds) {
+	def addLayoutRules(LatteView virtualView, HashMap<String,Integer> viewIds) {
 		var rootAndroidView = virtualView.rootAndroidView
 		var oldParams = rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams;
 		val newParams = new android.widget.RelativeLayout.LayoutParams(oldParams); 

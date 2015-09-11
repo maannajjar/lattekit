@@ -1,11 +1,12 @@
 package io.lattekit.ui
 
 import android.app.Activity
-import io.lattekit.LatteView
+import android.view.View
+import io.lattekit.Latte
 import io.lattekit.State
 
-@LatteView
-public class Button extends View {
+@Latte
+public class Button extends LatteView {
 
 	@State private String label;
 
@@ -15,11 +16,11 @@ public class Button extends View {
 	override applyAttributes() {
 		super.applyAttributes()
 		var android.widget.Button myButton = androidView as android.widget.Button;
-		myButton.text = getLabel();
+		myButton.text = ""+System.identityHashCode(this);//getLabel();
 	}
 
 
-	override android.view.View createAndroidView(Activity a) {
+	override View createAndroidView(Activity a) {
 		if (androidView == null) {
 			androidView = new android.widget.Button(a);
 			applyAttributes();

@@ -1,14 +1,14 @@
 package io.lattekit.android
 
 import android.graphics.Color
-import io.lattekit.LatteView
+import io.lattekit.Latte
 import io.lattekit.Layout
 import io.lattekit.State
+import io.lattekit.ui.LatteView
 import io.lattekit.ui.Style
-import io.lattekit.ui.View
 
-@LatteView
-class TestViewController extends View {
+@Latte
+class TestViewController extends LatteView {
 	
 	@State var int red = 50;
 	@State var int green = 50;
@@ -25,14 +25,15 @@ class TestViewController extends View {
 		marginTop = 30
 		marginLeft = 30
 		marginRight = 30
-		cornerRadius = 50
+		cornerRadius = 100
 		elevation = 5
 		translationY = 0;
 	]
 	
 	var touchStyle = new Style() => [
-		backgroundColor = Color.parseColor("#FFEBEE");
+		backgroundColor = "#B71C1C";
 		borderWidth = 10
+		cornerRadius = 10
 		borderColor = Color.WHITE
 		marginTop = 50
 		elevation = 0
@@ -71,12 +72,12 @@ class TestViewController extends View {
 	
 	@Layout
 	override render() '''
-		<LinearLayout width={match_parent} height={match_parent}>
-			<Button id="Button1" style={style} touchedStyle={touchStyle} label="Hi there" onTap={self.setMyAnchor("Button1")}/>
-			<Button id="Button2" alignParentEnd={true} style={style} touchedStyle={touchStyle} label="Button 2" onTap={self.setMyAnchor("Button2")}/>
+		<RelativeLayout width={match_parent} height={match_parent}>
+			<Button id="Button1" alignParentStart={true} style={style} touchedStyle={touchStyle} label="Hi there" onTap={self.setMyAnchor("Button1")}/>
+			<Button id="Button2" alignParentEnd={true}  style={style} touchedStyle={touchStyle} label="Button 2" onTap={self.setMyAnchor("Button2")}/>
 			
-			<Button below="Button1" style={helloStyle}  touchedStyle={helloStyleB}  alignStart={@anchor} label="Hello 2"/>
-		</LinearLayout>
+			<Button below="Button1" style={helloStyle}  touchedStyle={helloStyleB} label={@anchor}/>
+		</RelativeLayout>
 	'''
 
 	def void setMyAnchor(String a) {
