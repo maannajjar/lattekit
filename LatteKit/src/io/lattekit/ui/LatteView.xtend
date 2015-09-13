@@ -1,19 +1,25 @@
 package io.lattekit.ui
 
 import android.R
-import android.animation.StateListAnimator
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
 import android.app.Activity
 import android.content.res.ColorStateList
+import android.graphics.Point
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Build
+import android.os.Handler
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.view.View.MeasureSpec
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.widget.FrameLayout
 import android.widget.TextView
+import io.lattekit.State
 import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
@@ -29,21 +35,18 @@ public abstract class LatteView {
 	 
 	/** Base Attributes */ 
 	@Accessors public String id;
-	@Accessors public (LatteView)=>void onTap;
-	@Accessors public (LatteView)=>void onClick;
-	@Accessors public int width = WRAP_CONTENT;
-	@Accessors public int height = WRAP_CONTENT;
+	@State public (LatteView)=>void onTap;
+	@State public (LatteView)=>void onClick;
 	
-	
-	
-	Style _style = null;
 	@Accessors public Style normalStyle;
 	@Accessors public Style touchedStyle;
 	@Accessors public Style disabledStyle;
+	@State Style x_style = null;	
 	Style _resolvedTouchedStyle;
 	Style _resolvedDisabledStyle;
+	public var Animator currentAnimation;
 	
-	@Accessors public boolean enabled = true;
+	@State public boolean enabled = true;
 	@Accessors public boolean touched = false;
 	
 	// Generic Attributes
@@ -57,36 +60,38 @@ public abstract class LatteView {
 	// This contains children list being built while parsing the tree
 	private List<LatteView> _children = newArrayList;
 	
-	
-	
-	Activity activity;
+	public Activity activity;
 	@Accessors View androidView;
-	LatteView latteView;
 	
 	
 	protected (LatteView)=>void attributesProc;
 	protected (LatteView)=>void layoutProc;
 	private boolean isRendering = false;
 	
-	
 	def setStyle(Style style) {
-		normalStyle = style;
-		if (this._style != null) {
-//			this._style.cloneFrom(normalStyle);
+		if (normalStyle == null) {
+			normalStyle = new Style();
+		}
+		normalStyle.cloneFrom(style);
+		if (this.x_style != null) {
+//			this.x_style.cloneFrom(normalStyle);
 		} else {
-			this._style = style.clone();
+			this.x_style = style.clone();
 		}
 		_resolvedTouchedStyle = null;
 		_resolvedDisabledStyle = null;
 		onStateChanged("style");	
 	}
 	def getStyle() {
-		if (_style == null) {
-			return new Style();
+		if (x_style == null) {
+			return new Style() => [
+				it.width = WRAP_CONTENT
+				it.height = WRAP_CONTENT
+			]
 		}
-		return _style;
+		return x_style;
 	}
-	def setTouchedStyle(Style style) {
+	def void setTouchedStyle(Style style) {
 		if (this.touchedStyle != null) {
 			this.touchedStyle.cloneFrom(style);
 		} else {
@@ -95,7 +100,7 @@ public abstract class LatteView {
 
 		onStateChanged("touchedStyle");	
 	}
-	def setDisabledStyle(Style style) {
+	def void setDisabledStyle(Style style) {
 		if (this.disabledStyle != null) {
 			this.disabledStyle.cloneFrom(style);
 		} else {
@@ -124,34 +129,94 @@ public abstract class LatteView {
 		}
 		return if (normalStyle == null) new Style() else normalStyle;
 	}
+	
+	def void watchTree() {
+		androidView.viewTreeObserver.addOnGlobalLayoutListener([
+			activeStyle.x = androidView.x
+			activeStyle.y = androidView.y
+			androidView.viewTreeObserver.removeOnGlobalLayoutListener(self)
+		])
+	}
+	
 	def void applyAttributes() {
 		if (androidView != null) {
 			androidView.enabled = enabled;
 			updateBackgroundDrawable()			
 			updateTextColorDrawable()
+			if (activeStyle.x == null) {
+				Log.d("LatteX", "Active Style X is null " +activeStyle +" vs "+normalStyle)
+				watchTree();
+			}
 			activeStyle.applyStyle(androidView)
+						
 			androidView.onTouchListener = [ v, e|
+				var AnimatorSet newAnim = null;
+				var oldAnim = currentAnimation
 				if (enabled && touchedStyle != null) { 
 					if (e.action == MotionEvent.ACTION_DOWN) {
 						touched = true;
-						Log.d("Latte", "Active style "+activeStyle +" vs "+touchedStyle)
-						resolvedTouchedStyle.createAnimatorFrom(_style, this).start
+						newAnim = resolvedTouchedStyle.createAnimatorFrom(x_style, this);
 					} else if (e.action == MotionEvent.ACTION_UP) {
 						touched = false;
-						Log.d("Latte", "Active style "+activeStyle +" vs "+touchedStyle)
-						normalStyle.createAnimatorFrom(_style, this).start
+						newAnim = normalStyle.createAnimatorFrom(x_style, this)
+						if (onTap != null) {
+							onTap.apply(LatteView.this);
+						}
 					}
+					if (newAnim != null) {
+						currentAnimation = newAnim;
+						if (oldAnim != null && oldAnim.isRunning) {
+							oldAnim.cancel
+							newAnim.start
+						} else {
+							newAnim.start()
+						}
+					}			
 				}
 				return false;
 			]
 			
-			if (onTap != null) {
-				androidView.onClickListener = [ onTap.apply(this) ];
-			}
-			
 		}
 	}
 	
+	
+	def Point getMeasuredSize() {
+		return getMeasuredSize(activeStyle);
+	}
+	
+	def getWindowWidth() {
+		androidView.context.getResources().getDisplayMetrics().widthPixels
+	}
+	
+	def getWindowHeight() {
+		androidView.context.getResources().getDisplayMetrics().heightPixels
+	}
+	
+	def Point getMeasuredSize(Style forStyle) {
+	    var widthMeasureSpec = if (forStyle.width == LayoutParams.MATCH_PARENT) {
+	    	var parentWidth = if (nonVirtualParent != null) {
+	    		nonVirtualParent.measuredSize.x;
+	    	} else windowWidth;
+	    	MeasureSpec.makeMeasureSpec(parentWidth, MeasureSpec.EXACTLY);
+	    } else if (forStyle.width == LayoutParams.WRAP_CONTENT) {
+	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+	    } else {
+	    	MeasureSpec.makeMeasureSpec(forStyle.width, MeasureSpec.EXACTLY);
+	    }
+	    
+		var heightMeasureSpec = if (forStyle.height == LayoutParams.MATCH_PARENT) {
+	    	var parentHeight = if (nonVirtualParent != null) {
+	    		nonVirtualParent.measuredSize.y;
+	    	} else windowHeight;
+	    	MeasureSpec.makeMeasureSpec(parentHeight, MeasureSpec.EXACTLY);
+	    } else if (forStyle.height == LayoutParams.WRAP_CONTENT) {
+	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+	    } else {
+	    	MeasureSpec.makeMeasureSpec(forStyle.height, MeasureSpec.EXACTLY);
+	    }
+		androidView.measure(widthMeasureSpec, heightMeasureSpec);
+		return new Point(androidView.measuredWidth,androidView.measuredHeight);
+	}
 //	override onTouch(View v, MotionEvent event) {
 //		if (event.action == MotionEvent.ACTION_UP) {
 //			style.createAnimatorFrom(resolvedTouchedStyle, androidView).start
@@ -159,23 +224,8 @@ public abstract class LatteView {
 //		return false;
 //	}
 	
-	def updateStateListAnimator() {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return;
-		var stateAnimator = new StateListAnimator();
-		
-		if (touchedStyle != null) {
-//			stateAnimator.addState(#[ R.attr.state_enabled, R.attr.state_pressed], resolvedTouchedStyle.createAnimatorFrom(style, androidView))
-//			stateAnimator.addState(#[ R.attr.state_active, R.attr.state_enabled, -R.attr.state_pressed], style.createAnimatorFrom(resolvedTouchedStyle, androidView))
-			Log.d("Latte", style +" : creating animator for "+this);
-		}
-		
-		androidView.stateListAnimator = stateAnimator;
-		
-	}
+
 	def updateBackgroundDrawable() {
-//		Log.d("Latte","MY RADIUS IS " + style.cornerRadius)
-//		this.androidView.background = style.drawable;
-//		
 		var List<List<Integer>> colorStates = newArrayList
 		val List<Integer> colorList = newArrayList
 		if (touchedStyle != null) {
@@ -191,30 +241,17 @@ public abstract class LatteView {
 			colorList += Style::asColor(resolvedDisabledStyle.backgroundColor)
 		}
 		
-//		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			val StateListDrawable  sld = new StateListDrawable();
-			if (disabledStyle != null) {
-				sld.addState(#[-R.attr.state_enabled], resolvedDisabledStyle.drawable)
-			}
+		val StateListDrawable  sld = new StateListDrawable();
+		if (disabledStyle != null) {
+			sld.addState(#[-R.attr.state_enabled], resolvedDisabledStyle.drawable)
+		}
 
-			sld.addState(#[], style.drawable)
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { 
-				androidView.background = new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, style.shapeDrawable);
-			} else {			
-				androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, style.shapeDrawable);
-			}		
-//		} else {
-//			var StateListDrawable  sld = new StateListDrawable();
-//			if (touchedStyle != null) {
-//				sld.addState(#[ R.attr.state_enabled, R.attr.state_pressed], resolvedTouchedStyle.getDrawable())
-//			}
-//			sld.addState(#[ R.attr.state_enabled, -R.attr.state_pressed], style.getDrawable())
-//			if (disabledStyle != null) {
-//				sld.addState(#[ -R.attr.state_enabled ], resolvedDisabledStyle.getDrawable())	
-//			}
-//			androidView.background = sld;
-//		}
-
+		sld.addState(#[], style.drawable)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { 
+			androidView.background = new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, if (resolvedTouchedStyle != null ) resolvedTouchedStyle.shapeDrawable else style.shapeDrawable);
+		} else {			
+			androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, if (resolvedTouchedStyle != null ) resolvedTouchedStyle.shapeDrawable else style.shapeDrawable);
+		}		
 	}
 	
 
@@ -265,30 +302,38 @@ public abstract class LatteView {
 			children.apply(this as T);
 		}
 
-		var oldLatteView = latteView;
-		latteView = render();
+		
+		var latteView = render();
 		if (latteView != null) {
-			subviews = newArrayList()
-			
+			var oldLatteView = if (subviews.length > 0) subviews.get(0) else null;
 			if (oldLatteView != null) {
-				// TODO: Re-used old instance
-				latteView = oldLatteView;
+				// Re-use old instance
 				if (oldLatteView.class == latteView.class) {
-					subviews.add(oldLatteView);
+					Log.d("Latte", this +" Re-using same subview")
+					Log.d("Latte", this +" Compare "+ latteView +" with "+ oldLatteView);
 					compareView(latteView, oldLatteView);	
 				} else {
-					subviews.add(latteView);
+					subviews.set(0, latteView);
 				}
-				
+			} else {
+				subviews = newArrayList();
+				subviews.add(latteView);
 			}
 		} else {
 			// This view doesn't have a render. All children are considered subviews
 			var newSubviews = newArrayList()
 			for (var i =0 ; i < this.children.size; i++) {
 				var newChild = this.children.get(i);
-				newSubviews.add(newChild);			
-				if (i < this.subviews.size) {
-					compareView(newChild,this.subviews.get(i))
+				var oldChild = if (i < this.subviews.size) this.subviews.get(i) else null;
+				if (oldChild != null) {
+					if (sameView(newChild, oldChild)) {
+						newSubviews.add(oldChild);
+						compareView(newChild,oldChild)	
+					} else {
+						newSubviews.add(newChild);
+					}
+				} else {
+					newSubviews.add(newChild);
 				}
 			}	
 			subviews = newSubviews;
@@ -305,6 +350,7 @@ public abstract class LatteView {
 
 	def onStateChanged(String stateName) {
 		if (!isRendering) {
+			Log.d("Latte", this+" : State changed "+ stateName)
 			handleStateChanged
 		}
 	}
@@ -316,48 +362,73 @@ public abstract class LatteView {
 		buildAndroidViewTree(activity,rootAndroidView.layoutParams);	
 	}
 	
+	
+	def sameView(LatteView leftView, LatteView rightView) {
+		if (leftView.class == rightView.class) {
+			return true;
+		}
+		return false;
+	}
 	def void compareView(LatteView newView, LatteView oldView) {
-		if (newView.class != oldView.class) {
-			return;
-		} else {
-			if (newView.androidView == null && oldView.androidView == null) {
+//		if (newView.class != oldView.class) {
+//			return;
+//		} else {
+//			if (newView.androidView == null && oldView.androidView == null) {
 
 				// Both are virtual nodes. Compare the underlying nodes
 
 //				compareView(newView.latteView, oldView.latteView);
-//				newView._style = oldView._style;
+//				newView.x_style = oldView.x_style;
 				
 				// Compare children 
-				for (var i =0; i < subviews.size; i++) {
-					var oldChildView = if ( oldView.subviews.size > i) oldView.subviews.get(i) else null;
-					if (oldChildView != null) {
-						if (oldChildView.class == subviews.get(i).class) {
-							oldChildView.parentView = this;
-							subviews.set(i, oldChildView);
-							compareView(subviews.get(i), oldChildView);
-						}
-//						 else {
-//							compareView(subviews.get(i), oldChildView);
-//						}
-					}
-				}	
-			} else if ((newView.latteView != null && oldView.latteView == null) || (newView.latteView == null && oldView.latteView != null)) {
-				
-				// No match. One is native and the other is virtual
-				
-			} else if (newView.androidView == null && oldView.androidView != null) {
-				
-				Log.d("Latte", "Re-using " + oldView.androidView);
-				newView.androidView = oldView.androidView;
-				
-				for (var i =0; i < newView.subviews.size; i++) {
-					var oldChildView = if (oldView.subviews.size > i) oldView.subviews.get(i) else null;
-					if (oldChildView != null) {
-						compareView(newView.subviews.get(i), oldChildView);
-					}
+				oldView.copyState(newView);
+				if (oldView.normalStyle != null) {
+					oldView.normalStyle.cloneFrom(newView.normalStyle, true);	
+				} else {
+					oldView.normalStyle = newView.normalStyle;
 				}
-			}
-		}
+				
+//				oldView.touchedStyle.cloneFrom(newView.touchedStyle);
+//				oldView.disabledStyle.cloneFrom(newView.disabledStyle);
+				 
+				for (var i =0; i < newView.subviews.size; i++) {
+					if (oldView.subviews.size <= i) {
+						newView.subviews.get(i).parentView = oldView;
+						Log.d("Latte", "Added new view "+ newView.subviews.get(i));
+						oldView.subviews.add(newView.subviews.get(i))
+					} else {
+						var oldChildView = oldView.subviews.get(i);
+						var newChildView = newView.subviews.get(i);
+						Log.d("Latte", this +": Comparing child "+ newChildView +" with "+oldChildView);
+						if (this.sameView(oldChildView,newChildView)) {
+							// Accepted ?
+							compareView(newChildView, oldChildView);
+						} else {
+							// Not accepted, replace with the new child
+							newChildView.parentView = oldView;
+							// RODO: Maybe recycle old view ?
+							oldView.subviews.set(i, newChildView);								
+						}
+					}					
+				}
+
+//			} else if ((newView.androidView == null && oldView.androidView != null) || (newView.androidView != null && oldView.androidView == null)) {
+//				
+//				// No match. One is native and the other is virtual
+//				
+//			} else if (newView.androidView == null && oldView.androidView != null) {
+//				
+//				Log.d("Latte", "Re-using " + oldView.androidView);
+//				newView.androidView = oldView.androidView;
+//				
+//				for (var i =0; i < newView.subviews.size; i++) {
+//					var oldChildView = if (oldView.subviews.size > i) oldView.subviews.get(i) else null;
+//					if (oldChildView != null) {
+//						compareView(newView.subviews.get(i), oldChildView);
+//					}
+//				}
+//			}
+//		}
 	}
 	
 	
@@ -369,6 +440,16 @@ public abstract class LatteView {
 	
 	def LatteView render() { null; }
 	
+	def LatteView getNonVirtualParent() {
+		if (parentView == null) {
+			return null;
+		}
+		if (parentView.androidView != null) {
+			return parentView;
+		}
+		return parentView.nonVirtualParent
+	}
+	
 	def View getRootAndroidView() {
 		if (this.androidView == null) {
 			return this.subviews.get(0).rootAndroidView
@@ -376,34 +457,39 @@ public abstract class LatteView {
 		return this.androidView
 	}
 	
+
 	def View buildAndroidViewTree(Activity a, ViewGroup.LayoutParams lp) {
 		// Log.d("Latte", this.class.simpleName +" Building my tree (subview size = "+ children.size +" ) ");
 		// First build my view
 		this.activity = a;
 		var myView = if (this.androidView == null) { 
-			var c = createAndroidView(a); 
-			c;
+			createAndroidView(a); 
 		} else this.androidView;
 		if (myView == null) {
 			// If we don't have native android view, then we are virtual node
-			return this.latteView.buildAndroidViewTree(a, lp);
+			return this.subviews.get(0).buildAndroidViewTree(a, lp);
 		}
+		this.androidView = myView;
+		Log.d("Latte", this+" : My android view is "+this.androidView)
 		if (this.androidView.id == -1 && this.id != null) {
 			this.androidView.id = this.id.hashCode
 		}
 		if (androidView != null) {
 			androidView.layoutParams = lp;
 		}
-		applyAttributes
+		this.applyAttributes();
+
 		if (subviews.size > 0) {
 			var myContainer = myView as ViewGroup
-//			myContainer.removeAllViews
+
+			myContainer.removeAllViews
 			var i = 0;
 			for (LatteView v : subviews) {
-				var childLP = createLayoutParams(v.width, v.height);				
+
+				var childLP = createLayoutParams(v.style.width, v.style.height);				
 				var View childView = v.buildAndroidViewTree(a, childLP);
 				if (i >= myContainer.childCount) { 
-					myContainer.addView(childView, childLP)	
+					myContainer.addView(childView, i, childLP)	
 				} else if (myContainer.getChildAt(i) == childView) {
 					childView.layoutParams = childLP;
 				} else {
@@ -422,14 +508,10 @@ public abstract class LatteView {
 	}
 	
 	def void renderOn(Activity a) {
-		activity = a;
-		latteView = render();
-		if (latteView != null) {
-			latteView.processNode(this, null, null, null);
-			var nativeView = buildAndroidViewTree(a, new FrameLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT));
-			a.setContentView(nativeView);	
-		}
-		
+		activity = a;		
+		this.processNode(null,null,null, null);
+		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.style.width, this.style.height))
+		a.setContentView(this.rootAndroidView);		
 	}
 	
 }

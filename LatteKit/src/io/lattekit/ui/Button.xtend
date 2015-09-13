@@ -21,12 +21,7 @@ public class Button extends LatteView {
 
 
 	override View createAndroidView(Activity a) {
-		if (androidView == null) {
-			androidView = new android.widget.Button(a);
-		}
-		
-		return androidView;
-
+		return new android.widget.Button(a);
 	}
 
 }

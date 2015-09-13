@@ -22,42 +22,44 @@ class TestViewController extends LatteView {
 		borderWidth = 5
 		borderColor = "#B71C1C"
 		textColor = Color.WHITE
-		marginTop = 30
 		marginLeft = 30
 		marginRight = 30
 		cornerRadius = 100
-		
-		elevation = 15
-		translationY = 0;
+		paddingLeft = 30
+		paddingRight = 30
+		it.width = WRAP_CONTENT
+		it.height = 200
+		elevation = 0
 		transitions = #[
-			#[ "width", 200, null,0],
+			#[ "width", 200, null,300],
+			#[ "height", 10000, null,0],
+			#[ "marginLeft", 200, null,300],
+			#[ "marginRight", 200, null,300],			
 			#[ "cornerRadius", 300, null,0],
 			#[ "borderWidth", 300, null,0],
-			#[ "translationX", 200, null,100],
-			#[ "translationY", 200, null,100],
-			#[ "elevation", 600, null,1000]
+			#[ "elevation", 600, null,0]
 		]		
 	]
 	
 	var touchStyle = new Style() => [
-		backgroundColor = "#B71C1C";
+		backgroundColor = "#0288D1";
 		borderWidth = 20
-		cornerRadius = 10
-		it.width = 500
-		elevation = 0
-		borderColor = "#B71C1C"
-		marginTop = 30
-		marginLeft = 30
-		marginRight = 30
-		translationY = 10;
-		translationX = 10;
+		cornerRadius = 0
+		it.width = MATCH_PARENT
+		it.height = MATCH_PARENT
+		elevation = 10
+		borderColor = "#0277BD"
+		marginLeft = 0
+		marginRight = 0
 		transitions = #[
 			#[ "width", 200, null,0],
+			#[ "height", 10000, null,300],
 			#[ "cornerRadius", 300, null,0],
 			#[ "borderWidth", 300, null,0],
-			#[ "translationX", 200, null,100],
-			#[ "translationY", 200, null,100],
-			#[ "elevation", 300, null,1000]
+			#[ "marginLeft", 200, null,0],
+			#[ "marginRight", 200, null,0],
+			#[ "elevation", 300, null,0]
+			
 		]
 	]
 	
@@ -90,18 +92,28 @@ class TestViewController extends LatteView {
 		elevation = 30
 	]
 	
-	@Layout
+	
+	var layoutStyle = new Style() => [
+		width = MATCH_PARENT
+		height = MATCH_PARENT
+	]
+	
+	
+	@Layout(imports=#["io.lattekit.android"])
 	override render() '''
-		<RelativeLayout width={match_parent} height={match_parent}>
-			<Button id="Button1" alignParentStart={true} style={style} touchedStyle={touchStyle} label="Hi there" onTap={self.setMyAnchor("Button1")}/>
+		<RelativeLayout style={layoutStyle}>
+			<Button id="Button1" alignParentStart={true} style={style} touchedStyle={touchStyle} label="Button 1" onTap={self.setMyAnchor("Button1")}/>
 			<Button id="Button2" alignParentEnd={true}  style={style} touchedStyle={touchStyle} label="Button 2" onTap={self.setMyAnchor("Button2")}/>
 			
-			<Button below="Button1" style={helloStyle}  touchedStyle={helloStyleB} label={@anchor}/>
+			<Button below="Button1" style={helloStyle} touchedStyle={helloStyleB} label={@anchor}/>
 		</RelativeLayout>
 	'''
 
+	def void addRow(VirtualGroup virtualGroup) {
+		virtualGroup.totalRows = virtualGroup.totalRows+1; 
+	}
 	def void setMyAnchor(String a) {
-		this.anchor = a;
+//		this.anchor = a;
 	}
 
 }

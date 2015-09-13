@@ -19,10 +19,7 @@ public class RelativeLayout extends LatteView {
 	}
 	
 	override View createAndroidView(Activity a) {
-		if (androidView == null) {
-			androidView = new android.widget.RelativeLayout(a);
-		}
-		return androidView;
+		return new android.widget.RelativeLayout(a);
 	}
 
 	override android.widget.RelativeLayout.LayoutParams createLayoutParams(int width, int height) {

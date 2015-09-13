@@ -24,11 +24,7 @@ public class LinearLayout extends LatteView {
 	}
 	
 	override View createAndroidView(Activity a) {
-		if (androidView == null) {
-			androidView = new android.widget.LinearLayout(a);
-			applyAttributes();
-		}
-		return androidView;
+		return new android.widget.LinearLayout(a);
 	}
 
 	override LayoutParams createLayoutParams(int width, int height) {

@@ -110,23 +110,87 @@ class StateProcessor extends AbstractFieldProcessor {
 		])
 		
 		
+		if (annotatedField.declaringType.findDeclaredMethod("getStateFields") == null) {
+			val properties = annotatedField.declaringType.declaredFields.filter[!annotations.filter[annotationTypeDeclaration.simpleName=="State"].empty];
+			val propertyNames = properties.map[it.simpleName]
+			annotatedField.declaringType.addMethod("getStateFields") [
+				returnType = List.newTypeReference(String.newTypeReference());
+				body = '''
+					List<String> states = «if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.LatteView") "super.getStateFields()" else "new ArrayList<String>()"»;
+					«propertyNames.map['''states.add("«if (it.startsWith("_")) it.substring(1) else it»")'''].join(";\n")»;
+					return states;
+				'''			
+			]
+			
+			annotatedField.declaringType.addMethod("copyState") [
+				addParameter("other", findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference())
+				
+				val allSetters = new StringBuffer();
+				
+				properties.forEach[
+					val name = if (it.simpleName.startsWith("_")) it.simpleName.substring(1) else it.simpleName;
+					allSetters.append('''this._«name» = otherView._«name»;
+					''');
+				];
+				body = '''
+					«annotatedField.declaringType.newTypeReference().simpleName» otherView = («annotatedField.declaringType.newTypeReference().simpleName»)other;
+					«if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.LatteView") "super.copyState(otherView)"»;
+					«allSetters.toString»
+				'''
+			]
+			
+			annotatedField.declaringType.addMethod("setProperty") [
+				addParameter("propertyName", String.newTypeReference())
+				addParameter("value", Object.newTypeReference())
+				val allSetters = new StringBuffer();
+				
+				properties.forEach[
+					val name = if (it.simpleName.startsWith("_")) it.simpleName.substring(1) else it.simpleName;
+					allSetters.append('''if (propertyName.equals("«name»")) { set«name.substring(0,1).toUpperCase+name.substring(1)»((«it.type.name.replaceAll("\\$",".")»)value); }
+					''');
+				];
+				body = '''
+					«allSetters.toString»
+				'''
+			]
+			
+			annotatedField.declaringType.addMethod("getProperty") [
+				addParameter("propertyName", String.newTypeReference())
+				returnType = Object.newTypeReference
+				val allGetters = new StringBuffer();
+				properties.forEach[
+					val name = if (it.simpleName.startsWith("_")) it.simpleName.substring(1) else it.simpleName;
+					allGetters.append('''if (propertyName.equals("«name»")) { return get«name.substring(0,1).toUpperCase+name.substring(1)»(); }
+					''');
+				];
+				body = '''
+					«allGetters.toString»
+					return null;
+				'''
+			]			
+		} 
+		
 		annotatedField.markAsRead
 		
 		
-		annotatedField.declaringType.addMethod("get" + capiatlized) [
-			returnType = rawType
-			body = '''
-				return _«rawName»;
-			'''
-
-		];
-		annotatedField.declaringType.addMethod("set" + capiatlized) [
-			addParameter("newValue", rawType)
-			body = '''
-				_«rawName» = newValue;
-				onStateChanged("«rawName»");
-			'''
-		];
+		if (annotatedField.declaringType.findDeclaredMethod("get" + capiatlized) == null) {
+			annotatedField.declaringType.addMethod("get" + capiatlized) [
+				returnType = rawType
+				body = '''
+					return _«rawName»;
+				'''
+			];
+		}
+		
+		if (annotatedField.declaringType.findDeclaredMethod("set" + capiatlized,rawType) == null) {
+			annotatedField.declaringType.addMethod("set" + capiatlized) [
+				addParameter("newValue", rawType)
+				body = '''
+					_«rawName» = newValue;
+					onStateChanged("«rawName»");
+				'''
+			];
+		}
 
 	}
 

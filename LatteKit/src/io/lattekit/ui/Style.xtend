@@ -1,6 +1,7 @@
 package io.lattekit.ui
 
 import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.graphics.Color
@@ -11,17 +12,15 @@ import android.graphics.drawable.GradientDrawable.Orientation
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
-import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
 import io.lattekit.StyleProperty
 import java.util.ArrayList
 import java.util.List
-import android.view.ViewGroup
 
 class Style {
-	
 	var GradientDrawable currentDrawable;
 	var boolean isPrivate = false;
 	
@@ -43,12 +42,14 @@ class Style {
 	@StyleProperty public Integer elevation = 0;
 	@StyleProperty public Integer translationY = 0;
 	@StyleProperty public Integer translationX = 0;
+	@StyleProperty public Float x;
+	@StyleProperty public Float y;
 	
 	@StyleProperty public Integer padding = 0;
 	@StyleProperty public Integer paddingTop;
 	@StyleProperty public Integer paddingBottom;
-	@StyleProperty public Integer paddingLeft = 30;
-	@StyleProperty public Integer paddingRight = 30;
+	@StyleProperty public Integer paddingLeft = 0;
+	@StyleProperty public Integer paddingRight = 0;
 	
 	@StyleProperty public List<List<Object>> transitions;
 	
@@ -66,13 +67,16 @@ class Style {
 		myStyle.cornerRadius = _cornerRadius.otherwise(parentStyle.cornerRadius)
 		myStyle.borderWidth = _borderWidth.otherwise(parentStyle.borderWidth)
 		myStyle.margin = _margin.otherwise(parentStyle.margin)
-		myStyle.marginTop = _marginTop.otherwise(parentStyle.marginTop)
-		myStyle.marginBottom = _marginBottom.otherwise(parentStyle.marginBottom)
-		myStyle.marginLeft = _marginLeft.otherwise(parentStyle.marginLeft)
-		myStyle.marginRight = _marginRight.otherwise(parentStyle.marginRight)
+		myStyle.marginTop = _marginTop.otherwise(parentStyle.marginTop.otherwise(_margin))
+		myStyle.marginBottom = _marginBottom.otherwise(parentStyle.marginBottom.otherwise(_margin))
+		myStyle.marginLeft = _marginLeft.otherwise(parentStyle.marginLeft.otherwise(_margin))
+		myStyle.marginRight = _marginRight.otherwise(parentStyle.marginRight.otherwise(_margin))
 		myStyle.elevation = _elevation.otherwise(parentStyle.elevation)
 		myStyle.translationX = _translationX.otherwise(parentStyle.translationX)
 		myStyle.translationY = _translationY.otherwise(parentStyle.translationY)
+		
+		myStyle.x = x.otherwise(parentStyle.x)
+		myStyle.y = y.otherwise(parentStyle.y)
 		
 		myStyle.padding = _padding.otherwise(parentStyle.padding)
 		myStyle.paddingTop = _paddingTop.otherwise(parentStyle.paddingTop)
@@ -88,7 +92,8 @@ class Style {
 		return myStyle
 	}
 	
-	def void cloneFrom(Style form) {
+	def void cloneFrom(Style from) { cloneFrom(from, false) }
+	def void cloneFrom(Style form, boolean excludeComputed) {
 		this.backgroundColor = form._backgroundColor
 		this.borderColor = form._borderColor
 		this.textColor = form._textColor
@@ -98,7 +103,7 @@ class Style {
 		this.margin = form._margin
 		this.marginTop = form._marginTop
 		this.marginBottom = form._marginBottom
-		this.marginLeft = _marginLeft
+		this.marginLeft = form._marginLeft
 		this.marginRight = form._marginRight
 		this.elevation = form._elevation
 		this.translationX = form._translationX
@@ -111,6 +116,10 @@ class Style {
 		this.width = form._width
 		this.height = form._height
 		this.transitions = form._transitions
+		if (!excludeComputed) {
+			this.x = form._x
+			this.y = form._y
+		}
 	}
 	
 	override Style clone() {
@@ -120,16 +129,21 @@ class Style {
 		return myStyle
 	}
 	
+	
 	def createAnimatorFrom(Style startStyle,LatteView latteView) {
-		var animSet = new AnimatorSet();
+		val animSet = new AnimatorSet();
 		val List<String> transitionProperties = if (transitions != null) transitions.map[it.get(0) as String] else #[];
-
+		
+		val actualSize = latteView.getMeasuredSize(this);
+		val startActualSize = latteView.getMeasuredSize(startStyle);
+		
 		var immediateAnim =  ValueAnimator.ofInt(0,1);
 		immediateAnim.addUpdateListener([
 			if (animatedValue == 0) {
 				_properties.filter[!transitionProperties.contains(it)].forEach[
-					Log.d("Latte"," Setting "+it+"("+transitionProperties.contains(it) +") to "+this.getProperty(it))
-					startStyle.setProperty(it, this.getProperty(it));
+					if ( this.getProperty(it) != null) {
+						startStyle.setProperty(it, this.getProperty(it));
+					}
 				]
 				startStyle.updateDrawable();
 				startStyle.applyStyle(latteView.androidView)
@@ -137,7 +151,14 @@ class Style {
 			}
 		])
 		immediateAnim.setDuration(1);
-		
+
+		if (startStyle.x == null) {
+			startStyle.x = latteView.androidView.x
+		}
+		if (startStyle.y == null) {
+			startStyle.y = latteView.androidView.y
+		}
+				
 		
 		var List<Animator> allAnims = newArrayList();
 		allAnims += immediateAnim;
@@ -147,27 +168,33 @@ class Style {
 				val duration = it.get(1) as Integer;
 				val delay = it.get(3) as Integer;
 				
+
 				var startValue = startStyle.getProperty(propName);
 				var myValue = this.getProperty(propName);
 				var ValueAnimator anim = null;
-							
+				if (propName == "width") {
+					myValue = actualSize.x;
+					startValue = startActualSize.x;
+				}
+				if (propName == "height") {
+					myValue = actualSize.y
+					startValue = startActualSize.y
+				}
+				
 				if (startValue.class == Integer) {
 					anim = ValueAnimator.ofInt(startValue as Integer, myValue as Integer);
-					
 					anim.addUpdateListener([ 
-						if (latteView.activeStyle == this) {
+						if (latteView.currentAnimation == animSet) { 
 							startStyle.setProperty(propName, animatedValue as Integer);
 							startStyle.updateDrawable();
 							startStyle.applyStyle(latteView.androidView)
 						}
 					]);
-		
-					
 				} else if (startValue.class == Float) {
 					anim = ValueAnimator.ofFloat(startValue as Float, myValue as Float);
 					
 					anim.addUpdateListener([
-						if (latteView.activeStyle == this) { 
+						if (latteView.currentAnimation == animSet) { 
 							startStyle.setProperty(propName, animatedValue as Float);
 							startStyle.updateDrawable();
 							startStyle.applyStyle(latteView.androidView)
@@ -183,6 +210,15 @@ class Style {
 			].filterNull
 		}
 			
+		animSet.addListener(new AnimatorListenerAdapter() {
+			override onAnimationEnd(Animator animation) {
+				if (latteView.androidView.parent != null) {
+					latteView.androidView.parent.requestLayout
+				}
+//				Log.d("Latte","Animation ended and now I know my x & y");
+//				Log.d("Latte","x = "+x +" y = "+ y);
+			}
+		})
 		// ObjectAnimator.ofObject(androidView,"elevation",new IntEvaluator(),startStyle.elevation.otherwise(0), elevation.otherwise(0))
 //		val androidView = latteView.androidView;
 //		var animator1 = ValueAnimator.ofInt(startStyle.borderWidth, borderWidth)
@@ -221,6 +257,10 @@ class Style {
 		return if (left != null) left else or;
 	}
 	
+	def Float otherwise(Float left, Float or) {
+		return if (left != null) left else or;
+	}
+	
 	def Drawable getDrawable() {
 		if (currentDrawable == null) {
 			currentDrawable = new GradientDrawable(Orientation.BOTTOM_TOP, #[backgroundColor.asColor, backgroundColor.asColor]);
@@ -251,6 +291,10 @@ class Style {
 		androidView.translationY = translationY
 		androidView.translationX = translationX
 		
+		if (x != null) androidView.x = x
+		if (y != null) androidView.y = y
+		
+		
 		var pLeft = paddingLeft.otherwise(padding);
 		var pRight = paddingRight.otherwise(padding);
 		var pTop = paddingTop.otherwise(padding);
@@ -260,8 +304,16 @@ class Style {
 		
 		// Layout Params
     	var LayoutParams lp = androidView.layoutParams
-    	lp.width = width
-    	lp.height = height
+//    	if (width < 0 || height < 0) {
+//    		var widthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
+//			var heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
+//			androidView.measure(widthMeasureSpec, heightMeasureSpec);
+//    		lp.width = androidView.measuredWidth
+//    		lp.width = androidView.measuredHeight
+//    	} else {
+		lp.width = width
+		lp.height = height
+//    	}
     	if (lp instanceof MarginLayoutParams) {
 	    	if (margin != null) {
 	    		lp.leftMargin = margin
@@ -287,8 +339,7 @@ class Style {
     	
     	return lp;
     }
-	
-
+    
 	static def int asColor(Object color) {
 		if (color == null) {
 			return Color.WHITE;
