@@ -127,7 +127,7 @@ public abstract class LatteView {
 			if (activeStyle._computedX == null) {
 				watchTree();
 			}
-			updateBackgroundDrawable();
+			updateBackgroundColors();
 			updateTextColorDrawable();
 			// Todo: update _style  attributes form active style and use _style
 			activeStyle.applyStyle(this);
@@ -216,7 +216,7 @@ public abstract class LatteView {
 
 	
 
-	def updateBackgroundDrawable() {
+	def updateBackgroundColors() {
 		var List<List<Integer>> colorStates = newArrayList
 		val List<Integer> colorList = newArrayList
 		if (touchedStyle != null) {
