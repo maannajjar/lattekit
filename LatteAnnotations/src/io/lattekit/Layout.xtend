@@ -21,6 +21,7 @@ import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.xml.sax.Attributes
 import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
+import org.eclipse.xtext.xbase.lib.Functions.Function2
 
 @Active(typeof(LayoutProcessor))
 annotation Layout {
@@ -113,6 +114,12 @@ class LayoutParser extends DefaultHandler {
 		procs.findFirst[ newTypeReference().isAssignableFrom(type) ]
 	}
 	
+	def getFunctionType(extension TransformationContext context, TypeReference type) {
+		
+		var procs = #[Functions.Function0,Functions.Function1,Functions.Function2,Functions.Function3,Functions.Function4,Functions.Function5,Functions.Function6]
+		procs.findFirst[ newTypeReference().isAssignableFrom(type) ]
+	}
+	
 
 	def static preprocess(String sourceStr) {
 		var source = sourceStr.replaceAll("< ","&lt; ").replaceAll("<=","&lt;=")
@@ -176,27 +183,54 @@ class LayoutParser extends DefaultHandler {
 				simpleName == propertySetter && parameters.size == 1
 			]
 
-			val closureSetter = setterMethods.findFirst[
+			val procClosureSetter = setterMethods.findFirst[
 				context.getProcedureType(parameters.findFirst[true].type) != null
 			];	
+			
+			val fnClosureSetter = setterMethods.findFirst[
+				context.getFunctionType(parameters.findFirst[true].type) != null
+			];	
+			
 			var hasSetter = !setterMethods.isEmpty
 			var value = if (isJavaCode) {
 				attrValue.replaceAll("&quot;",'''"''');	
 			} else {
 				'"' + attrValue.replaceAll("&quot;",'''\"''') + '"';
 			}
-			if (closureSetter != null) { 
-				var closureType = context.getProcedureType(closureSetter.parameters.findFirst[true].type).canonicalName
+			if (procClosureSetter != null || fnClosureSetter != null) { 
+				val closureSetter = if (procClosureSetter != null ) procClosureSetter else fnClosureSetter; 
+				var closureType = if (procClosureSetter != null ) {
+					context.getProcedureType(closureSetter.parameters.findFirst[true].type).canonicalName
+				} else {
+					context.getFunctionType(closureSetter.parameters.findFirst[true].type).canonicalName
+				}
+				val returnType = if (procClosureSetter != null ) {
+					"void"
+				} else {
+					closureSetter.parameters.findFirst[true].type.actualTypeArguments.findLast[true].upperBound.name
+				}
 				val typeList = closureSetter.parameters.findFirst[true].type.actualTypeArguments.map[
-					lowerBound.name
-				]
+						if (lowerBound.name == "java.lang.Object") { upperBound.name } else { lowerBound.name }
+					]
+				val paramsTypeList = if (procClosureSetter != null ) {
+					closureSetter.parameters.findFirst[true].type.actualTypeArguments.map[
+						if (lowerBound.name == "java.lang.Object") { upperBound.name } else { lowerBound.name }
+					]
+				} else {
+					var paramTypes = closureSetter.parameters.findFirst[true].type.actualTypeArguments 
+					paramTypes.subList(0,paramTypes.length-1).map[
+						if (lowerBound.name == "java.lang.Object") { upperBound.name } else { lowerBound.name }
+					]
+					
+				}
+				
 				val List<String> paramList = newArrayList()
-				for (index : 0..<typeList.size) {
-					paramList += '''final «typeList.get(index)» $«index»''';
+				for (index : 0..<paramsTypeList.size) {
+					paramList += '''final «paramsTypeList.get(index)» $«index»''';
 				}
 									
 				attrsProc += '''final «closureType»<«typeList.join(",")»> _«property»_handler = new «closureType»<«typeList.join(",")»>() {
-						public void apply(«paramList.join(",")») {
+						public «returnType» apply(«paramList.join(",")») {
 							«context.newSelfTypeReference(declaringType)» self =  «declaringType.simpleName».this;
 							«value»«if (!isJavaCode) /*TODO ADD PARAM*/"()" else ""»;
 						} 
