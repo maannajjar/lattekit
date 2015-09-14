@@ -6,8 +6,9 @@ import android.animation.AnimatorSet
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.graphics.Point
+import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
-import android.graphics.drawable.StateListDrawable
+import android.graphics.drawable.ShapeDrawable
 import android.os.Build
 import android.util.Log
 import android.view.MotionEvent
@@ -36,10 +37,11 @@ public abstract class LatteView {
 	@State public (LatteView)=>void onTap;
 	@State public (LatteView, MotionEvent)=>boolean onTouch;
 	
-	@Accessors public Style normalStyle;
-	@Accessors public Style touchedStyle;
-	@Accessors public Style disabledStyle;
-	@State Style x_style = null;	
+	@Accessors public Style normalStyle = new Style();
+	@Accessors public Style touchedStyle = new Style();
+	@Accessors public Style disabledStyle = new Style();
+	@Accessors Style _style;
+		
 	Style _resolvedTouchedStyle;
 	Style _resolvedDisabledStyle;
 	public var Animator currentAnimation;
@@ -61,49 +63,33 @@ public abstract class LatteView {
 	public Activity activity;
 	@Accessors View androidView;
 	
-	
+	public ShapeDrawable shapeDrawable;
+	public GradientDrawable backgroundDrawable;
 	protected (LatteView)=>void attributesProc;
 	protected (LatteView)=>void layoutProc;
 	private boolean isRendering = false;
 	
 	def setStyle(Style style) {
-		if (normalStyle == null) {
-			normalStyle = new Style();
-		}
 		normalStyle.cloneFrom(style);
-		if (this.x_style != null) {
-//			this.x_style.cloneFrom(normalStyle);
-		} else {
-			this.x_style = style.clone();
-		}
+		if (_style == null) {
+			_style = new Style();
+			_style.cloneFrom(normalStyle);
+		}		
 		_resolvedTouchedStyle = null;
 		_resolvedDisabledStyle = null;
 		onStateChanged("style");	
 	}
 	def getStyle() {
-		if (x_style == null) {
-			return new Style() => [
-				it.width = WRAP_CONTENT
-				it.height = WRAP_CONTENT
-			]
-		}
-		return x_style;
+		return normalStyle;
 	}
+	
 	def void setTouchedStyle(Style style) {
-		if (this.touchedStyle != null) {
-			this.touchedStyle.cloneFrom(style);
-		} else {
-			this.touchedStyle = style.clone();
-		}
-
+		this.touchedStyle.cloneFrom(style);
 		onStateChanged("touchedStyle");	
 	}
+	
 	def void setDisabledStyle(Style style) {
-		if (this.disabledStyle != null) {
-			this.disabledStyle.cloneFrom(style);
-		} else {
-			this.disabledStyle = style.clone();
-		}
+		this.disabledStyle.cloneFrom(style);
 		onStateChanged("disabledStyle");	
 	}
 	
@@ -138,12 +124,16 @@ public abstract class LatteView {
 	def void applyAttributes() {
 		if (androidView != null) {
 			androidView.enabled = enabled;
-			updateBackgroundDrawable()			
-			updateTextColorDrawable()
 			if (activeStyle._computedX == null) {
 				watchTree();
 			}
-			activeStyle.applyStyle(androidView)
+			updateBackgroundDrawable();
+			updateTextColorDrawable();
+			// Todo: update _style  attributes form active style and use _style
+			activeStyle.applyStyle(this);
+			activeStyle.applyDrawableStyle(this);
+			activeStyle.applyShapeDrawable(this);
+			
 			androidView.onClickListener = [v |
 				if (onTap != null) {
 					onTap.apply(LatteView.this);
@@ -161,10 +151,10 @@ public abstract class LatteView {
 				if (enabled && touchedStyle != null) { 
 					if (e.action == MotionEvent.ACTION_DOWN) {
 						touched = true;
-						newAnim = resolvedTouchedStyle.createAnimatorFrom(x_style, this, false);
+						newAnim = resolvedTouchedStyle.createAnimatorFrom(_style, this, false);
 					} else if (e.action == MotionEvent.ACTION_UP) {
 						touched = false;
-						newAnim = normalStyle.createAnimatorFrom(x_style, this, true)
+						newAnim = normalStyle.createAnimatorFrom(_style, this, true)
 					}
 					if (newAnim != null) {
 						currentAnimation = newAnim;
@@ -223,12 +213,7 @@ public abstract class LatteView {
 		androidView.measure(widthMeasureSpec, heightMeasureSpec);
 		return new Point(androidView.measuredWidth,androidView.measuredHeight);
 	}
-//	override onTouch(View v, MotionEvent event) {
-//		if (event.action == MotionEvent.ACTION_UP) {
-//			style.createAnimatorFrom(resolvedTouchedStyle, androidView).start
-//		}
-//		return false;
-//	}
+
 	
 
 	def updateBackgroundDrawable() {
@@ -236,28 +221,44 @@ public abstract class LatteView {
 		val List<Integer> colorList = newArrayList
 		if (touchedStyle != null) {
 			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
-			colorList += Style::asColor(resolvedTouchedStyle.backgroundColor)
+			if (resolvedTouchedStyle.rippleColor != null) {
+				colorList += Style::asColor(resolvedTouchedStyle.rippleColor)
+			} else {
+				colorList += Style::asColor(resolvedTouchedStyle.backgroundColor)
+			}
+		} else {
+			
+			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
+			if (normalStyle.rippleColor != null) {
+				colorList += Style::asColor(normalStyle.rippleColor)	
+			} else {
+				colorList += Style::asColor(normalStyle.backgroundColor)
+			}
 		}
 		
 		colorStates += #[R.attr.state_enabled, -R.attr.state_pressed]
-		colorList += Style::asColor(style.backgroundColor)
+		colorList += Style::asColor(normalStyle.backgroundColor)
 		
 		if (disabledStyle != null) {
 			colorStates += #[ -R.attr.state_enabled ]
 			colorList += Style::asColor(resolvedDisabledStyle.backgroundColor)
 		}
-		
-		val StateListDrawable  sld = new StateListDrawable();
-		if (disabledStyle != null) {
-			sld.addState(#[-R.attr.state_enabled], resolvedDisabledStyle.drawable)
-		}
 
-		sld.addState(#[], style.drawable)
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			androidView.background = new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, if (resolvedTouchedStyle != null ) resolvedTouchedStyle.shapeDrawable else style.shapeDrawable);
-		} else {			
-			androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, if (resolvedTouchedStyle != null ) resolvedTouchedStyle.shapeDrawable else style.shapeDrawable);
-		}		
+		if (backgroundDrawable == null) {
+			backgroundDrawable = new GradientDrawable();
+			shapeDrawable = new ShapeDrawable();
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+				androidView.background = new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),this.backgroundDrawable, this.shapeDrawable);
+			} else {			
+				androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),this.backgroundDrawable, this.shapeDrawable);
+			}
+		} else{
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+				(androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
+			} else {		
+				(androidView.background as codetail.graphics.drawables.RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));	
+			}
+		}
 	}
 	
 
@@ -358,7 +359,6 @@ public abstract class LatteView {
 		if (!isRendering) {
 			Log.d("Latte", this+" : State changed "+ stateName)
 			handleStateChanged
-			
 		}
 	}
 	
@@ -376,77 +376,50 @@ public abstract class LatteView {
 		}
 		return false;
 	}
+	
 	def void compareView(LatteView newView, LatteView oldView) {
-//		if (newView.class != oldView.class) {
-//			return;
-//		} else {
-//			if (newView.androidView == null && oldView.androidView == null) {
+		// Compare children 
+		oldView.copyState(newView);
+		if (oldView.normalStyle != null) {
+			oldView.normalStyle.cloneFrom(newView.normalStyle);	
+		} else {
+			oldView.normalStyle = newView.normalStyle;
+		}
 
-				// Both are virtual nodes. Compare the underlying nodes
-
-//				compareView(newView.latteView, oldView.latteView);
-//				newView.x_style = oldView.x_style;
-				
-				// Compare children 
-				oldView.copyState(newView);
-				
-				if (oldView.normalStyle != null) {
-					oldView.normalStyle.cloneFrom(newView.normalStyle, true);	
+		if (oldView.touchedStyle != null) {
+			oldView.touchedStyle.cloneFrom(newView.touchedStyle);	
+		} else {
+			oldView.touchedStyle = newView.touchedStyle;
+		}
+		
+		if (oldView.disabledStyle != null) {
+			oldView.disabledStyle.cloneFrom(newView.disabledStyle);	
+		} else {
+			oldView.disabledStyle = newView.disabledStyle;
+		}
+										
+		 
+		for (var i =0; i < newView.subviews.size; i++) {
+			if (oldView.subviews.size <= i) {
+				newView.subviews.get(i).parentView = oldView;
+				Log.d("Latte", "Added new view "+ newView.subviews.get(i));
+				oldView.subviews.add(newView.subviews.get(i))
+			} else {
+				var oldChildView = oldView.subviews.get(i);
+				var newChildView = newView.subviews.get(i);
+				Log.d("Latte", this +": Comparing child "+ newChildView +" with "+oldChildView);
+				if (this.sameView(oldChildView,newChildView)) {
+					// Accepted ?
+					compareView(newChildView, oldChildView);
 				} else {
-					oldView.normalStyle = newView.normalStyle;
+					// Not accepted, replace with the new child
+					newChildView.parentView = oldView;
+					// RODO: Maybe recycle old view ?
+					oldView.subviews.set(i, newChildView);								
 				}
+			}					
+		}
 
-				if (oldView.touchedStyle != null) {
-					oldView.touchedStyle.cloneFrom(newView.touchedStyle, true);	
-				} else {
-					oldView.touchedStyle = newView.touchedStyle;
-				}
-				
-				if (oldView.disabledStyle != null) {
-					oldView.disabledStyle.cloneFrom(newView.disabledStyle, true);	
-				} else {
-					oldView.disabledStyle = newView.disabledStyle;
-				}
-												
-				 
-				for (var i =0; i < newView.subviews.size; i++) {
-					if (oldView.subviews.size <= i) {
-						newView.subviews.get(i).parentView = oldView;
-						Log.d("Latte", "Added new view "+ newView.subviews.get(i));
-						oldView.subviews.add(newView.subviews.get(i))
-					} else {
-						var oldChildView = oldView.subviews.get(i);
-						var newChildView = newView.subviews.get(i);
-						Log.d("Latte", this +": Comparing child "+ newChildView +" with "+oldChildView);
-						if (this.sameView(oldChildView,newChildView)) {
-							// Accepted ?
-							compareView(newChildView, oldChildView);
-						} else {
-							// Not accepted, replace with the new child
-							newChildView.parentView = oldView;
-							// RODO: Maybe recycle old view ?
-							oldView.subviews.set(i, newChildView);								
-						}
-					}					
-				}
-
-//			} else if ((newView.androidView == null && oldView.androidView != null) || (newView.androidView != null && oldView.androidView == null)) {
-//				
-//				// No match. One is native and the other is virtual
-//				
-//			} else if (newView.androidView == null && oldView.androidView != null) {
-//				
-//				Log.d("Latte", "Re-using " + oldView.androidView);
-//				newView.androidView = oldView.androidView;
-//				
-//				for (var i =0; i < newView.subviews.size; i++) {
-//					var oldChildView = if (oldView.subviews.size > i) oldView.subviews.get(i) else null;
-//					if (oldChildView != null) {
-//						compareView(newView.subviews.get(i), oldChildView);
-//					}
-//				}
-//			}
-//		}
 	}
 	
 	
@@ -498,7 +471,7 @@ public abstract class LatteView {
 			var myContainer = myView as ViewGroup
 			var i = 0;
 			for (LatteView v : subviews) {
-				var childLP = createLayoutParams(v.style.width, v.style.height);
+				var childLP = createLayoutParams(v.normalStyle.width, v.normalStyle.height);
 				var View childView = v.buildAndroidViewTree(a, childLP);
 				if (i >= myContainer.childCount) {
 					myContainer.addView(childView, i, childLP)	
@@ -526,7 +499,7 @@ public abstract class LatteView {
 	def void renderOn(Activity a) {
 		activity = a;		
 		this.processNode(null,null,null, null);
-		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.style.width, this.style.height))
+		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width, this.normalStyle.height))
 		a.setContentView(this.rootAndroidView);		
 	}
 	

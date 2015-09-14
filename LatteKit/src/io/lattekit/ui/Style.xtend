@@ -1,18 +1,12 @@
 package io.lattekit.ui
 
 import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.GradientDrawable.Orientation
-import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
-import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
@@ -21,10 +15,10 @@ import java.util.ArrayList
 import java.util.List
 
 class Style {
-	var GradientDrawable currentDrawable;
 	var boolean isPrivate = false;
 	
 	@StyleProperty public Object backgroundColor = Color.WHITE;
+	@StyleProperty public Object rippleColor;
 	@StyleProperty public Object borderColor = Color.WHITE;
 	@StyleProperty public Object textColor = Color.BLACK;
 	
@@ -63,6 +57,7 @@ class Style {
 		var myStyle = new Style();
 		
 		myStyle.backgroundColor = _backgroundColor.otherwise(parentStyle.backgroundColor)
+		myStyle.rippleColor = _rippleColor.otherwise(parentStyle.rippleColor)
 		myStyle.borderColor = _borderColor.otherwise(parentStyle.borderColor)
 		myStyle.textColor = _textColor.otherwise(parentStyle.textColor)
 		myStyle.backgroundDrawable = _backgroundDrawable.otherwise(parentStyle.backgroundDrawable)
@@ -97,6 +92,7 @@ class Style {
 	def void cloneFrom(Style from) { cloneFrom(from, false) }
 	def void cloneFrom(Style form, boolean excludeComputed) {
 		this.backgroundColor = form._backgroundColor
+		this.rippleColor = form._rippleColor
 		this.borderColor = form._borderColor
 		this.textColor = form._textColor
 		this.backgroundDrawable = form._backgroundDrawable
@@ -150,8 +146,7 @@ class Style {
 						startStyle.setProperty(it, this.getProperty(it));
 					}
 				]
-				startStyle.updateDrawable();
-				startStyle.applyStyle(latteView.androidView)
+				startStyle.applyStyle(latteView)
 				
 			}
 		])
@@ -188,14 +183,16 @@ class Style {
 					myValue = actualSize.y
 					startValue = startActualSize.y
 				}
-				
+				if (myValue == null) {
+					return null;
+				}
 				if (startValue.class == Integer) {
 					anim = ValueAnimator.ofInt(startValue as Integer, myValue as Integer);
 					anim.addUpdateListener([ 
 						if (latteView.currentAnimation == animSet) { 
 							startStyle.setProperty(propName, animatedValue as Integer);
-							startStyle.updateDrawable();
-							startStyle.applyStyle(latteView.androidView)
+							startStyle.applyDrawableStyle(latteView);
+							startStyle.applyStyle(latteView)
 						}
 					]);
 				} else if (startValue.class == Float) {
@@ -203,8 +200,8 @@ class Style {
 					anim.addUpdateListener([
 						if (latteView.currentAnimation == animSet) { 
 							startStyle.setProperty(propName, animatedValue as Float);
-							startStyle.updateDrawable();
-							startStyle.applyStyle(latteView.androidView)
+							startStyle.applyDrawableStyle(latteView);
+							startStyle.applyStyle(latteView)
 						}
 					]);
 				}
@@ -216,84 +213,34 @@ class Style {
 				return anim;
 			].filterNull
 		}
-			
-		animSet.addListener(new AnimatorListenerAdapter() {
-			override onAnimationEnd(Animator animation) {
-				if (latteView.androidView.parent != null) {
-					latteView.androidView.parent.requestLayout
-				}
-//				Log.d("Latte","Animation ended and now I know my x & y");
-//				Log.d("Latte","x = "+x +" y = "+ y);
-			}
-		})
-		// ObjectAnimator.ofObject(androidView,"elevation",new IntEvaluator(),startStyle.elevation.otherwise(0), elevation.otherwise(0))
-//		val androidView = latteView.androidView;
-//		var animator1 = ValueAnimator.ofInt(startStyle.borderWidth, borderWidth)
-//		animator1.addUpdateListener([ 
-//			startStyle.borderWidth = animatedValue as Integer
-//			startStyle.applyStyle(androidView)
-//		]);
-//		animator1.duration = 100;
-//		
-//		var animator2 = ObjectAnimator.ofObject(androidView,"translationY",new IntEvaluator(),startStyle.translationY.otherwise(0), translationY.otherwise(0))
-//		animator2.duration = 100;
-//		
-//		var animator3 = ObjectAnimator.ofObject(androidView,"translationX",new IntEvaluator(),startStyle.translationX.otherwise(0), translationX.otherwise(0))
-//		animator3.duration = 100;
-//		
-//		
-//		var animator4 = ValueAnimator.ofInt(startStyle.cornerRadius, cornerRadius)
-//		animator4.addUpdateListener([ 
-//			startStyle.cornerRadius = animatedValue as Integer
-//			startStyle.updateDrawable();
-//			
-//		]);
-//		animator4.duration = 300;
-//		
-		
-		animSet.playTogether(allAnims)
-		
+		animSet.playTogether(allAnims)		
 		return animSet
 	}
 	
-	def Object otherwise(Object left, Object or) {
-		return if (left != null) left else or;
-	}
 	
-	def Integer otherwise(Integer left, Integer or) {
-		return if (left != null) left else or;
-	}
-	
-	def Float otherwise(Float left, Float or) {
-		return if (left != null) left else or;
-	}
-	
-	def Drawable getDrawable() {
-		if (currentDrawable == null) {
-			currentDrawable = new GradientDrawable(Orientation.BOTTOM_TOP, #[backgroundColor.asColor, backgroundColor.asColor]);
-		}
-		updateDrawable();
-		return currentDrawable;
-	    
+
+    def applyDrawableStyle(LatteView view) {
+    	view.backgroundDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
+		view.backgroundDrawable.setStroke(borderWidth, borderColor.asColor);
+	    view.backgroundDrawable.setCornerRadius(cornerRadius);
+	    view.backgroundDrawable.invalidateSelf
+	    view.updateBackgroundDrawable();
     }
     
-    def updateDrawable() {
-		currentDrawable.setStroke(borderWidth, borderColor.asColor);
-	    currentDrawable.setCornerRadius(cornerRadius);
-    }
-    
-    def getShapeDrawable() {
+    def applyShapeDrawable(LatteView latteView) {
     	var float[] radii = if (cornerRadius != null) { 
     		#[cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius];
     	} else null;
     	var shape = new RoundRectShape(radii, null,null);
-    	return new ShapeDrawable(shape);
+		latteView.shapeDrawable.shape = shape;
+		latteView.shapeDrawable.invalidateSelf
     }
-    def applyStyle(View androidView) {
-    
+    def applyStyle(LatteView latteView) {
+    	var androidView = latteView.androidView;
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			androidView.elevation = elevation;
 		}
+		applyShapeDrawable(latteView);
 		androidView.translationY = translationY
 		androidView.translationX = translationX
 		
@@ -335,6 +282,20 @@ class Style {
     	}
     	androidView.layoutParams = lp;
     }
+    
+    
+	def Object otherwise(Object left, Object or) {
+		return if (left != null) left else or;
+	}
+	
+	def Integer otherwise(Integer left, Integer or) {
+		return if (left != null) left else or;
+	}
+	
+	def Float otherwise(Float left, Float or) {
+		return if (left != null) left else or;
+	}
+
     
 	static def int asColor(Object color) {
 		if (color == null) {
