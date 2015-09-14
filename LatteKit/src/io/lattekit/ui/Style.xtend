@@ -1,10 +1,13 @@
 package io.lattekit.ui
 
+import android.R
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
 import android.view.ViewGroup
@@ -13,6 +16,8 @@ import android.view.ViewGroup.MarginLayoutParams
 import io.lattekit.StyleProperty
 import java.util.ArrayList
 import java.util.List
+
+import static extension io.lattekit.xtend.ArrayLiterals2.*
 
 class Style {
 	var boolean isPrivate = false;
@@ -223,8 +228,28 @@ class Style {
     	view.backgroundDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
 		view.backgroundDrawable.setStroke(borderWidth, borderColor.asColor);
 	    view.backgroundDrawable.setCornerRadius(cornerRadius);
-	    view.backgroundDrawable.invalidateSelf
-	    view.updateBackgroundDrawable();
+//	    Todo: investigate whether we need to call this
+//	    view.backgroundDrawable.invalidateSelf
+//	    view.updateBackgroundDrawable();
+	
+
+		var List<List<Integer>> colorStates = newArrayList
+		val List<Integer> colorList = newArrayList
+
+		colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
+		if (rippleColor != null) {
+			colorList += Style::asColor(rippleColor)	
+		} else {
+			colorList += Style::asColor(backgroundColor)
+		}
+		colorStates += #[R.attr.state_enabled,-R.attr.state_pressed]
+		colorList += backgroundColor.asColor;
+		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			(view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
+		} else {		
+			(view.androidView.background as codetail.graphics.drawables.RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));	
+		}
     }
     
     def applyShapeDrawable(LatteView latteView) {
@@ -233,8 +258,10 @@ class Style {
     	} else null;
     	var shape = new RoundRectShape(radii, null,null);
 		latteView.shapeDrawable.shape = shape;
-		latteView.shapeDrawable.invalidateSelf
+//		Todo: investigate whether we need to call this
+//		latteView.shapeDrawable.invalidateSelf
     }
+    
     def applyStyle(LatteView latteView) {
     	var androidView = latteView.androidView;
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

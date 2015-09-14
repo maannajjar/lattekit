@@ -127,7 +127,7 @@ public abstract class LatteView {
 			if (activeStyle._computedX == null) {
 				watchTree();
 			}
-			updateBackgroundColors();
+			createBackgroundDrawable();
 			updateTextColorDrawable();
 			// Todo: update _style  attributes form active style and use _style
 			activeStyle.applyStyle(this);
@@ -216,47 +216,14 @@ public abstract class LatteView {
 
 	
 
-	def updateBackgroundColors() {
-		var List<List<Integer>> colorStates = newArrayList
-		val List<Integer> colorList = newArrayList
-		if (touchedStyle != null) {
-			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
-			if (resolvedTouchedStyle.rippleColor != null) {
-				colorList += Style::asColor(resolvedTouchedStyle.rippleColor)
-			} else {
-				colorList += Style::asColor(resolvedTouchedStyle.backgroundColor)
-			}
-		} else {
-			
-			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
-			if (normalStyle.rippleColor != null) {
-				colorList += Style::asColor(normalStyle.rippleColor)	
-			} else {
-				colorList += Style::asColor(normalStyle.backgroundColor)
-			}
-		}
-		
-		colorStates += #[R.attr.state_enabled, -R.attr.state_pressed]
-		colorList += Style::asColor(normalStyle.backgroundColor)
-		
-		if (disabledStyle != null) {
-			colorStates += #[ -R.attr.state_enabled ]
-			colorList += Style::asColor(resolvedDisabledStyle.backgroundColor)
-		}
-
+	def createBackgroundDrawable() {
 		if (backgroundDrawable == null) {
 			backgroundDrawable = new GradientDrawable();
 			shapeDrawable = new ShapeDrawable();
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-				androidView.background = new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),this.backgroundDrawable, this.shapeDrawable);
+				androidView.background = new RippleDrawable(new ColorStateList(#[], #[]),this.backgroundDrawable, this.shapeDrawable);
 			} else {			
-				androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),this.backgroundDrawable, this.shapeDrawable);
-			}
-		} else{
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-				(androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
-			} else {		
-				(androidView.background as codetail.graphics.drawables.RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));	
+				androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(#[],#[]),this.backgroundDrawable, this.shapeDrawable);
 			}
 		}
 	}
