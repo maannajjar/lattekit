@@ -2,7 +2,6 @@ package io.lattekit.ui
 
 import android.R
 import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.app.Activity
 import android.content.res.ColorStateList
@@ -10,7 +9,6 @@ import android.graphics.Point
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Build
-import android.os.Handler
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -36,7 +34,7 @@ public abstract class LatteView {
 	/** Base Attributes */ 
 	@Accessors public String id;
 	@State public (LatteView)=>void onTap;
-	@State public (LatteView)=>void onClick;
+	@State public (LatteView, MotionEvent)=>boolean onTouch;
 	
 	@Accessors public Style normalStyle;
 	@Accessors public Style touchedStyle;
@@ -132,36 +130,41 @@ public abstract class LatteView {
 	
 	def void watchTree() {
 		androidView.viewTreeObserver.addOnGlobalLayoutListener([
-			activeStyle.x = androidView.x
-			activeStyle.y = androidView.y
+			activeStyle._computedX = androidView.x
+			activeStyle._computedY = androidView.y
 			androidView.viewTreeObserver.removeOnGlobalLayoutListener(self)
 		])
 	}
-	
 	def void applyAttributes() {
 		if (androidView != null) {
 			androidView.enabled = enabled;
 			updateBackgroundDrawable()			
 			updateTextColorDrawable()
-			if (activeStyle.x == null) {
-				Log.d("LatteX", "Active Style X is null " +activeStyle +" vs "+normalStyle)
+			if (activeStyle._computedX == null) {
 				watchTree();
 			}
 			activeStyle.applyStyle(androidView)
-						
+			androidView.onClickListener = [v |
+				if (onTap != null) {
+					onTap.apply(LatteView.this);
+				}				
+			]
+			
 			androidView.onTouchListener = [ v, e|
 				var AnimatorSet newAnim = null;
 				var oldAnim = currentAnimation
+				var handled = false;
+				if (onTouch != null && e.action == MotionEvent.ACTION_DOWN) {
+					handled = onTouch.apply(this,e);
+				}				
+				
 				if (enabled && touchedStyle != null) { 
 					if (e.action == MotionEvent.ACTION_DOWN) {
 						touched = true;
-						newAnim = resolvedTouchedStyle.createAnimatorFrom(x_style, this);
+						newAnim = resolvedTouchedStyle.createAnimatorFrom(x_style, this, false);
 					} else if (e.action == MotionEvent.ACTION_UP) {
 						touched = false;
-						newAnim = normalStyle.createAnimatorFrom(x_style, this)
-						if (onTap != null) {
-							onTap.apply(LatteView.this);
-						}
+						newAnim = normalStyle.createAnimatorFrom(x_style, this, true)
 					}
 					if (newAnim != null) {
 						currentAnimation = newAnim;
@@ -173,7 +176,10 @@ public abstract class LatteView {
 						}
 					}			
 				}
-				return false;
+				if (onTouch != null && e.action == MotionEvent.ACTION_UP) {
+					handled = onTouch.apply(this,e);
+				}				
+				return handled;
 			]
 			
 		}
@@ -247,7 +253,7 @@ public abstract class LatteView {
 		}
 
 		sld.addState(#[], style.drawable)
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { 
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			androidView.background = new RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, if (resolvedTouchedStyle != null ) resolvedTouchedStyle.shapeDrawable else style.shapeDrawable);
 		} else {			
 			androidView.background =  new codetail.graphics.drawables.RippleDrawable(new ColorStateList(colorStates.unwrap, colorList),sld, if (resolvedTouchedStyle != null ) resolvedTouchedStyle.shapeDrawable else style.shapeDrawable);
@@ -352,6 +358,7 @@ public abstract class LatteView {
 		if (!isRendering) {
 			Log.d("Latte", this+" : State changed "+ stateName)
 			handleStateChanged
+			
 		}
 	}
 	
@@ -382,14 +389,25 @@ public abstract class LatteView {
 				
 				// Compare children 
 				oldView.copyState(newView);
+				
 				if (oldView.normalStyle != null) {
 					oldView.normalStyle.cloneFrom(newView.normalStyle, true);	
 				} else {
 					oldView.normalStyle = newView.normalStyle;
 				}
+
+				if (oldView.touchedStyle != null) {
+					oldView.touchedStyle.cloneFrom(newView.touchedStyle, true);	
+				} else {
+					oldView.touchedStyle = newView.touchedStyle;
+				}
 				
-//				oldView.touchedStyle.cloneFrom(newView.touchedStyle);
-//				oldView.disabledStyle.cloneFrom(newView.disabledStyle);
+				if (oldView.disabledStyle != null) {
+					oldView.disabledStyle.cloneFrom(newView.disabledStyle, true);	
+				} else {
+					oldView.disabledStyle = newView.disabledStyle;
+				}
+												
 				 
 				for (var i =0; i < newView.subviews.size; i++) {
 					if (oldView.subviews.size <= i) {
@@ -457,7 +475,6 @@ public abstract class LatteView {
 		return this.androidView
 	}
 	
-
 	def View buildAndroidViewTree(Activity a, ViewGroup.LayoutParams lp) {
 		// Log.d("Latte", this.class.simpleName +" Building my tree (subview size = "+ children.size +" ) ");
 		// First build my view
@@ -470,28 +487,23 @@ public abstract class LatteView {
 			return this.subviews.get(0).buildAndroidViewTree(a, lp);
 		}
 		this.androidView = myView;
-		Log.d("Latte", this+" : My android view is "+this.androidView)
 		if (this.androidView.id == -1 && this.id != null) {
 			this.androidView.id = this.id.hashCode
 		}
-		if (androidView != null) {
-			androidView.layoutParams = lp;
+		if (this.androidView.layoutParams == null) {
+			this.androidView.layoutParams = lp;
 		}
-		this.applyAttributes();
 
 		if (subviews.size > 0) {
 			var myContainer = myView as ViewGroup
-
-			myContainer.removeAllViews
 			var i = 0;
 			for (LatteView v : subviews) {
-
-				var childLP = createLayoutParams(v.style.width, v.style.height);				
+				var childLP = createLayoutParams(v.style.width, v.style.height);
 				var View childView = v.buildAndroidViewTree(a, childLP);
-				if (i >= myContainer.childCount) { 
+				if (i >= myContainer.childCount) {
 					myContainer.addView(childView, i, childLP)	
 				} else if (myContainer.getChildAt(i) == childView) {
-					childView.layoutParams = childLP;
+//					childView.layoutParams = childLP;
 				} else {
 					childView.layoutParams = childLP;
 					myContainer.addView(childView,i, childLP);
@@ -501,7 +513,11 @@ public abstract class LatteView {
 			for (var z = i; z < myContainer.childCount; z++) {
 				myContainer.removeViewAt(z);
 			}
+
+			this.applyAttributes();
 			onChildrenAdded();
+		} else {
+			this.applyAttributes();
 		}
 		
 		return myView;

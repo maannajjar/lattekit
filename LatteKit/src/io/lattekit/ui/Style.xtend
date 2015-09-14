@@ -44,6 +44,8 @@ class Style {
 	@StyleProperty public Integer translationX = 0;
 	@StyleProperty public Float x;
 	@StyleProperty public Float y;
+	public Float _computedX;
+	public Float _computedY;
 	
 	@StyleProperty public Integer padding = 0;
 	@StyleProperty public Integer paddingTop;
@@ -129,8 +131,7 @@ class Style {
 		return myStyle
 	}
 	
-	
-	def createAnimatorFrom(Style startStyle,LatteView latteView) {
+	def createAnimatorFrom(Style startStyle,LatteView latteView, boolean revertToNormal) {
 		val animSet = new AnimatorSet();
 		val List<String> transitionProperties = if (transitions != null) transitions.map[it.get(0) as String] else #[];
 		
@@ -141,7 +142,11 @@ class Style {
 		immediateAnim.addUpdateListener([
 			if (animatedValue == 0) {
 				_properties.filter[!transitionProperties.contains(it)].forEach[
-					if ( this.getProperty(it) != null) {
+					if (it == "x" && _computedX != null && revertToNormal && startStyle.x != null) {
+						startStyle.setProperty(it, _computedX)
+					} else if (it == "y" && _computedY != null && revertToNormal  && startStyle.y != null) {
+						startStyle.setProperty(it, _computedY)
+					}  else if ( this.getProperty(it) != null) {
 						startStyle.setProperty(it, this.getProperty(it));
 					}
 				]
@@ -152,14 +157,6 @@ class Style {
 		])
 		immediateAnim.setDuration(1);
 
-		if (startStyle.x == null) {
-			startStyle.x = latteView.androidView.x
-		}
-		if (startStyle.y == null) {
-			startStyle.y = latteView.androidView.y
-		}
-				
-		
 		var List<Animator> allAnims = newArrayList();
 		allAnims += immediateAnim;
 		if (transitions != null) {
@@ -167,10 +164,21 @@ class Style {
 				val propName = it.get(0) as String;
 				val duration = it.get(1) as Integer;
 				val delay = it.get(3) as Integer;
-				
 
-				var startValue = startStyle.getProperty(propName);
-				var myValue = this.getProperty(propName);
+				var startValue = if (propName == "x") {
+					latteView.androidView.x
+				} else if (propName == "y") {
+					 latteView.androidView.y
+				} else {
+					startStyle.getProperty(propName);
+				}
+				var myValue = if (propName == "x" && _computedX != null && revertToNormal) {
+					_computedX;
+				} else if (propName == "y" && _computedY != null && revertToNormal) {
+					 _computedY;
+				} else {
+					this.getProperty(propName);
+				}
 				var ValueAnimator anim = null;
 				if (propName == "width") {
 					myValue = actualSize.x;
@@ -192,7 +200,6 @@ class Style {
 					]);
 				} else if (startValue.class == Float) {
 					anim = ValueAnimator.ofFloat(startValue as Float, myValue as Float);
-					
 					anim.addUpdateListener([
 						if (latteView.currentAnimation == animSet) { 
 							startStyle.setProperty(propName, animatedValue as Float);
@@ -282,9 +289,8 @@ class Style {
     	var shape = new RoundRectShape(radii, null,null);
     	return new ShapeDrawable(shape);
     }
-        
     def applyStyle(View androidView) {
-		
+    
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			androidView.elevation = elevation;
 		}
@@ -304,16 +310,8 @@ class Style {
 		
 		// Layout Params
     	var LayoutParams lp = androidView.layoutParams
-//    	if (width < 0 || height < 0) {
-//    		var widthMeasureSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY);
-//			var heightMeasureSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY);
-//			androidView.measure(widthMeasureSpec, heightMeasureSpec);
-//    		lp.width = androidView.measuredWidth
-//    		lp.width = androidView.measuredHeight
-//    	} else {
 		lp.width = width
 		lp.height = height
-//    	}
     	if (lp instanceof MarginLayoutParams) {
 	    	if (margin != null) {
 	    		lp.leftMargin = margin
@@ -336,8 +334,6 @@ class Style {
 	    	}
     	}
     	androidView.layoutParams = lp;
-    	
-    	return lp;
     }
     
 	static def int asColor(Object color) {
