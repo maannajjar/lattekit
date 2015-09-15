@@ -2,7 +2,6 @@ package io.lattekit.ui
 
 import android.R
 import android.animation.Animator
-import android.animation.AnimatorSet
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.graphics.Point
@@ -14,6 +13,8 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.MeasureSpec
+import android.view.View.OnClickListener
+import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.widget.FrameLayout
@@ -23,9 +24,7 @@ import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
-import static extension io.lattekit.xtend.ArrayLiterals2.*
-import android.view.View.OnTouchListener
-import android.view.View.OnClickListener
+import static io.lattekit.xtend.ArrayLiterals2.*
 
 public abstract class LatteView implements OnTouchListener, OnClickListener {
 	
@@ -36,31 +35,28 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	 
 	/** Base Attributes */ 
 	@Accessors public String id;
-	@State public (LatteView)=>void onTap;
-	@State public (LatteView, MotionEvent)=>boolean onTouch;
-	
-	@Accessors public Style normalStyle = new Style();
-	@Accessors public Style touchedStyle = new Style();
-	@Accessors public Style disabledStyle = new Style();
-	@Accessors Style _style;
+	@Accessors public (LatteView)=>void onTap;
+	@Accessors public (LatteView, MotionEvent)=>boolean onTouch;
 		
-	Style _resolvedTouchedStyle;
-	Style _resolvedDisabledStyle;
 	public var Animator currentAnimation;
-	
+	public var Style pendingStyle;
+
+	@Accessors public Style normalStyle = new Style();
+	@Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
+	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];	
 	@State public boolean enabled = true;
-	@Accessors public boolean touched = false;
-	
+	@State public boolean touched = false;
+	Style _style;
+		
 	// Generic Attributes
 	public Map<String,Object> attributes = newHashMap();
 	
 	@Accessors public LatteView parentView;
 	// This contains current active children
+	@Accessors public List<LatteView> _children = newArrayList;
 	@Accessors public List<LatteView> children = newArrayList;
 	@Accessors private List<LatteView> subviews = newArrayList;
 	
-	// This contains children list being built while parsing the tree
-	private List<LatteView> _children = newArrayList;
 	
 	public Activity activity;
 	@Accessors View androidView;
@@ -77,8 +73,6 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 			_style = new Style();
 			_style.cloneFrom(normalStyle);
 		}		
-		_resolvedTouchedStyle = null;
-		_resolvedDisabledStyle = null;
 		onStateChanged("style");	
 	}
 	def getStyle() {
@@ -95,23 +89,11 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		onStateChanged("disabledStyle");	
 	}
 	
-	def getResolvedTouchedStyle() {
-		if (touchedStyle == null) return normalStyle;
-		if (_resolvedTouchedStyle == null) _resolvedTouchedStyle = touchedStyle.inheritsFrom(normalStyle);
-		return _resolvedTouchedStyle
-	}
-	
-	def getResolvedDisabledStyle() {
-		if (disabledStyle == null) return normalStyle;
-		if (_resolvedDisabledStyle == null) _resolvedDisabledStyle = disabledStyle.inheritsFrom(normalStyle);
-		return _resolvedDisabledStyle
-	}
-	
 	def getActiveStyle() {
 		if (!enabled && disabledStyle != null) {
-			return resolvedDisabledStyle
+			return disabledStyle
 		} else if (touched && touchedStyle != null) {
-			return resolvedTouchedStyle;
+			return touchedStyle;
 		}
 		return if (normalStyle == null) new Style() else normalStyle;
 	}
@@ -138,7 +120,19 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	def void applyAttributes() {
 		if (androidView != null) {
 			androidView.enabled = enabled;
-			activeStyle.applyStyle(this);
+			
+			if (pendingStyle == null && activeStyle == normalStyle) {
+				pendingStyle = normalStyle;
+				activeStyle.applyStyle(this);
+			} else if (pendingStyle != activeStyle) {
+				pendingStyle = activeStyle;
+				var oldAnim = currentAnimation; 
+				currentAnimation = pendingStyle.createAnimatorFrom(_style, this, activeStyle == normalStyle)
+				if (oldAnim != null) {
+					oldAnim.cancel();
+				}
+				currentAnimation.start;
+			}
 		}
 	}
 	
@@ -149,30 +143,16 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	override onTouch(View v, MotionEvent e) {	
-		var AnimatorSet newAnim = null;
-		var oldAnim = currentAnimation
-		var handled = false;
+		var handled = false;		
 		if (onTouch != null && e.action == MotionEvent.ACTION_DOWN) {
 			handled = onTouch.apply(this,e);
-		}				
-		
-		if (enabled && touchedStyle != null) { 
+		}
+		if (enabled) { 
 			if (e.action == MotionEvent.ACTION_DOWN) {
-				touched = true;
-				newAnim = resolvedTouchedStyle.createAnimatorFrom(_style, this, false);
+				touched = true;				
 			} else if (e.action == MotionEvent.ACTION_UP) {
 				touched = false;
-				newAnim = normalStyle.createAnimatorFrom(_style, this, true)
 			}
-			if (newAnim != null) {
-				currentAnimation = newAnim;
-				if (oldAnim != null && oldAnim.isRunning) {
-					oldAnim.cancel
-					newAnim.start
-				} else {
-					newAnim.start()
-				}
-			}			
 		}
 		if (onTouch != null && e.action == MotionEvent.ACTION_UP) {
 			handled = onTouch.apply(this,e);
@@ -219,8 +199,6 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		return new Point(androidView.measuredWidth,androidView.measuredHeight);
 	}
 
-	
-
 	def createBackgroundDrawable() {
 		if (backgroundDrawable == null) {
 			backgroundDrawable = new GradientDrawable();
@@ -232,23 +210,20 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 			}
 		}
 	}
-	
-
-
 	def updateTextColorDrawable() {
 		
 		var List<List<Integer>> colorStates = newArrayList
 		var List<Integer> colorList = newArrayList
 		if (touchedStyle != null) {
 			colorStates += #[ R.attr.state_enabled, R.attr.state_pressed]
-			colorList += Style::asColor(resolvedTouchedStyle.textColor)
+			colorList += Style::asColor(touchedStyle.textColor)
 		}
 		colorStates += #[R.attr.state_enabled, -R.attr.state_pressed ]
 		colorList += Style::asColor(style.textColor)
 		
 		if (disabledStyle != null) {
 			colorStates += #[ -R.attr.state_enabled ]
-			colorList += Style::asColor(resolvedDisabledStyle.textColor)
+			colorList += Style::asColor(disabledStyle.textColor)
 		}
 		if (androidView instanceof TextView) {
 			val int[][] colorStatesArray = intArray(colorStates.size);
@@ -264,32 +239,35 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	def View createAndroidView(Activity a) { null; }
 	def void onChildrenAdded() {}
 		
+	def addChild(int index, LatteView parent) {
+		parent._children.add(this.children.get(index));
+		this.children.get(index).parentView = parent;
+	}
 	def <T extends LatteView> void processNode(LatteView parent, String id, (T)=>void attrs, (T)=>void children) {
 		isRendering = true;
 		parentView = parent as LatteView;
-		if (parent != null && parent._children != null) {
-			parent.children.add(this);				
+		if (parent != null) {
+			parent._children.add(this);				
 		}	
 
-		_children = newArrayList();
 		if (attrs != null) {
 			attributesProc = attrs as (LatteView)=>void;
 			attrs.apply(this as T);
 		}
+		_children = newArrayList();
 		if (children != null) {
 			layoutProc = children as (LatteView)=>void;
 			children.apply(this as T);
 		}
-
-		
+		Log.d("Latte", this +" : About to run render, my children are "+ _children.size() )
+		this.children = _children.clone
+		Log.d("Latte", this +" : Cloned children "+ this.children.size() )
 		var latteView = render();
 		if (latteView != null) {
 			var oldLatteView = if (subviews.length > 0) subviews.get(0) else null;
 			if (oldLatteView != null) {
 				// Re-use old instance
 				if (oldLatteView.class == latteView.class) {
-					Log.d("Latte", this +" Re-using same subview")
-					Log.d("Latte", this +" Compare "+ latteView +" with "+ oldLatteView);
 					compareView(latteView, oldLatteView);	
 				} else {
 					subviews.set(0, latteView);
@@ -301,8 +279,10 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		} else {
 			// This view doesn't have a render. All children are considered subviews
 			var newSubviews = newArrayList()
+			Log.d("Latte", this +" My children are " +this.children.size);
 			for (var i =0 ; i < this.children.size; i++) {
 				var newChild = this.children.get(i);
+				Log.d("Latte", this +" Child " +i + " :" + newChild);
 				var oldChild = if (i < this.subviews.size) this.subviews.get(i) else null;
 				if (oldChild != null) {
 					if (sameView(newChild, oldChild)) {
@@ -334,14 +314,11 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		}
 	}
 	
-	
-	
 	def void handleStateChanged() {
 		this.processNode(null, null, null, layoutProc);
 		buildAndroidViewTree(activity,rootAndroidView.layoutParams);	
 	}
-	
-	
+		
 	def sameView(LatteView leftView, LatteView rightView) {
 		if (leftView.class == rightView.class) {
 			return true;
@@ -352,24 +329,9 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	def void compareView(LatteView newView, LatteView oldView) {
 		// Compare children 
 		oldView.copyState(newView);
-		if (oldView.normalStyle != null) {
-			oldView.normalStyle.cloneFrom(newView.normalStyle);	
-		} else {
-			oldView.normalStyle = newView.normalStyle;
-		}
-
-		if (oldView.touchedStyle != null) {
-			oldView.touchedStyle.cloneFrom(newView.touchedStyle);	
-		} else {
-			oldView.touchedStyle = newView.touchedStyle;
-		}
-		
-		if (oldView.disabledStyle != null) {
-			oldView.disabledStyle.cloneFrom(newView.disabledStyle);	
-		} else {
-			oldView.disabledStyle = newView.disabledStyle;
-		}
-										
+		oldView.normalStyle.cloneFrom(newView.normalStyle);
+		oldView.touchedStyle.cloneFrom(newView.touchedStyle);
+		oldView.disabledStyle.cloneFrom(newView.disabledStyle);
 		 
 		for (var i =0; i < newView.subviews.size; i++) {
 			if (oldView.subviews.size <= i) {
@@ -419,10 +381,8 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def View buildAndroidViewTree(Activity a, ViewGroup.LayoutParams lp) {
-		// Log.d("Latte", this.class.simpleName +" Building my tree (subview size = "+ children.size +" ) ");
 		// First build my view
 		this.activity = a;
-		var isNewView = false;
 		var myView = if (this.androidView == null) {
 			this.androidView = createAndroidView(a); 
 			if (this.androidView != null) {

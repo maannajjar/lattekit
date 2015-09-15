@@ -10,18 +10,20 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
+import android.util.Log
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
 import io.lattekit.StyleProperty
 import java.util.ArrayList
 import java.util.List
+import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
 
 class Style {
-	var boolean isPrivate = false;
 	
+	@Accessors Style parentStyle;
 	@StyleProperty public Object backgroundColor = Color.WHITE;
 	@StyleProperty public Object rippleColor;
 	@StyleProperty public Object borderColor = Color.WHITE;
@@ -125,7 +127,6 @@ class Style {
 	override Style clone() {
 		var myStyle = new Style()	
 		myStyle.cloneFrom(this);
-		myStyle.isPrivate = true;	
 		return myStyle
 	}
 	
@@ -175,6 +176,9 @@ class Style {
 					 _computedY;
 				} else {
 					this.getProperty(propName);
+				}
+				if (propName == "y") {
+					Log.d("Latte", "Animating from "+ startValue + " to "+myValue +" (? "+ revertToNormal+" * " + latteView.androidView.y+")");
 				}
 				var ValueAnimator anim = null;
 				if (propName == "width") {
