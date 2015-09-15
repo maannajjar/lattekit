@@ -94,8 +94,7 @@ class Style {
 		return myStyle
 	}
 	
-	def void cloneFrom(Style from) { cloneFrom(from, false) }
-	def void cloneFrom(Style form, boolean excludeComputed) {
+	def void cloneFrom(Style form) {
 		this.backgroundColor = form._backgroundColor
 		this.rippleColor = form._rippleColor
 		this.borderColor = form._borderColor
@@ -119,10 +118,8 @@ class Style {
 		this.width = form._width
 		this.height = form._height
 		this.transitions = form._transitions
-		if (!excludeComputed) {
-			this.x = form._x
-			this.y = form._y
-		}
+		this.x = form._x
+		this.y = form._y
 	}
 	
 	override Style clone() {
@@ -196,7 +193,6 @@ class Style {
 					anim.addUpdateListener([ 
 						if (latteView.currentAnimation == animSet) { 
 							startStyle.setProperty(propName, animatedValue as Integer);
-							startStyle.applyDrawableStyle(latteView);
 							startStyle.applyStyle(latteView)
 						}
 					]);
@@ -205,7 +201,6 @@ class Style {
 					anim.addUpdateListener([
 						if (latteView.currentAnimation == animSet) { 
 							startStyle.setProperty(propName, animatedValue as Float);
-							startStyle.applyDrawableStyle(latteView);
 							startStyle.applyStyle(latteView)
 						}
 					]);
@@ -252,7 +247,7 @@ class Style {
 		}
     }
     
-    def applyShapeDrawable(LatteView latteView) {
+    def applyDrawableShape(LatteView latteView) {
     	var float[] radii = if (cornerRadius != null) { 
     		#[cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius];
     	} else null;
@@ -267,7 +262,8 @@ class Style {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			androidView.elevation = elevation;
 		}
-		applyShapeDrawable(latteView);
+		applyDrawableStyle(latteView);
+		applyDrawableShape(latteView);
 		androidView.translationY = translationY
 		androidView.translationX = translationX
 		

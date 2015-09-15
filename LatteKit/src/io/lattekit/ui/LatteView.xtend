@@ -24,8 +24,10 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
+import android.view.View.OnTouchListener
+import android.view.View.OnClickListener
 
-public abstract class LatteView {
+public abstract class LatteView implements OnTouchListener, OnClickListener {
 	
 	public final int MATCH_PARENT = LayoutParams.MATCH_PARENT;
 	public final int WRAP_CONTENT = LayoutParams.WRAP_CONTENT;
@@ -116,63 +118,66 @@ public abstract class LatteView {
 	
 	def void watchTree() {
 		androidView.viewTreeObserver.addOnGlobalLayoutListener([
-			activeStyle._computedX = androidView.x
-			activeStyle._computedY = androidView.y
+			normalStyle._computedX = androidView.x
+			normalStyle._computedY = androidView.y
 			androidView.viewTreeObserver.removeOnGlobalLayoutListener(self)
 		])
 	}
+	
+	def void initAndroidView() {
+		createBackgroundDrawable();
+		updateTextColorDrawable();
+		androidView.onClickListener = this;
+		androidView.onTouchListener = this;
+		
+		if (normalStyle._computedX == null) {
+			watchTree();
+		}
+	}
+	
 	def void applyAttributes() {
 		if (androidView != null) {
 			androidView.enabled = enabled;
-			if (activeStyle._computedX == null) {
-				watchTree();
-			}
-			createBackgroundDrawable();
-			updateTextColorDrawable();
-			// Todo: update _style  attributes form active style and use _style
 			activeStyle.applyStyle(this);
-			activeStyle.applyDrawableStyle(this);
-			activeStyle.applyShapeDrawable(this);
-			
-			androidView.onClickListener = [v |
-				if (onTap != null) {
-					onTap.apply(LatteView.this);
-				}				
-			]
-			
-			androidView.onTouchListener = [ v, e|
-				var AnimatorSet newAnim = null;
-				var oldAnim = currentAnimation
-				var handled = false;
-				if (onTouch != null && e.action == MotionEvent.ACTION_DOWN) {
-					handled = onTouch.apply(this,e);
-				}				
-				
-				if (enabled && touchedStyle != null) { 
-					if (e.action == MotionEvent.ACTION_DOWN) {
-						touched = true;
-						newAnim = resolvedTouchedStyle.createAnimatorFrom(_style, this, false);
-					} else if (e.action == MotionEvent.ACTION_UP) {
-						touched = false;
-						newAnim = normalStyle.createAnimatorFrom(_style, this, true)
-					}
-					if (newAnim != null) {
-						currentAnimation = newAnim;
-						if (oldAnim != null && oldAnim.isRunning) {
-							oldAnim.cancel
-							newAnim.start
-						} else {
-							newAnim.start()
-						}
-					}			
-				}
-				if (onTouch != null && e.action == MotionEvent.ACTION_UP) {
-					handled = onTouch.apply(this,e);
-				}				
-				return handled;
-			]
-			
 		}
+	}
+	
+	override onClick(View v) {
+		if (onTap != null) {
+			onTap.apply(LatteView.this);
+		}				
+	}
+	
+	override onTouch(View v, MotionEvent e) {	
+		var AnimatorSet newAnim = null;
+		var oldAnim = currentAnimation
+		var handled = false;
+		if (onTouch != null && e.action == MotionEvent.ACTION_DOWN) {
+			handled = onTouch.apply(this,e);
+		}				
+		
+		if (enabled && touchedStyle != null) { 
+			if (e.action == MotionEvent.ACTION_DOWN) {
+				touched = true;
+				newAnim = resolvedTouchedStyle.createAnimatorFrom(_style, this, false);
+			} else if (e.action == MotionEvent.ACTION_UP) {
+				touched = false;
+				newAnim = normalStyle.createAnimatorFrom(_style, this, true)
+			}
+			if (newAnim != null) {
+				currentAnimation = newAnim;
+				if (oldAnim != null && oldAnim.isRunning) {
+					oldAnim.cancel
+					newAnim.start
+				} else {
+					newAnim.start()
+				}
+			}			
+		}
+		if (onTouch != null && e.action == MotionEvent.ACTION_UP) {
+			handled = onTouch.apply(this,e);
+		}				
+		return handled;
 	}
 	
 	
@@ -390,8 +395,6 @@ public abstract class LatteView {
 	}
 	
 	
-	
-
 	def LayoutParams createLayoutParams(int width, int height) {
 		return null;
 	}
@@ -419,8 +422,13 @@ public abstract class LatteView {
 		// Log.d("Latte", this.class.simpleName +" Building my tree (subview size = "+ children.size +" ) ");
 		// First build my view
 		this.activity = a;
-		var myView = if (this.androidView == null) { 
-			createAndroidView(a); 
+		var isNewView = false;
+		var myView = if (this.androidView == null) {
+			this.androidView = createAndroidView(a); 
+			if (this.androidView != null) {
+				initAndroidView();
+			}
+			this.androidView
 		} else this.androidView;
 		if (myView == null) {
 			// If we don't have native android view, then we are virtual node
@@ -443,7 +451,6 @@ public abstract class LatteView {
 				if (i >= myContainer.childCount) {
 					myContainer.addView(childView, i, childLP)	
 				} else if (myContainer.getChildAt(i) == childView) {
-//					childView.layoutParams = childLP;
 				} else {
 					childView.layoutParams = childLP;
 					myContainer.addView(childView,i, childLP);
@@ -453,7 +460,6 @@ public abstract class LatteView {
 			for (var z = i; z < myContainer.childCount; z++) {
 				myContainer.removeViewAt(z);
 			}
-
 			this.applyAttributes();
 			onChildrenAdded();
 		} else {
