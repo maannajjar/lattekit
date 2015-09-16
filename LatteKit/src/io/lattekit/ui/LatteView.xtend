@@ -37,26 +37,26 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	@Accessors public String id;
 	@Accessors public (LatteView)=>void onTap;
 	@Accessors public (LatteView, MotionEvent)=>boolean onTouch;
-		
+	
 	public var Animator currentAnimation;
 	public var Style pendingStyle;
 
 	@Accessors public Style normalStyle = new Style();
 	@Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
-	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];	
+	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];
+	Style _style = new Style();	
 	@State public boolean enabled = true;
 	@State public boolean touched = false;
-	Style _style;
+	
 		
 	// Generic Attributes
 	public Map<String,Object> attributes = newHashMap();
 	
 	@Accessors public LatteView parentView;
 	// This contains current active children
-	@Accessors public List<LatteView> _children = newArrayList;
 	@Accessors public List<LatteView> children = newArrayList;
 	@Accessors private List<LatteView> subviews = newArrayList;
-	
+	private Map<String,Object> newProperties = newHashMap();
 	
 	public Activity activity;
 	@Accessors View androidView;
@@ -96,6 +96,12 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 			return touchedStyle;
 		}
 		return if (normalStyle == null) new Style() else normalStyle;
+	}
+	def addNewProperty(String propName, Object value) {
+		newProperties.put(propName,value);
+	}
+	def hasProperty(String propName) {
+		return newProperties.containsKey(propName);
 	}
 	
 	def void watchTree() {
@@ -239,65 +245,48 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	def View createAndroidView(Activity a) { null; }
 	def void onChildrenAdded() {}
 		
-	def addChild(int index, LatteView parent) {
-		parent._children.add(this.children.get(index));
-		this.children.get(index).parentView = parent;
+//	def addChild(int index, LatteView parent) {
+//		parent._children.add(this.children.get(index));
+//		this.children.get(index).parentView = parent;
+//	}
+//	
+	def addChild(int index, LatteView newChild) {
+		// TODO: 
+		// Compare child with existing subview
+		// If accepted then just call render in existing subview after transferring properties
+		// If not, then add new subview
+		if (index < subviews.size) {
+			if (sameView(subviews.get(index),newChild)) {
+				subviews.get(index).copyStateProps(newChild)
+				subviews.get(index).render();
+			} else {
+				subviews.set(index,newChild)
+				newChild.render();
+			}
+		} else {
+			subviews.add(index,newChild);
+			newChild.render();
+		}
 	}
+	
+	
+	
+	
 	def <T extends LatteView> void processNode(LatteView parent, String id, (T)=>void attrs, (T)=>void children) {
 		isRendering = true;
 		parentView = parent as LatteView;
 		if (parent != null) {
-			parent._children.add(this);				
-		}	
+			parent.children.add(this);
+		}
 
 		if (attrs != null) {
 			attributesProc = attrs as (LatteView)=>void;
 			attrs.apply(this as T);
 		}
-		_children = newArrayList();
 		if (children != null) {
 			layoutProc = children as (LatteView)=>void;
 			children.apply(this as T);
 		}
-		Log.d("Latte", this +" : About to run render, my children are "+ _children.size() )
-		this.children = _children.clone
-		Log.d("Latte", this +" : Cloned children "+ this.children.size() )
-		var latteView = render();
-		if (latteView != null) {
-			var oldLatteView = if (subviews.length > 0) subviews.get(0) else null;
-			if (oldLatteView != null) {
-				// Re-use old instance
-				if (oldLatteView.class == latteView.class) {
-					compareView(latteView, oldLatteView);	
-				} else {
-					subviews.set(0, latteView);
-				}
-			} else {
-				subviews = newArrayList();
-				subviews.add(latteView);
-			}
-		} else {
-			// This view doesn't have a render. All children are considered subviews
-			var newSubviews = newArrayList()
-			Log.d("Latte", this +" My children are " +this.children.size);
-			for (var i =0 ; i < this.children.size; i++) {
-				var newChild = this.children.get(i);
-				Log.d("Latte", this +" Child " +i + " :" + newChild);
-				var oldChild = if (i < this.subviews.size) this.subviews.get(i) else null;
-				if (oldChild != null) {
-					if (sameView(newChild, oldChild)) {
-						newSubviews.add(oldChild);
-						compareView(newChild,oldChild)	
-					} else {
-						newSubviews.add(newChild);
-					}
-				} else {
-					newSubviews.add(newChild);
-				}
-			}	
-			subviews = newSubviews;
-		}
-		
 		isRendering = false;
 	}
 
@@ -307,15 +296,15 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		onStateChanged(key);
 	}
 
-	def onStateChanged(String stateName) {
+	def onStateChanged(String... states) {
 		if (!isRendering) {
-			Log.d("Latte", this+" : State changed "+ stateName)
+			Log.d("Latte", this+" : State changed "+ states.join(","))
 			handleStateChanged
 		}
 	}
 	
 	def void handleStateChanged() {
-		this.processNode(null, null, null, layoutProc);
+		this.render();
 		buildAndroidViewTree(activity,rootAndroidView.layoutParams);	
 	}
 		
@@ -328,11 +317,18 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	
 	def void compareView(LatteView newView, LatteView oldView) {
 		// Compare children 
-		oldView.copyState(newView);
+		// TODO: Should only copy properties
+		 
+
 		oldView.normalStyle.cloneFrom(newView.normalStyle);
 		oldView.touchedStyle.cloneFrom(newView.touchedStyle);
 		oldView.disabledStyle.cloneFrom(newView.disabledStyle);
-		 
+		if (oldView.copyStateProps(newView)) {
+			Log.d("Latte", this +" copied properties "+newView.newProperties.keySet.join(","));
+//			oldView.onStateChanged(newView.newProperties.keySet.join(","));			
+		} else {
+			Log.d("Latte", this +" Nothing was copied");
+		}
 		for (var i =0; i < newView.subviews.size; i++) {
 			if (oldView.subviews.size <= i) {
 				newView.subviews.get(i).parentView = oldView;
@@ -344,7 +340,19 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 				Log.d("Latte", this +": Comparing child "+ newChildView +" with "+oldChildView);
 				if (this.sameView(oldChildView,newChildView)) {
 					// Accepted ?
+					if (oldChildView instanceof Button && newChildView instanceof Button) {
+						Log.d("Latte", oldChildView +" ((VS)) "+ newChildView); 							
+						
+						Log.d("Latte", (oldChildView as Button).label +" ((VS)) "+ (newChildView as Button).label); 							
+//						Log.d("Latte", (oldChildView.androidView as android.widget.Button).text +" VS "+ (newChildView.androidView as android.widget.Button).text); 	
+					}
 					compareView(newChildView, oldChildView);
+					// Accepted ?
+					if (oldChildView instanceof Button && newChildView instanceof Button) {
+						Log.d("Latte", "AFTER :" +oldChildView +" ((VS)) "+ newChildView); 													
+						Log.d("Latte",  "AFTER :" +(oldChildView as Button).label +" ((VS)) "+ (newChildView as Button).label); 							
+ 	
+					}					
 				} else {
 					// Not accepted, replace with the new child
 					newChildView.parentView = oldView;
@@ -361,7 +369,18 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		return null;
 	}
 	
-	def LatteView render() { null; }
+	def void render() {
+		this.children = newArrayList();
+		if (layoutProc != null) {
+			layoutProc.apply(this);
+		}		
+	 	// This view doesn't have a render. All children are considered subviews
+	 	Log.d("Latte", "in "+this+" children are "+ this.children.size)
+		for (var i =0 ; i < this.children.size; i++) {
+			var newChild = this.children.get(i);
+			this.addChild(i,newChild);
+		}	
+	}
 	
 	def LatteView getNonVirtualParent() {
 		if (parentView == null) {
@@ -430,8 +449,9 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def void renderOn(Activity a) {
-		activity = a;		
+		activity = a;
 		this.processNode(null,null,null, null);
+		this.render();
 		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width, this.normalStyle.height))
 		a.setContentView(this.rootAndroidView);		
 	}

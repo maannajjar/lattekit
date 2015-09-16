@@ -30,28 +30,34 @@ class StateProcessor extends AbstractFieldProcessor {
 			annotatedField.declaringType.addMethod("getStateFields") [
 				returnType = List.newTypeReference(String.newTypeReference());
 				body = '''
-					List<String> states = «if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.LatteView") "super.getStateFields()" else "new ArrayList<String>()"»;
+					List<String> states = «if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.LatteView") "super.getStateFields()" else "new java.util.ArrayList<String>()"»;
 					«propertyNames.map['''states.add("«if (it.startsWith("_")) it.substring(1) else it»")'''].join(";\n")»;
 					return states;
 				'''			
 			]
 			
-			annotatedField.declaringType.addMethod("copyState") [
+			annotatedField.declaringType.addMethod("copyStateProps") [
+				returnType = Boolean.newTypeReference().primitiveIfWrapper
 				addParameter("other", findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference())
-				
 				val allSetters = new StringBuffer();
 				
 				properties.forEach[
 					val name = if (it.simpleName.startsWith("_")) it.simpleName.substring(1) else it.simpleName;
-					allSetters.append('''this._«name» = otherView._«name»;
+					allSetters.append('''
+						if (otherView.hasProperty("«name»")) {
+							this._«name» = otherView._«name»;
+							didCopy = true;
+						}
 					''');
 				];
 				body = '''
+					boolean didCopy = false;
 					«annotatedField.declaringType.newTypeReference().simpleName» otherView = («annotatedField.declaringType.newTypeReference().simpleName»)other;
-					«if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.LatteView") "super.copyState(otherView)"»;
+					«if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.LatteView") "didCopy = super.copyStateProps(otherView)"»;
 					this.attributes = otherView.attributes;
 					
 					«allSetters.toString»
+					return didCopy;
 				'''
 			]
 			

@@ -33,6 +33,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		super.doTransform(annotatedMethod, context)
 
 		val layoutStr = annotatedMethod.body.toString
+//		annotatedMethod.addParameter("oldView", findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference)
 		annotatedMethod.markAsRead
 		
 		var importList = newArrayList("io.lattekit.ui");
@@ -48,7 +49,6 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 		layoutParser.parseLayout(context, annotatedMethod.declaringType,  importList, layoutSource);
 		
-		annotatedMethod.returnType = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference;
 		annotatedMethod.body = '''
 			«layoutParser.renderBody»
 		''';
@@ -238,11 +238,15 @@ class LayoutParser extends DefaultHandler {
 					it.«propertySetter»(_«property»_handler);
 					
 				''';
+				attrsProc += '''it.addNewProperty("«property»",_«property»_handler);'''+"\n";
 			} else if (hasSetter) {
 				attrsProc += '''it.«propertySetter»(«value»);'''+"\n";
+				attrsProc += '''it.addNewProperty("«property»",«value»);'''+"\n";
 			} else {
 				attrsProc += '''it.setAttribute("«property»",«value»);'''+"\n";
+				attrsProc += '''it.addNewProperty("«property»",«value»);'''+"\n";
 			}
+			
 	   }
 	   
 	   currentProc = new StringBuilder();
@@ -290,8 +294,9 @@ class LayoutParser extends DefaultHandler {
 			currentProc.append(myProc);
 			currentProc.append('''«myEl.get('name')».«myEl.get('simpleName')»(it, «myEl.get('attrProcName')», «myEl.get('childrenProcName')»);''')
 		} else {
-			currentProc.append("return ");
+			currentProc.append("LatteView myView = ");
 			currentProc.append('''«currentEl.get('name')».«currentEl.get('simpleName')»(this, «currentEl.get('attrProcName')», «currentEl.get('childrenProcName')»);''')
+			currentProc.append('''this.addChild(0,myView);''')
 			renderBody = translateCode(currentProc.toString);		   			
 		}
 		
