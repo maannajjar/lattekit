@@ -189,7 +189,8 @@ class Style {
 					myValue = actualSize.y
 					startValue = startActualSize.y
 				}
-				if (myValue == null) {
+				if (myValue == null || startValue == null) {
+					Log.d("Latte", latteView +": No start or end value for "+propName)
 					return null;
 				}
 				if (startValue.class == Integer) {

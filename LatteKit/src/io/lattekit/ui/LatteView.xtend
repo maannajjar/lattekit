@@ -125,12 +125,16 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	
 	def void applyAttributes() {
 		if (androidView != null) {
+			Log.d("Latte", "Style object for "+this+" : "+ _style);
 			androidView.enabled = enabled;
 			
 			if (pendingStyle == null && activeStyle == normalStyle) {
 				pendingStyle = normalStyle;
+				Log.d("Latte", this+": Applying active style "+normalStyle)
+				// Shouldn't clone, apply should have the same effect of clone
+				_style.cloneFrom(normalStyle);
 				activeStyle.applyStyle(this);
-			} else if (pendingStyle != activeStyle) {
+			} else if (pendingStyle != activeStyle && pendingStyle != null) {
 				pendingStyle = activeStyle;
 				var oldAnim = currentAnimation; 
 				currentAnimation = pendingStyle.createAnimatorFrom(_style, this, activeStyle == normalStyle)
