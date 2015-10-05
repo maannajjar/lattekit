@@ -27,6 +27,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
 import io.lattekit.Latte
+import io.lattekit.stylesheet.Stylesheet
 
 @Latte
 public  class LatteView implements OnTouchListener, OnClickListener {
@@ -44,6 +45,9 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	public var Animator currentAnimation;
 	public var Style pendingStyle;
 
+	Style classStyle;
+	Style touchedClassStyle;
+	Style disabledClassStyle;
 	@Accessors public Style normalStyle = new Style();
 	@Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
 	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];
@@ -52,6 +56,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	Style _style = new Style();	
 	@State public boolean enabled = true;
 	@State public boolean touched = false;
+	@State String cls; 
+	Stylesheet stylesheet = new Stylesheet();
 	
 		
 	// Generic Attributes
@@ -88,6 +94,33 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 			_style.cloneFrom(normalStyle);
 		}		
 		onStateChanged("style");	
+	}
+	
+	def updateStyles() {
+		classStyle = new Style();
+		touchedClassStyle = new Style();
+		disabledClassStyle = new Style();
+		
+		touchedClassStyle.parentStyle = classStyle;
+		disabledClassStyle.parentStyle = classStyle;
+		
+		normalStyle.parentStyle = classStyle;
+		touchedStyle.parentStyle = touchedClassStyle;
+		disabledStyle.parentStyle = disabledClassStyle;
+		if (cls != null) {
+			cls.split(" ").forEach[
+				var style = stylesheet.getClass(it) 
+				if (style != null) { 
+					Log.d("Latte","Loaded class  "+it);
+					classStyle.applyStyle(style);
+					Log.d("Latte","Border color is  "+classStyle.borderColor); 
+				} else { Log.d("Latte","Couldn't find class "+it); }
+				var touchedStyle = stylesheet.getClass(it+":touched");
+				if (touchedStyle != null) touchedClassStyle.applyStyle(touchedStyle); 
+				var disabledStyle = stylesheet.getClass(it+":disabled");
+				if (disabledStyle != null) disabledClassStyle.applyStyle(disabledStyle); 
+			]
+		}
 	}
 	def getStyle() {
 		return normalStyle;
@@ -137,9 +170,18 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		}
 	}
 	
+	def void onLoadStylesheet() {
+		// Override this to apply your own stylesheets by calling
+		// this.loadStylesheet(Stylesheet);
+	}
+	def void loadStylesheet(Stylesheet stylesheet) {
+		Log.d("Latte", "Loaded Stylesheet "+stylesheet);
+		stylesheet.apply(this.stylesheet);
+	}
 	def void applyAttributes() {
 		if (androidView != null) {
 			Log.d("Latte", "Style object for "+this+" : "+ _style);
+			updateStyles();
 			androidView.enabled = enabled;
 			
 			if (pendingStyle == null && activeStyle == normalStyle) {
@@ -268,13 +310,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	def void onChildrenAdded() {}
 		
-//	def addChild(int index, LatteView parent) {
-//		parent._children.add(this.children.get(index));
-//		this.children.get(index).parentView = parent;
-//	}
-//	
+
 	def addChild(int index, LatteView newChild) {
-		// TODO: 
 		// Compare child with existing subview
 		// If accepted then just call render in existing subview after transferring properties
 		// If not, then add new subview
@@ -284,6 +321,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 				subviews.get(index).render();
 			} else {
 				subviews.set(index,newChild)
+				newChild.stylesheet = stylesheet;
 				newChild.render();
 			}
 		} else {
@@ -300,6 +338,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		parentView = parent as LatteView;
 		if (parent != null) {
 			parent.children.add(this);
+			this.stylesheet = parent.stylesheet;
 		}
 
 		if (attrs != null) {
@@ -458,7 +497,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		activity = a;
 		this.processNode(null,null,null, null);
 		this.render();
-		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width.inPixels(androidView.context), this.normalStyle.height.inPixels(androidView.context)))
+		this.onLoadStylesheet();
+		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width.inPixels(a), this.normalStyle.height.inPixels(a)))
 		a.setContentView(this.rootAndroidView);		
 	}
 	

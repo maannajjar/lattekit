@@ -73,6 +73,40 @@ class Style {
 	@StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, android.util.TypedValue.COMPLEX_UNIT_PX);
 	
 	
+	
+	
+    def applyStyle(Style appliedStyle) {
+        _backgroundColor = appliedStyle._backgroundColor.otherwise(_backgroundColor)
+        _rippleColor = appliedStyle._rippleColor.otherwise(_rippleColor)
+        _borderColor = appliedStyle._borderColor.otherwise(_borderColor)
+        _textColor = appliedStyle._textColor.otherwise(_textColor)
+        _backgroundDrawable = appliedStyle._backgroundDrawable.otherwise(_backgroundDrawable)
+        _cornerRadius = appliedStyle._cornerRadius.otherwise(_cornerRadius)
+        _borderWidth = appliedStyle._borderWidth.otherwise(_borderWidth)
+        _margin = appliedStyle._margin.otherwise(_margin)
+        _marginTop = appliedStyle._marginTop.otherwise(_marginTop)
+        _marginBottom = appliedStyle._marginBottom.otherwise(_marginBottom)
+        _marginLeft = appliedStyle._marginLeft.otherwise(_marginLeft)
+        _marginRight = appliedStyle._marginRight.otherwise(_marginRight)
+        _elevation = appliedStyle._elevation.otherwise(_elevation)
+        _translationX = appliedStyle._translationX.otherwise(_translationX)
+        _translationY = appliedStyle._translationY.otherwise(_translationY)
+        
+        _x = appliedStyle.x.otherwise(_x)
+        _y = appliedStyle.y.otherwise(_y)
+        
+        _padding = appliedStyle._padding.otherwise(_padding)
+        _paddingTop = appliedStyle._paddingTop.otherwise(_paddingTop)
+        _paddingBottom = appliedStyle._paddingBottom.otherwise(_paddingBottom)
+        _paddingLeft = appliedStyle._paddingLeft.otherwise(_paddingLeft)
+        _paddingRight = appliedStyle._paddingRight.otherwise(_paddingRight)
+        
+        _width = appliedStyle._width.otherwise(_width)
+        _height = appliedStyle._height.otherwise(_height)
+        
+        _transitions = appliedStyle._transitions.otherwise(new ArrayList<List<Object>>()) as List<List<Object>>
+    }
+    
 	def Style inheritsFrom(Style parentStyle) {
 		var myStyle = new Style();
 		
@@ -127,10 +161,23 @@ class Style {
 			} catch(Exception ex) {}
 
 			try {
+				var intVal = new NumberValue(Integer.parseInt(value),0);
+				style.setProperty(key,intVal);
+				return
+			} catch(Exception ex) {}
+
+			try {
 				var floatVal = Float.parseFloat(value);
 				style.setProperty(key,floatVal);
 				return
+			} catch(Exception ex) {}	
+			
+			try {
+				var floatVal = new NumberValue(Float.parseFloat(value) as int, 0);
+				style.setProperty(key,floatVal);
+				return
 			} catch(Exception ex) {}			
+					
 			style.setProperty(key,value);
 		];
 		return style;
