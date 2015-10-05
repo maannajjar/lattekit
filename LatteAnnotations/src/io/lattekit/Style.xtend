@@ -31,7 +31,7 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 				java.util.Collections.<String>unmodifiableList(org.eclipse.xtext.xbase.lib.CollectionLiterals.<String>newArrayList(«propertyNames.map['''"«if (it.startsWith("_")) it.substring(1) else it»"'''].join(",")»))
 				'''			
 			]
-			
+						
 			annotatedField.declaringType.addMethod("setProperty") [
 				addParameter("propertyName", String.newTypeReference())
 				addParameter("value", Object.newTypeReference())
@@ -65,6 +65,7 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 		
 		annotatedField.markAsRead
 		
+		
 		val initilizer = annotatedField.initializer;
 		annotatedField.declaringType.addMethod("get" + capiatlized) [
 			returnType = rawType
@@ -85,6 +86,16 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 				'''
 			}
 		];
+		
+		if (rawType.simpleName == "NumberValue") {
+			annotatedField.declaringType.addMethod("set"+capiatlized) [
+				addParameter("value", Integer.newTypeReference())
+				body = '''
+					_«rawName» = new NumberValue(value,0);
+				'''
+			]
+		}
+
 		annotatedField.declaringType.addMethod("set" + capiatlized) [
 			addParameter("newValue", rawType)
 			body = '''

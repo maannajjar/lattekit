@@ -3,6 +3,7 @@ package io.lattekit.ui
 import android.R
 import android.animation.Animator
 import android.app.Activity
+import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Point
 import android.graphics.drawable.GradientDrawable
@@ -25,13 +26,15 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
+import io.lattekit.Latte
 
-public abstract class LatteView implements OnTouchListener, OnClickListener {
+@Latte
+public  class LatteView implements OnTouchListener, OnClickListener {
 	
-	public final int MATCH_PARENT = LayoutParams.MATCH_PARENT;
-	public final int WRAP_CONTENT = LayoutParams.WRAP_CONTENT;
-	public final int match_parent = LayoutParams.MATCH_PARENT;
-	public final int wrap_content = LayoutParams.WRAP_CONTENT;
+	public final static int MATCH_PARENT = LayoutParams.MATCH_PARENT;
+	public final static int WRAP_CONTENT = LayoutParams.WRAP_CONTENT;
+	public final static int match_parent = LayoutParams.MATCH_PARENT;
+	public final static int wrap_content = LayoutParams.WRAP_CONTENT;
 	 
 	/** Base Attributes */ 
 	@Accessors public String id;
@@ -44,6 +47,8 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	@Accessors public Style normalStyle = new Style();
 	@Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
 	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];
+	@Accessors public (Context)=>View viewCreator;
+	
 	Style _style = new Style();	
 	@State public boolean enabled = true;
 	@State public boolean touched = false;
@@ -67,6 +72,15 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	protected (LatteView)=>void layoutProc;
 	private boolean isRendering = false;
 	
+	def setStyle(String style) {
+		setStyle(Style.parseStyle(style));
+	}
+	def setTouchedStyle(String style) {
+		setTouchedStyle(Style.parseStyle(style));
+	}
+	def setDisabledtyle(String style) {
+		setDisabledStyle(Style.parseStyle(style));
+	}
 	def setStyle(Style style) {
 		normalStyle.cloneFrom(style);
 		if (_style == null) {
@@ -148,7 +162,7 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	
 	override onClick(View v) {
 		if (onTap != null) {
-			onTap.apply(LatteView.this);
+			onTap.apply(this);
 		}				
 	}
 	
@@ -192,7 +206,7 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	    } else if (forStyle.width == LayoutParams.WRAP_CONTENT) {
 	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 	    } else {
-	    	MeasureSpec.makeMeasureSpec(forStyle.width, MeasureSpec.EXACTLY);
+	    	MeasureSpec.makeMeasureSpec(forStyle.width.inPixels(androidView.context), MeasureSpec.EXACTLY);
 	    }
 	    
 		var heightMeasureSpec = if (forStyle.height == LayoutParams.MATCH_PARENT) {
@@ -203,7 +217,7 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	    } else if (forStyle.height == LayoutParams.WRAP_CONTENT) {
 	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 	    } else {
-	    	MeasureSpec.makeMeasureSpec(forStyle.height, MeasureSpec.EXACTLY);
+	    	MeasureSpec.makeMeasureSpec(forStyle.height.inPixels(androidView.context), MeasureSpec.EXACTLY);
 	    }
 		androidView.measure(widthMeasureSpec, heightMeasureSpec);
 		return new Point(androidView.measuredWidth,androidView.measuredHeight);
@@ -246,7 +260,12 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		}
 	}
 	
-	def View createAndroidView(Activity a) { null; }
+	def View createAndroidView(Activity a) {
+		if (viewCreator != null) {
+			return viewCreator.apply(a);
+		} 
+		null;
+	}
 	def void onChildrenAdded() {}
 		
 //	def addChild(int index, LatteView parent) {
@@ -322,8 +341,6 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 	def void compareView(LatteView newView, LatteView oldView) {
 		// Compare children 
 		// TODO: Should only copy properties
-		 
-
 		oldView.normalStyle.cloneFrom(newView.normalStyle);
 		oldView.touchedStyle.cloneFrom(newView.touchedStyle);
 		oldView.disabledStyle.cloneFrom(newView.disabledStyle);
@@ -336,27 +353,12 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		for (var i =0; i < newView.subviews.size; i++) {
 			if (oldView.subviews.size <= i) {
 				newView.subviews.get(i).parentView = oldView;
-				Log.d("Latte", "Added new view "+ newView.subviews.get(i));
 				oldView.subviews.add(newView.subviews.get(i))
 			} else {
 				var oldChildView = oldView.subviews.get(i);
 				var newChildView = newView.subviews.get(i);
-				Log.d("Latte", this +": Comparing child "+ newChildView +" with "+oldChildView);
 				if (this.sameView(oldChildView,newChildView)) {
-					// Accepted ?
-					if (oldChildView instanceof Button && newChildView instanceof Button) {
-						Log.d("Latte", oldChildView +" ((VS)) "+ newChildView); 							
-						
-						Log.d("Latte", (oldChildView as Button).label +" ((VS)) "+ (newChildView as Button).label); 							
-//						Log.d("Latte", (oldChildView.androidView as android.widget.Button).text +" VS "+ (newChildView.androidView as android.widget.Button).text); 	
-					}
 					compareView(newChildView, oldChildView);
-					// Accepted ?
-					if (oldChildView instanceof Button && newChildView instanceof Button) {
-						Log.d("Latte", "AFTER :" +oldChildView +" ((VS)) "+ newChildView); 													
-						Log.d("Latte",  "AFTER :" +(oldChildView as Button).label +" ((VS)) "+ (newChildView as Button).label); 							
- 	
-					}					
 				} else {
 					// Not accepted, replace with the new child
 					newChildView.parentView = oldView;
@@ -429,7 +431,7 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 			var myContainer = myView as ViewGroup
 			var i = 0;
 			for (LatteView v : subviews) {
-				var childLP = createLayoutParams(v.normalStyle.width, v.normalStyle.height);
+				var childLP = createLayoutParams(v.normalStyle.width.inPixels(androidView.context), v.normalStyle.height.inPixels(androidView.context));
 				var View childView = v.buildAndroidViewTree(a, childLP);
 				if (i >= myContainer.childCount) {
 					myContainer.addView(childView, i, childLP)	
@@ -456,7 +458,7 @@ public abstract class LatteView implements OnTouchListener, OnClickListener {
 		activity = a;
 		this.processNode(null,null,null, null);
 		this.render();
-		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width, this.normalStyle.height))
+		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width.inPixels(androidView.context), this.normalStyle.height.inPixels(androidView.context)))
 		a.setContentView(this.rootAndroidView);		
 	}
 	

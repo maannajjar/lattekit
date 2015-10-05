@@ -4,6 +4,7 @@ import android.R
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
+import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -21,6 +22,18 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
 
+class NumberValue {
+	@Accessors var int value;
+	@Accessors var int type;
+	new(int value, int type) {
+		this.value = value;
+		this.type = type;
+	}
+	def inPixels(Context context) {
+		// TODO Convert
+		return value;
+	}
+} 
 class Style {
 	
 	@Accessors Style parentStyle;
@@ -28,36 +41,36 @@ class Style {
 	@StyleProperty public Object rippleColor;
 	@StyleProperty public Object borderColor = Color.WHITE;
 	@StyleProperty public Object textColor = Color.BLACK;
-	
+
 	@StyleProperty public Integer backgroundDrawable;
 		
-	@StyleProperty public Integer cornerRadius = 10;
-	@StyleProperty public Integer borderWidth = 5;
+	@StyleProperty public NumberValue cornerRadius = new NumberValue(10,android.util.TypedValue.COMPLEX_UNIT_DIP);
+	@StyleProperty public NumberValue borderWidth = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_DIP);
 	
-	@StyleProperty public Integer margin = 0;
-	@StyleProperty public Integer marginTop;
-	@StyleProperty public Integer marginBottom;
-	@StyleProperty public Integer marginLeft;
-	@StyleProperty public Integer marginRight;
+	@StyleProperty public NumberValue margin = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+	@StyleProperty public NumberValue marginTop;
+	@StyleProperty public NumberValue marginBottom;
+	@StyleProperty public NumberValue marginLeft;
+	@StyleProperty public NumberValue marginRight;
 	
-	@StyleProperty public Integer elevation = 0;
-	@StyleProperty public Integer translationY = 0;
-	@StyleProperty public Integer translationX = 0;
-	@StyleProperty public Float x;
-	@StyleProperty public Float y;
+	@StyleProperty public NumberValue elevation = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+	@StyleProperty public NumberValue translationY = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+	@StyleProperty public NumberValue translationX = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+	@StyleProperty public NumberValue x;
+	@StyleProperty public NumberValue y;
 	public Float _computedX;
 	public Float _computedY;
 	
-	@StyleProperty public Integer padding = 0;
-	@StyleProperty public Integer paddingTop;
-	@StyleProperty public Integer paddingBottom;
-	@StyleProperty public Integer paddingLeft = 0;
-	@StyleProperty public Integer paddingRight = 0;
+	@StyleProperty public NumberValue padding = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+	@StyleProperty public NumberValue paddingTop;
+	@StyleProperty public NumberValue paddingBottom;
+	@StyleProperty public NumberValue paddingLeft;
+	@StyleProperty public NumberValue paddingRight;
 	
 	@StyleProperty public List<List<Object>> transitions;
 	
-	@StyleProperty public Integer width = ViewGroup.LayoutParams.WRAP_CONTENT;
-	@StyleProperty public Integer height = ViewGroup.LayoutParams.WRAP_CONTENT;
+	@StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, android.util.TypedValue.COMPLEX_UNIT_PX);
+	@StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, android.util.TypedValue.COMPLEX_UNIT_PX);
 	
 	
 	def Style inheritsFrom(Style parentStyle) {
@@ -96,6 +109,33 @@ class Style {
 		return myStyle
 	}
 	
+	def static Style parseStyle(String styleStr) {
+		val style = new Style();
+		styleStr.split(";").forEach[
+			var splitted = split(":");
+			var key = splitted.get(0).trim()
+			var value = splitted.get(1).trim()
+			if (value.toUpperCase == "MATCH_PARENT") {
+				value = ""+LayoutParams.MATCH_PARENT	
+			} else if (value.toUpperCase == "WRAP_CONTENT") {
+				value = ""+LayoutParams.WRAP_CONTENT	
+			}
+			try {
+				var intVal = Integer.parseInt(value);
+				style.setProperty(key,intVal);
+				return
+			} catch(Exception ex) {}
+
+			try {
+				var floatVal = Float.parseFloat(value);
+				style.setProperty(key,floatVal);
+				return
+			} catch(Exception ex) {}			
+			style.setProperty(key,value);
+		];
+		return style;
+	}
+		
 	def void cloneFrom(Style form) {
 		this.backgroundColor = form._backgroundColor
 		this.rippleColor = form._rippleColor
@@ -226,8 +266,8 @@ class Style {
 
     def applyDrawableStyle(LatteView view) {
     	view.backgroundDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
-		view.backgroundDrawable.setStroke(borderWidth, borderColor.asColor);
-	    view.backgroundDrawable.setCornerRadius(cornerRadius);
+		view.backgroundDrawable.setStroke(borderWidth.inPixels(view.androidView.context), borderColor.asColor);
+	    view.backgroundDrawable.setCornerRadius(cornerRadius.inPixels(view.androidView.context));
 //	    Todo: investigate whether we need to call this
 //	    view.backgroundDrawable.invalidateSelf
 //	    view.updateBackgroundDrawable();
@@ -248,13 +288,14 @@ class Style {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			(view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
 		} else {		
-			(view.androidView.background as codetail.graphics.drawables.RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));	
+			(view.androidView.background as codetail.graphics.drawables.RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
 		}
     }
     
     def applyDrawableShape(LatteView latteView) {
     	var float[] radii = if (cornerRadius != null) { 
-    		#[cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius,cornerRadius];
+    		var radius = cornerRadius.inPixels(latteView.androidView.context)
+    		#[radius,radius,radius,radius,radius,radius,radius,radius];
     	} else null;
     	var shape = new RoundRectShape(radii, null,null);
 		latteView.shapeDrawable.shape = shape;
@@ -265,51 +306,56 @@ class Style {
     def applyStyle(LatteView latteView) {
     	var androidView = latteView.androidView;
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			androidView.elevation = elevation;
+			androidView.elevation = elevation.inPixels(androidView.context);
 		}
 		applyDrawableStyle(latteView);
 		applyDrawableShape(latteView);
-		androidView.translationY = translationY
-		androidView.translationX = translationX
+		androidView.translationY = translationY.inPixels(androidView.context)
+		androidView.translationX = translationX.inPixels(androidView.context);
 		
-		if (x != null) androidView.x = x
-		if (y != null) androidView.y = y
+		if (x != null) androidView.x = x.inPixels(androidView.context)
+		if (y != null) androidView.y = y.inPixels(androidView.context)
 		
 		
-		var pLeft = paddingLeft.otherwise(padding);
-		var pRight = paddingRight.otherwise(padding);
-		var pTop = paddingTop.otherwise(padding);
-		var pBottom = paddingBottom.otherwise(padding);
+		var pLeft = paddingLeft.otherwise(padding).inPixels(androidView.context)
+		var pRight = paddingRight.otherwise(padding).inPixels(androidView.context)
+		var pTop = paddingTop.otherwise(padding).inPixels(androidView.context)
+		var pBottom = paddingBottom.otherwise(padding).inPixels(androidView.context)
 		
 		androidView.setPadding(pLeft,pTop,pRight,pBottom);
 		
 		// Layout Params
     	var LayoutParams lp = androidView.layoutParams
-		lp.width = width
-		lp.height = height
+		lp.width = width.inPixels(androidView.context)
+		lp.height = height.inPixels(androidView.context)
     	if (lp instanceof MarginLayoutParams) {
 	    	if (margin != null) {
-	    		lp.leftMargin = margin
-	    		lp.topMargin = margin
-	    		lp.rightMargin = margin
-	    		lp.bottomMargin = margin
+	    		lp.leftMargin = margin.inPixels(androidView.context)
+	    		lp.topMargin = margin.inPixels(androidView.context)
+	    		lp.rightMargin = margin.inPixels(androidView.context)
+	    		lp.bottomMargin = margin.inPixels(androidView.context)
 	    	}
 	    	
 	    	if (marginLeft != null) {
-	    		lp.leftMargin = marginLeft
+	    		lp.leftMargin = marginLeft.inPixels(androidView.context)
 	    	}
 	    	if (marginRight != null) {
-	    		lp.rightMargin = marginRight
+	    		lp.rightMargin = marginRight.inPixels(androidView.context)
 	    	}
 	    	if (marginBottom != null) {
-	    		lp.bottomMargin = marginBottom
+	    		lp.bottomMargin = marginBottom.inPixels(androidView.context)
 	    	}
 	    	if (marginTop != null) {
-	    		lp.topMargin = marginTop
+	    		lp.topMargin = marginTop.inPixels(androidView.context)
 	    	}
     	}
     	androidView.layoutParams = lp;
     }
+    
+    
+    def NumberValue otherwise(NumberValue left, NumberValue or) {
+		return if (left != null) left else or;
+	}
     
     
 	def Object otherwise(Object left, Object or) {

@@ -36,7 +36,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 //		annotatedMethod.addParameter("oldView", findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference)
 		annotatedMethod.markAsRead
 		
-		var importList = newArrayList("io.lattekit.ui");
+		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
 		var importListParam = annotatedMethod.annotations.findFirst[ a|
 			a.annotationTypeDeclaration == Layout.newTypeReference().type
 		].getStringArrayValue("imports")
@@ -48,11 +48,9 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		val layoutParser = new LayoutParser();
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 		layoutParser.parseLayout(context, annotatedMethod.declaringType,  importList, layoutSource);
-		
 		annotatedMethod.body = '''
 			«layoutParser.renderBody»
 		''';
-	
 
 	}
 	
@@ -152,6 +150,8 @@ class LayoutParser extends DefaultHandler {
 	   var attrProcName = '''_createAttributes_«tagsIncrement»''';
 	   var elName = qName;
 	   var tagSimpleName = elName;
+	   var androidCreator = "";
+	   var isAndroidView = false;
 	   
 	   // Find Fully Qualified name
 		val viewType = context.findViewType(elName,importList);
@@ -159,15 +159,30 @@ class LayoutParser extends DefaultHandler {
 			errorList += "Couldn't find view with type "+ elName;
 		} else {
 			elName = viewType.qualifiedName
+			var androidView = context.findTypeGlobally("android.view.View");
+			if (androidView.isAssignableFrom(viewType)) {
+				isAndroidView = true;
+				androidCreator = '''
+				it.setViewCreator(new org.eclipse.xtext.xbase.lib.Functions.Function1<android.content.Context,android.view.View>() {
+					public «viewType.qualifiedName» apply(android.content.Context context) {
+							return new «elName»(context);
+					}
+				});'''
+				elName = "io.lattekit.ui.LatteView"
+			}
 		}
 
 	   var attrsProc = "";
 	   for ( i : 0..< attributes.length) {
-			var attrName = attributes.getLocalName(i)
+			var attrName = attributes.getQName(i)
+            if (attrName == null || attrName == "") {
+               attrName = attributes.getQName(i);
+            }
 			var attrValue = attributes.getValue(i);
 			var isJavaCode = attrName.startsWith("__x__");
 			
-			val property = if (attrName.startsWith("__x__")) {  attrName.substring("__x__".length); } else { attrName  }			
+			val property = if (attrName.startsWith("__x__")) {  attrName.substring("__x__".length); } else { attrName  }
+
 			val propertySetter = "set"+property.substring(0,1).toUpperCase+property.substring(1)
 			
 			attrsProc += '''// «propertySetter»'''+"\n";
@@ -251,8 +266,11 @@ class LayoutParser extends DefaultHandler {
 	   
 	   currentProc = new StringBuilder();
 	   currentProc.append('''
+	   		
 			final org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«elName»> «attrProcName» = new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«elName»>() {
 			public void apply(final «elName» it) {
+					«androidCreator»
+					
 					«attrsProc»
 				}
 			};
@@ -266,8 +284,8 @@ class LayoutParser extends DefaultHandler {
 			elStack.push(currentEl);
 	   }		       
 	   currentEl = #{ 
-		"name" -> elName,
-		"simpleName" -> tagSimpleName,
+		"name" -> if (isAndroidView)  "io.lattekit.ui.LatteView" else elName,
+		"simpleName" -> if (isAndroidView)  "LatteView" else tagSimpleName,
 		"childrenProcBody"-> currentProc,
 		"attrProcBody" -> "",
 		"childrenProcName" -> childProcName,
