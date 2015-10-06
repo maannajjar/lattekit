@@ -28,6 +28,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import static io.lattekit.xtend.ArrayLiterals2.*
 import io.lattekit.Latte
 import io.lattekit.stylesheet.Stylesheet
+import android.graphics.Color
 
 @Latte
 public  class LatteView implements OnTouchListener, OnClickListener {
@@ -36,7 +37,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	public final static int WRAP_CONTENT = LayoutParams.WRAP_CONTENT;
 	public final static int match_parent = LayoutParams.MATCH_PARENT;
 	public final static int wrap_content = LayoutParams.WRAP_CONTENT;
-	 
+	
 	/** Base Attributes */ 
 	@Accessors public String id;
 	@Accessors public (LatteView)=>void onTap;
@@ -101,8 +102,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		touchedClassStyle = new Style();
 		disabledClassStyle = new Style();
 		
-		touchedClassStyle.parentStyle = classStyle;
-		disabledClassStyle.parentStyle = classStyle;
+		touchedClassStyle.parentStyle = normalStyle;
+		disabledClassStyle.parentStyle = normalStyle;
 		
 		normalStyle.parentStyle = classStyle;
 		touchedStyle.parentStyle = touchedClassStyle;
@@ -110,17 +111,14 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		if (cls != null) {
 			cls.split(" ").forEach[
 				var style = stylesheet.getClass(it) 
-				if (style != null) { 
-					Log.d("Latte","Loaded class  "+it);
-					classStyle.applyStyle(style);
-					Log.d("Latte","Border color is  "+classStyle.borderColor); 
-				} else { Log.d("Latte","Couldn't find class "+it); }
+				if (style != null) classStyle.applyStyle(style);
 				var touchedStyle = stylesheet.getClass(it+":touched");
 				if (touchedStyle != null) touchedClassStyle.applyStyle(touchedStyle); 
 				var disabledStyle = stylesheet.getClass(it+":disabled");
 				if (disabledStyle != null) disabledClassStyle.applyStyle(disabledStyle); 
 			]
 		}
+		
 	}
 	def getStyle() {
 		return normalStyle;
@@ -248,7 +246,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	    } else if (forStyle.width == LayoutParams.WRAP_CONTENT) {
 	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 	    } else {
-	    	MeasureSpec.makeMeasureSpec(forStyle.width.inPixels(androidView.context), MeasureSpec.EXACTLY);
+	    	MeasureSpec.makeMeasureSpec(forStyle.width.inPixelsInt(androidView.context), MeasureSpec.EXACTLY);
 	    }
 	    
 		var heightMeasureSpec = if (forStyle.height == LayoutParams.MATCH_PARENT) {
@@ -259,7 +257,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	    } else if (forStyle.height == LayoutParams.WRAP_CONTENT) {
 	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 	    } else {
-	    	MeasureSpec.makeMeasureSpec(forStyle.height.inPixels(androidView.context), MeasureSpec.EXACTLY);
+	    	MeasureSpec.makeMeasureSpec(forStyle.height.inPixelsInt(androidView.context), MeasureSpec.EXACTLY);
 	    }
 		androidView.measure(widthMeasureSpec, heightMeasureSpec);
 		return new Point(androidView.measuredWidth,androidView.measuredHeight);
@@ -470,7 +468,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 			var myContainer = myView as ViewGroup
 			var i = 0;
 			for (LatteView v : subviews) {
-				var childLP = createLayoutParams(v.normalStyle.width.inPixels(androidView.context), v.normalStyle.height.inPixels(androidView.context));
+				var childLP = createLayoutParams(v.normalStyle.width.inPixelsInt(androidView.context), v.normalStyle.height.inPixelsInt(androidView.context));
 				var View childView = v.buildAndroidViewTree(a, childLP);
 				if (i >= myContainer.childCount) {
 					myContainer.addView(childView, i, childLP)	
@@ -498,7 +496,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		this.processNode(null,null,null, null);
 		this.render();
 		this.onLoadStylesheet();
-		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width.inPixels(a), this.normalStyle.height.inPixels(a)))
+		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(a), this.normalStyle.height.inPixelsInt(a)))
 		a.setContentView(this.rootAndroidView);		
 	}
 	

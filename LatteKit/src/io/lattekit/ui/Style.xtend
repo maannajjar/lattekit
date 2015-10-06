@@ -21,19 +21,33 @@ import java.util.List
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
+import android.util.TypedValue
 
 class NumberValue {
 	@Accessors var int value;
 	@Accessors var int type;
+	Float cached;
 	new(int value, int type) {
 		this.value = value;
 		this.type = type;
 	}
 	def inPixels(Context context) {
-		// TODO Convert
-		return value;
+		if (cached != null) { return cached;}
+		if (type == TypedValue.COMPLEX_UNIT_DIP) {
+			cached = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,context.resources.displayMetrics);
+		}
+		if (cached == null) {
+			cached = value as float
+		}
+		return cached;
+	}
+	
+	def int inPixelsInt(Context context) {
+		return Math.round(inPixels(context))
 	}
 } 
+
+
 class Style {
 	
 	@Accessors Style parentStyle;
@@ -44,7 +58,7 @@ class Style {
 
 	@StyleProperty public Integer backgroundDrawable;
 		
-	@StyleProperty public NumberValue cornerRadius = new NumberValue(10,android.util.TypedValue.COMPLEX_UNIT_DIP);
+	@StyleProperty public NumberValue cornerRadius = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_DIP);
 	@StyleProperty public NumberValue borderWidth = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_DIP);
 	
 	@StyleProperty public NumberValue margin = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
@@ -106,43 +120,7 @@ class Style {
         
         _transitions = appliedStyle._transitions.otherwise(new ArrayList<List<Object>>()) as List<List<Object>>
     }
-    
-	def Style inheritsFrom(Style parentStyle) {
-		var myStyle = new Style();
-		
-		myStyle.backgroundColor = _backgroundColor.otherwise(parentStyle.backgroundColor)
-		myStyle.rippleColor = _rippleColor.otherwise(parentStyle.rippleColor)
-		myStyle.borderColor = _borderColor.otherwise(parentStyle.borderColor)
-		myStyle.textColor = _textColor.otherwise(parentStyle.textColor)
-		myStyle.backgroundDrawable = _backgroundDrawable.otherwise(parentStyle.backgroundDrawable)
-		myStyle.cornerRadius = _cornerRadius.otherwise(parentStyle.cornerRadius)
-		myStyle.borderWidth = _borderWidth.otherwise(parentStyle.borderWidth)
-		myStyle.margin = _margin.otherwise(parentStyle.margin)
-		myStyle.marginTop = _marginTop.otherwise(parentStyle.marginTop.otherwise(_margin))
-		myStyle.marginBottom = _marginBottom.otherwise(parentStyle.marginBottom.otherwise(_margin))
-		myStyle.marginLeft = _marginLeft.otherwise(parentStyle.marginLeft.otherwise(_margin))
-		myStyle.marginRight = _marginRight.otherwise(parentStyle.marginRight.otherwise(_margin))
-		myStyle.elevation = _elevation.otherwise(parentStyle.elevation)
-		myStyle.translationX = _translationX.otherwise(parentStyle.translationX)
-		myStyle.translationY = _translationY.otherwise(parentStyle.translationY)
-		
-		myStyle.x = x.otherwise(parentStyle.x)
-		myStyle.y = y.otherwise(parentStyle.y)
-		
-		myStyle.padding = _padding.otherwise(parentStyle.padding)
-		myStyle.paddingTop = _paddingTop.otherwise(parentStyle.paddingTop)
-		myStyle.paddingBottom = _paddingBottom.otherwise(parentStyle.paddingBottom)
-		myStyle.paddingLeft = _paddingLeft.otherwise(parentStyle.paddingLeft)
-		myStyle.paddingRight = _paddingRight.otherwise(parentStyle.paddingRight)
-		
-		myStyle.width = _width.otherwise(parentStyle.width)
-		myStyle.height = _height.otherwise(parentStyle.height)
-		
-		myStyle.transitions = _transitions.otherwise(new ArrayList<List<Object>>()) as List<List<Object>>
-		
-		return myStyle
-	}
-	
+
 	def static Style parseStyle(String styleStr) {
 		val style = new Style();
 		styleStr.split(";").forEach[
@@ -313,7 +291,7 @@ class Style {
 
     def applyDrawableStyle(LatteView view) {
     	view.backgroundDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
-		view.backgroundDrawable.setStroke(borderWidth.inPixels(view.androidView.context), borderColor.asColor);
+		view.backgroundDrawable.setStroke(borderWidth.inPixelsInt(view.androidView.context), borderColor.asColor);
 	    view.backgroundDrawable.setCornerRadius(cornerRadius.inPixels(view.androidView.context));
 //	    Todo: investigate whether we need to call this
 //	    view.backgroundDrawable.invalidateSelf
@@ -364,36 +342,36 @@ class Style {
 		if (y != null) androidView.y = y.inPixels(androidView.context)
 		
 		
-		var pLeft = paddingLeft.otherwise(padding).inPixels(androidView.context)
-		var pRight = paddingRight.otherwise(padding).inPixels(androidView.context)
-		var pTop = paddingTop.otherwise(padding).inPixels(androidView.context)
-		var pBottom = paddingBottom.otherwise(padding).inPixels(androidView.context)
+		var pLeft = paddingLeft.otherwise(padding).inPixelsInt(androidView.context)
+		var pRight = paddingRight.otherwise(padding).inPixelsInt(androidView.context)
+		var pTop = paddingTop.otherwise(padding).inPixelsInt(androidView.context)
+		var pBottom = paddingBottom.otherwise(padding).inPixelsInt(androidView.context)
 		
 		androidView.setPadding(pLeft,pTop,pRight,pBottom);
 		
 		// Layout Params
     	var LayoutParams lp = androidView.layoutParams
-		lp.width = width.inPixels(androidView.context)
-		lp.height = height.inPixels(androidView.context)
+		lp.width = width.inPixelsInt(androidView.context)
+		lp.height = height.inPixelsInt(androidView.context)
     	if (lp instanceof MarginLayoutParams) {
 	    	if (margin != null) {
-	    		lp.leftMargin = margin.inPixels(androidView.context)
-	    		lp.topMargin = margin.inPixels(androidView.context)
-	    		lp.rightMargin = margin.inPixels(androidView.context)
-	    		lp.bottomMargin = margin.inPixels(androidView.context)
+	    		lp.leftMargin = margin.inPixelsInt(androidView.context)
+	    		lp.topMargin = margin.inPixelsInt(androidView.context)
+	    		lp.rightMargin = margin.inPixelsInt(androidView.context)
+	    		lp.bottomMargin = margin.inPixelsInt(androidView.context) 
 	    	}
 	    	
 	    	if (marginLeft != null) {
-	    		lp.leftMargin = marginLeft.inPixels(androidView.context)
+	    		lp.leftMargin = marginLeft.inPixelsInt(androidView.context)
 	    	}
 	    	if (marginRight != null) {
-	    		lp.rightMargin = marginRight.inPixels(androidView.context)
+	    		lp.rightMargin = marginRight.inPixelsInt(androidView.context)
 	    	}
 	    	if (marginBottom != null) {
-	    		lp.bottomMargin = marginBottom.inPixels(androidView.context)
+	    		lp.bottomMargin = marginBottom.inPixelsInt(androidView.context)
 	    	}
 	    	if (marginTop != null) {
-	    		lp.topMargin = marginTop.inPixels(androidView.context)
+	    		lp.topMargin = marginTop.inPixelsInt(androidView.context)
 	    	}
     	}
     	androidView.layoutParams = lp;
