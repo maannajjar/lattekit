@@ -82,6 +82,9 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 				'''	
 			} else {
 				body = '''
+					if (_«rawName» == null && parentStyle != null) {
+						return parentStyle.get«capiatlized»();
+					}				
 					return _«rawName»;
 				'''
 			}
