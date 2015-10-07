@@ -20,15 +20,14 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.widget.FrameLayout
 import android.widget.TextView
+import io.lattekit.Latte
 import io.lattekit.State
+import io.lattekit.stylesheet.Stylesheet
 import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
-import io.lattekit.Latte
-import io.lattekit.stylesheet.Stylesheet
-import android.graphics.Color
 
 @Latte
 public  class LatteView implements OnTouchListener, OnClickListener {
@@ -170,10 +169,6 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		}
 	}
 	
-	def void onLoadStylesheet() {
-		// Override this to apply your own stylesheets by calling
-		// this.loadStylesheet(Stylesheet);
-	}
 	def void loadStylesheet(Stylesheet stylesheet) {
 		Log.d("Latte", "Loaded Stylesheet "+stylesheet);
 		stylesheet.apply(this.stylesheet);
@@ -500,7 +495,6 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		activity = a;
 		this.processNode(null,null,null, null);
 		this.render();
-		this.onLoadStylesheet();
 		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(a), this.normalStyle.height.inPixelsInt(a)))
 		a.setContentView(this.rootAndroidView);		
 	}
