@@ -305,34 +305,23 @@ class Style {
 					Log.d("Latte", latteView +": No start or end value for "+propName)
 					return null;
 				}
-				if (startValue.class == Integer || startValue instanceof NumberValue) {
+				
+				if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Integer") {
 					var start = if (startValue instanceof NumberValue) { startValue.inPixelsInt(latteView.androidView.context); } else { startValue as Integer}
 					var end = if (myValue instanceof NumberValue) { myValue.inPixelsInt(latteView.androidView.context); } else { myValue as Integer}
-					Log.d("Latte", "i Animating "+propName+" from "+ start + " to "+end +" in "+duration);
 					anim = ValueAnimator.ofInt(start,end);
 					anim.addUpdateListener([ 
 						if (latteView.currentAnimation == animSet) { 
-//							try { 
-//								startStyle.setProperty(propName, animatedValue as Integer);
-//							} catch (Exception ex) {
-//								startStyle.setProperty(propName, new NumberValue(animatedValue as Integer, 0));
-//							}
 							startStyle.setProperty(propName, new NumberValue(animatedValue as Integer, 0));
 							startStyle.applyStyle(latteView)
 						}
 					]);
-				} else if (startValue.class == Float) {
+				} else if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Float") {
 					var start = if (startValue instanceof NumberValue) { startValue.inPixels(latteView.androidView.context); } else { startValue as Float;}
 					var end = if (myValue instanceof NumberValue) { myValue.inPixels(latteView.androidView.context); } else { myValue as Float;}
 					anim = ValueAnimator.ofFloat(start, end);
-					Log.d("Latte", "f Animating "+propName+" from "+ start + " to "+end );
 					anim.addUpdateListener([
 						if (latteView.currentAnimation == animSet) { 
-//							try { 
-//								startStyle.setProperty(propName, animatedValue as Float);
-//							} catch (Exception ex) {
-//								startStyle.setProperty(propName, new NumberValue(animatedValue as Float, 0));
-//							}
 							startStyle.setProperty(propName, new NumberValue(animatedValue as Float, 0));
 							startStyle.applyStyle(latteView)
 						}
