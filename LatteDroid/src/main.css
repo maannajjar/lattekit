@@ -1,0 +1,57 @@
+.mainButton {
+
+	border-color: #aaaaaa;
+	border-width: 5dp;
+	background-color: #0288D1;
+	border-color: #0277BD;		
+	ripple-color: #ff0000;
+	border-width: 5;
+	margin-top: 30;
+	margin-left: 100;
+	margin-right: 30;
+	corner-radius: 100;
+	padding-left: 30;
+	padding-right: 30;
+	width: wrap_content;
+	height: wrap_content;
+	font-size: 15sp;
+	padding-bottom: 0dp;
+	elevation: 3dp;
+	text-color: #ffffff;
+	transition: width 300ms 200ms,
+				height 200ms 0ms,
+				margin-top 300ms 500ms,
+				margin-left 300ms 800ms,
+				margin-right 300ms 800ms,           
+				corner-radius 300ms 800ms,
+				border-width 300ms 0ms,
+				font-size 300ms 0ms,
+				elevation 600ms 0ms;
+}
+
+.mainButton:touched {
+	font-size: 40sp;
+
+	border-width: 20dp;
+	corner-radius: 0;
+	width: match_parent;
+	height: wrap_content;
+	elevation: 10;
+	border-color: #0277BD;
+	margin-top: 0;
+	margin-left: 0;
+	margin-right: 0;
+	y: 0;
+	padding-bottom:50dp;
+	text-color: #000000;
+	transition: width 200ms 0ms,
+				height 300ms 300ms,
+				corner-radius 300ms 0ms,
+				border-width 300ms 0ms,
+				margin-top 300ms 0ms,
+				margin-left 300ms 0ms,
+				margin-right 300ms 0ms,
+				font-size 300ms 300ms,
+				padding-bottom 300ms 300ms,
+				elevation 300ms 0ms;
+}
