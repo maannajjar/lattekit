@@ -113,10 +113,6 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 				var style = stylesheet.getClass(it) 
 				if (style != null) {
 					classStyle.applyStyle(style);
-					Log.d("Latte", "Applied class "+cls+". Background is "+classStyle.backgroundColor);
-					Log.d("Latte", "Applied class "+cls+". NORMAL background is "+normalStyle.backgroundColor);
-				} else {
-					Log.d("Latte", "COULD NOT FIND CLASS "+cls);
 				}
 				var touchedStyle = stylesheet.getClass(it+":touched");
 				if (touchedStyle != null) touchedClassStyle.applyStyle(touchedStyle); 
@@ -242,6 +238,9 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def Point getMeasuredSize(Style forStyle) {
+		// Temporarily apply style to accurately measure size
+		// TODO: only apply attributes that affect size
+		forStyle.applyStyle(this);
 	    var widthMeasureSpec = if (forStyle.width.inPixelsInt(androidView.context) == LayoutParams.MATCH_PARENT) {
 	    	var parentWidth = if (nonVirtualParent != null) {
 	    		nonVirtualParent.measuredSize.x;
@@ -264,6 +263,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	    	MeasureSpec.makeMeasureSpec(forStyle.height.inPixelsInt(androidView.context), MeasureSpec.EXACTLY);
 	    }
 		androidView.measure(widthMeasureSpec, heightMeasureSpec);
+		// Go back to current style;
+		_style.applyStyle(this);
 		return new Point(androidView.measuredWidth,androidView.measuredHeight);
 	}
 
