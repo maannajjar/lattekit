@@ -22,6 +22,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
 import android.util.TypedValue
+import android.widget.TextView
 
 class NumberValue {
 	@Accessors var int value;
@@ -34,7 +35,7 @@ class NumberValue {
 		valueType = "Integer";
 		if (type == TypedValue.COMPLEX_UNIT_PX) {
 			cached = value as float;
-		}		
+		}	
 	}
 	
 	new(float value, int type) {
@@ -49,6 +50,8 @@ class NumberValue {
 		if (cached != null) { return cached;}
 		if (type == TypedValue.COMPLEX_UNIT_DIP) {
 			cached = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,context.resources.displayMetrics);
+		} else if (type == TypedValue.COMPLEX_UNIT_SP) {
+			cached = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value,context.resources.displayMetrics);
 		}
 		if (cached == null) {
 			cached = value as float
@@ -95,6 +98,8 @@ class Style {
 	@StyleProperty public NumberValue paddingLeft;
 	@StyleProperty public NumberValue paddingRight;
 	
+	@StyleProperty public NumberValue fontSize;
+	
 	@StyleProperty public List<List<Object>> transitions;
 	
 	@StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, android.util.TypedValue.COMPLEX_UNIT_PX);
@@ -131,6 +136,8 @@ class Style {
         
         _width = appliedStyle._width.otherwise(_width)
         _height = appliedStyle._height.otherwise(_height)
+        
+        _fontSize = appliedStyle._fontSize.otherwise(_fontSize)
         
         _transitions = appliedStyle._transitions.otherwise(new ArrayList<List<Object>>()) as List<List<Object>>
     }
@@ -198,6 +205,7 @@ class Style {
 		this.paddingRight = form.paddingRight
 		this.width = form.width
 		this.height = form.height
+		this.fontSize = form.fontSize
 		this.transitions = form.transitions
 		this.x = form.x
 		this.y = form.y
@@ -225,6 +233,7 @@ class Style {
 		this.paddingRight = form._paddingRight
 		this.width = form._width
 		this.height = form._height
+		this.fontSize = form._fontSize
 		this.transitions = form._transitions
 		this.x = form._x
 		this.y = form._y
@@ -402,6 +411,13 @@ class Style {
 		var pBottom = paddingBottom.otherwise(padding).inPixelsInt(androidView.context)
 		
 		androidView.setPadding(pLeft,pTop,pRight,pBottom);
+		
+		if (androidView instanceof TextView) {
+			androidView.setTextColor(textColor.asColor);
+			if (fontSize != null) {
+				androidView.textSize = fontSize.inPixelsInt(androidView.context);
+			}
+		}
 		
 		// Layout Params
     	var LayoutParams lp = androidView.layoutParams

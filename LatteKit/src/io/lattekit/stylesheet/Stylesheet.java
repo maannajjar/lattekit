@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class Stylesheet {
 	static Map<String,Stylesheet> styleSheets = new HashMap<>();
+	Map<String,Style> classes = new HashMap<>();
 
 	public static void registerStylesheet(String fileName,Stylesheet stylesheet) {
 		styleSheets.put(fileName, stylesheet);
@@ -15,11 +16,6 @@ public class Stylesheet {
 		return styleSheets.get(fileName);
 	}
 	
-	public final void loadStylesheet(String filename) {
-		
-	}
-	
-	Map<String,Style> classes = new HashMap<>();
 	public void registerClass(String className, Style style) {
 		classes.put(className, style);
 	}
@@ -27,6 +23,8 @@ public class Stylesheet {
 		return classes.get(className);
 	}
 	
-	
+	public void apply(Stylesheet stylesheet) {
+		
+	}
 	
 }
