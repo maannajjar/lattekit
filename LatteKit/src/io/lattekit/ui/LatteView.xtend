@@ -111,7 +111,13 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		if (cls != null) {
 			cls.split(" ").forEach[
 				var style = stylesheet.getClass(it) 
-				if (style != null) classStyle.applyStyle(style);
+				if (style != null) {
+					classStyle.applyStyle(style);
+					Log.d("Latte", "Applied class "+cls+". Background is "+classStyle.backgroundColor);
+					Log.d("Latte", "Applied class "+cls+". NORMAL background is "+normalStyle.backgroundColor);
+				} else {
+					Log.d("Latte", "COULD NOT FIND CLASS "+cls);
+				}
 				var touchedStyle = stylesheet.getClass(it+":touched");
 				if (touchedStyle != null) touchedClassStyle.applyStyle(touchedStyle); 
 				var disabledStyle = stylesheet.getClass(it+":disabled");
@@ -178,15 +184,13 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	def void applyAttributes() {
 		if (androidView != null) {
-			Log.d("Latte", "Style object for "+this+" : "+ _style);
 			updateStyles();
 			androidView.enabled = enabled;
 			
 			if (pendingStyle == null && activeStyle == normalStyle) {
 				pendingStyle = normalStyle;
-				Log.d("Latte", this+": Applying active style "+normalStyle)
 				// Shouldn't clone, apply should have the same effect of clone
-				_style.cloneFrom(normalStyle);
+				_style.deriveFrom(normalStyle);
 				activeStyle.applyStyle(this);
 			} else if (pendingStyle != activeStyle && pendingStyle != null) {
 				pendingStyle = activeStyle;
@@ -238,23 +242,23 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def Point getMeasuredSize(Style forStyle) {
-	    var widthMeasureSpec = if (forStyle.width == LayoutParams.MATCH_PARENT) {
+	    var widthMeasureSpec = if (forStyle.width.inPixelsInt(androidView.context) == LayoutParams.MATCH_PARENT) {
 	    	var parentWidth = if (nonVirtualParent != null) {
 	    		nonVirtualParent.measuredSize.x;
 	    	} else windowWidth;
 	    	MeasureSpec.makeMeasureSpec(parentWidth, MeasureSpec.EXACTLY);
-	    } else if (forStyle.width == LayoutParams.WRAP_CONTENT) {
+	    } else if (forStyle.width.inPixelsInt(androidView.context) == LayoutParams.WRAP_CONTENT) {
 	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 	    } else {
 	    	MeasureSpec.makeMeasureSpec(forStyle.width.inPixelsInt(androidView.context), MeasureSpec.EXACTLY);
 	    }
 	    
-		var heightMeasureSpec = if (forStyle.height == LayoutParams.MATCH_PARENT) {
+		var heightMeasureSpec = if (forStyle.height.inPixelsInt(androidView.context) == LayoutParams.MATCH_PARENT) {
 	    	var parentHeight = if (nonVirtualParent != null) {
 	    		nonVirtualParent.measuredSize.y;
 	    	} else windowHeight;
 	    	MeasureSpec.makeMeasureSpec(parentHeight, MeasureSpec.EXACTLY);
-	    } else if (forStyle.height == LayoutParams.WRAP_CONTENT) {
+	    } else if (forStyle.height.inPixelsInt(androidView.context) == LayoutParams.WRAP_CONTENT) {
 	    	MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 	    } else {
 	    	MeasureSpec.makeMeasureSpec(forStyle.height.inPixelsInt(androidView.context), MeasureSpec.EXACTLY);

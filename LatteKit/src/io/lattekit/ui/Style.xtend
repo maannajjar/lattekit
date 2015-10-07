@@ -26,11 +26,25 @@ import android.util.TypedValue
 class NumberValue {
 	@Accessors var int value;
 	@Accessors var int type;
+	@Accessors String valueType;
 	Float cached;
 	new(int value, int type) {
 		this.value = value;
 		this.type = type;
+		valueType = "Integer";
+		if (type == TypedValue.COMPLEX_UNIT_PX) {
+			cached = value as float;
+		}		
 	}
+	
+	new(float value, int type) {
+		this.value = Math.round(value);
+		this.type = type;
+		valueType = "Float";
+		if (type == TypedValue.COMPLEX_UNIT_PX) {
+			cached = value;
+		}
+	}	
 	def inPixels(Context context) {
 		if (cached != null) { return cached;}
 		if (type == TypedValue.COMPLEX_UNIT_DIP) {
@@ -160,7 +174,34 @@ class Style {
 		];
 		return style;
 	}
-		
+
+	def void deriveFrom(Style form) {
+		this.backgroundColor = form.backgroundColor
+		this.rippleColor = form.rippleColor
+		this.borderColor = form.borderColor
+		this.textColor = form.textColor
+		this.backgroundDrawable = form.backgroundDrawable
+		this.cornerRadius = form.cornerRadius
+		this.borderWidth = form.borderWidth
+		this.margin = form.margin
+		this.marginTop = form.marginTop
+		this.marginBottom = form.marginBottom
+		this.marginLeft = form.marginLeft
+		this.marginRight = form.marginRight
+		this.elevation = form.elevation
+		this.translationX = form.translationX
+		this.translationY = form.translationY
+		this.padding = form.padding
+		this.paddingTop = form.paddingTop
+		this.paddingBottom = form.paddingBottom
+		this.paddingLeft = form.paddingLeft
+		this.paddingRight = form.paddingRight
+		this.width = form.width
+		this.height = form.height
+		this.transitions = form.transitions
+		this.x = form.x
+		this.y = form.y
+	}
 	def void cloneFrom(Style form) {
 		this.backgroundColor = form._backgroundColor
 		this.rippleColor = form._rippleColor
@@ -207,9 +248,9 @@ class Style {
 			if (animatedValue == 0) {
 				_properties.filter[!transitionProperties.contains(it)].forEach[
 					if (it == "x" && _computedX != null && revertToNormal && startStyle.x != null) {
-						startStyle.setProperty(it, _computedX)
+						startStyle.setProperty(it, new NumberValue(_computedX, TypedValue.COMPLEX_UNIT_PX));
 					} else if (it == "y" && _computedY != null && revertToNormal  && startStyle.y != null) {
-						startStyle.setProperty(it, _computedY)
+						startStyle.setProperty(it, new NumberValue(_computedY, TypedValue.COMPLEX_UNIT_PX));
 					}  else if ( this.getProperty(it) != null) {
 						startStyle.setProperty(it, this.getProperty(it));
 					}
@@ -225,8 +266,8 @@ class Style {
 		if (transitions != null) {
 			allAnims += transitions.map[
 				val propName = it.get(0) as String;
-				val duration = it.get(1) as Integer;
-				val delay = it.get(3) as Integer;
+				val duration = (it.get(1) as Integer).otherwise(0);
+				val delay = (it.get(3) as Integer).otherwise(0);
 
 				var startValue = if (propName == "x") {
 					latteView.androidView.x
@@ -242,35 +283,48 @@ class Style {
 				} else {
 					this.getProperty(propName);
 				}
-				if (propName == "y") {
-					Log.d("Latte", "Animating from "+ startValue + " to "+myValue +" (? "+ revertToNormal+" * " + latteView.androidView.y+")");
-				}
 				var ValueAnimator anim = null;
 				if (propName == "width") {
-					myValue = actualSize.x;
-					startValue = startActualSize.x;
+					myValue = new NumberValue(actualSize.x,0);
+					startValue = new NumberValue(startActualSize.x,0);
 				}
 				if (propName == "height") {
-					myValue = actualSize.y
-					startValue = startActualSize.y
+					myValue = new NumberValue(actualSize.y,0)
+					startValue = new NumberValue(startActualSize.y,0)
 				}
 				if (myValue == null || startValue == null) {
 					Log.d("Latte", latteView +": No start or end value for "+propName)
 					return null;
 				}
-				if (startValue.class == Integer) {
-					anim = ValueAnimator.ofInt(startValue as Integer, myValue as Integer);
+				if (startValue.class == Integer || startValue instanceof NumberValue) {
+					var start = if (startValue instanceof NumberValue) { startValue.inPixelsInt(latteView.androidView.context); } else { startValue as Integer}
+					var end = if (myValue instanceof NumberValue) { myValue.inPixelsInt(latteView.androidView.context); } else { myValue as Integer}
+					Log.d("Latte", "i Animating "+propName+" from "+ start + " to "+end +" in "+duration);
+					anim = ValueAnimator.ofInt(start,end);
 					anim.addUpdateListener([ 
 						if (latteView.currentAnimation == animSet) { 
-							startStyle.setProperty(propName, animatedValue as Integer);
+//							try { 
+//								startStyle.setProperty(propName, animatedValue as Integer);
+//							} catch (Exception ex) {
+//								startStyle.setProperty(propName, new NumberValue(animatedValue as Integer, 0));
+//							}
+							startStyle.setProperty(propName, new NumberValue(animatedValue as Integer, 0));
 							startStyle.applyStyle(latteView)
 						}
 					]);
 				} else if (startValue.class == Float) {
-					anim = ValueAnimator.ofFloat(startValue as Float, myValue as Float);
+					var start = if (startValue instanceof NumberValue) { startValue.inPixels(latteView.androidView.context); } else { startValue as Float;}
+					var end = if (myValue instanceof NumberValue) { myValue.inPixels(latteView.androidView.context); } else { myValue as Float;}
+					anim = ValueAnimator.ofFloat(start, end);
+					Log.d("Latte", "f Animating "+propName+" from "+ start + " to "+end );
 					anim.addUpdateListener([
 						if (latteView.currentAnimation == animSet) { 
-							startStyle.setProperty(propName, animatedValue as Float);
+//							try { 
+//								startStyle.setProperty(propName, animatedValue as Float);
+//							} catch (Exception ex) {
+//								startStyle.setProperty(propName, new NumberValue(animatedValue as Float, 0));
+//							}
+							startStyle.setProperty(propName, new NumberValue(animatedValue as Float, 0));
 							startStyle.applyStyle(latteView)
 						}
 					]);
