@@ -2,6 +2,7 @@ package io.lattekit.ui
 
 import android.R
 import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.content.Context
@@ -11,18 +12,19 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
+import android.os.Handler
 import android.util.Log
+import android.util.TypedValue
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
+import android.widget.TextView
 import io.lattekit.StyleProperty
 import java.util.ArrayList
 import java.util.List
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
-import android.util.TypedValue
-import android.widget.TextView
 
 class NumberValue {
     @Accessors var int value;
@@ -335,7 +337,21 @@ class Style {
                 return anim;
             ].filterNull
         }
-        animSet.playTogether(allAnims)      
+        animSet.playTogether(allAnims)
+        val nativeParent = latteView.nonVirtualParent;
+        if (nativeParent != null) {
+        	nativeParent.pendingChildAnimations += animSet;
+	        animSet.addListener(new AnimatorListenerAdapter() {
+				override onAnimationEnd(Animator animation) {
+					nativeParent.pendingChildAnimations.remove(animSet);
+					new Handler().postDelayed([
+						if (nativeParent.pendingChildAnimations.isEmpty) {
+							nativeParent.applySubviewStyles
+						}
+					],10);
+				}
+	        })
+	    }
         return animSet
     }
     
@@ -392,7 +408,6 @@ class Style {
         
         if (x != null) androidView.x = x.inPixels(androidView.context)
         if (y != null) androidView.y = y.inPixels(androidView.context)
-        
         
         var pLeft = (paddingLeft ?: padding).inPixelsInt(androidView.context)
         var pRight = (paddingRight ?: padding).inPixelsInt(androidView.context)

@@ -10,6 +10,7 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.os.Build
+import android.os.Handler
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -28,7 +29,7 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
-import android.os.Handler
+import android.widget.Button
 
 public  class LatteView implements OnTouchListener, OnClickListener {
 	
@@ -43,6 +44,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	@Accessors public (LatteView, MotionEvent)=>boolean onTouch;
 	
 	public var Animator currentAnimation;
+	public var List<Animator> pendingChildAnimations = newArrayList(); 
 	public var Style pendingStyle;
 
 	Style classStyle;
@@ -56,7 +58,6 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	@Accessors public Runnable onApplyAttributes
 	
 	Style _style = new Style();	
-	@State public boolean enabled = true;
 	@State public boolean touched = false;
 	@State String cls; 
 	Stylesheet stylesheet = new Stylesheet();
@@ -103,6 +104,12 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		onStateChanged("style");	
 	}
 	
+	def applySubviewStyles() {
+		subviews.forEach[
+			it.activeStyle.applyStyle(it);
+		]
+	}
+	
 	def updateStyles() {
 		classStyle = new Style();
 		touchedClassStyle = new Style();
@@ -143,7 +150,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def getActiveStyle() {
-		if (!enabled && disabledStyle != null) {
+		if (androidView != null && !androidView.enabled && disabledStyle != null) {
 			return disabledStyle
 		} else if (touched && touchedStyle != null) {
 			return touchedStyle;
@@ -161,6 +168,9 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		androidView.viewTreeObserver.addOnGlobalLayoutListener([
 			normalStyle._computedX = androidView.x
 			normalStyle._computedY = androidView.y
+			if (androidView instanceof Button) {
+				Log.d("Latte", androidView.text +": My computed y is "+androidView.y)
+			}
 			androidView.viewTreeObserver.removeOnGlobalLayoutListener(self)
 		])
 	}
@@ -182,9 +192,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		stylesheet.apply(this.stylesheet);
 	}
 
-
 	def void loadStylesheets(List<? extends Stylesheet> stylesheets) {
-		
 		stylesheets.forEach[ it.apply(this.stylesheet) ];
 	}
 		
@@ -192,12 +200,11 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		if (androidView != null) {
 			onApplyAttributes?.run
 			updateStyles();
-			androidView.enabled = enabled;
 			
-			if (pendingStyle == null && activeStyle == normalStyle) {
-				pendingStyle = normalStyle;
+			if (pendingStyle == null ) {
+				pendingStyle = activeStyle;
 				// Shouldn't clone, apply should have the same effect of clone
-				_style.deriveFrom(normalStyle);
+				_style.deriveFrom(activeStyle);
 				activeStyle.applyStyle(this);
 			} else if (pendingStyle != activeStyle && pendingStyle != null) {
 				pendingStyle = activeStyle;
@@ -222,7 +229,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		if (onTouch != null && e.action == MotionEvent.ACTION_DOWN) {
 			handled = onTouch.apply(this,e);
 		}
-		if (enabled) { 
+		if (v.enabled) { 
 			if (e.action == MotionEvent.ACTION_DOWN) {
 				touched = true; 				
 			} else if (e.action == MotionEvent.ACTION_UP) {
@@ -399,12 +406,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		oldView.normalStyle.cloneFrom(newView.normalStyle);
 		oldView.touchedStyle.cloneFrom(newView.touchedStyle);
 		oldView.disabledStyle.cloneFrom(newView.disabledStyle);
-		if (oldView.copyStateProps(newView)) {
-			Log.d("Latte", this +" copied properties "+newView.newProperties.keySet.join(","));
-//			oldView.onStateChanged(newView.newProperties.keySet.join(","));			
-		} else {
-			Log.d("Latte", this +" Nothing was copied");
-		}
+		var stateChanged = oldView.copyStateProps(newView)
+		
 		for (var i =0; i < newView.subviews.size; i++) {
 			if (oldView.subviews.size <= i) {
 				newView.subviews.get(i).parentView = oldView;
