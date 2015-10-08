@@ -265,8 +265,9 @@ class Style {
                     }  else if ( this.getProperty(it) != null) {
                         startStyle.setProperty(it, this.getProperty(it));
                     }
+                    startStyle.applyStyleAttributes(latteView,it)
                 ]
-                startStyle.applyStyle(latteView)
+                
                 
             }
         ])
@@ -315,7 +316,7 @@ class Style {
                     anim.addUpdateListener([ 
                         if (latteView.currentAnimation == animSet) { 
                             startStyle.setProperty(propName, new NumberValue(animatedValue as Integer, 0));
-                            startStyle.applyStyle(latteView)
+                            startStyle.applyStyleAttributes(latteView,propName)
                         }
                     ]);
                 } else if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Float") {
@@ -325,7 +326,7 @@ class Style {
                     anim.addUpdateListener([
                         if (latteView.currentAnimation == animSet) { 
                             startStyle.setProperty(propName, new NumberValue(animatedValue as Float, 0));
-                            startStyle.applyStyle(latteView)
+                            startStyle.applyStyleAttributes(latteView,propName)
                         }
                     ]);
                 }
@@ -337,7 +338,7 @@ class Style {
                 return anim;
             ].filterNull
         }
-        animSet.playTogether(allAnims)
+		animSet.playTogether(allAnims)
         val nativeParent = latteView.nonVirtualParent;
         if (nativeParent != null) {
         	nativeParent.pendingChildAnimations += animSet;
@@ -397,58 +398,85 @@ class Style {
     }
     
     def applyStyle(LatteView latteView) {
+    	applyStyleAttributes(latteView);
+    }
+    def applyStyleAttributes(LatteView latteView, String... properties) {
+    	
+    	var applyAll = properties.isEmpty
+    	
         var androidView = latteView.androidView;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if ( (applyAll ||  properties.contains("elevation")) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             androidView.elevation = elevation.inPixels(androidView.context);
         }
-        applyDrawableStyle(latteView);
-        applyDrawableShape(latteView);
-        androidView.translationY = translationY.inPixels(androidView.context)
-        androidView.translationX = translationX.inPixels(androidView.context);
         
-        if (x != null) androidView.x = x.inPixels(androidView.context)
-        if (y != null) androidView.y = y.inPixels(androidView.context)
+        if (applyAll || !properties.filter[#["cornerRadius","backgroundColor","rippleColor","borderWidth"].contains(it)].empty) {
+        	applyDrawableStyle(latteView);
+        }
+        if (applyAll || !properties.filter[#["cornerRadius","borderWidth"].contains(it)].empty) {
+        	applyDrawableShape(latteView);
+        }
         
-        var pLeft = (paddingLeft ?: padding).inPixelsInt(androidView.context)
-        var pRight = (paddingRight ?: padding).inPixelsInt(androidView.context)
-        var pTop = (paddingTop ?: padding).inPixelsInt(androidView.context)
-        var pBottom = (paddingBottom ?: padding).inPixelsInt(androidView.context)
+        if (applyAll || properties.contains("translationY")) androidView.translationY = translationY.inPixels(androidView.context)
+        if (applyAll || properties.contains("translationX")) androidView.translationX = translationX.inPixels(androidView.context);
         
-        androidView.setPadding(pLeft,pTop,pRight,pBottom);
-        
-        if (androidView instanceof TextView) {
-            androidView.setTextColor(textColor.asColor);
-            if (fontSize != null) {
+        if ((applyAll || properties.contains("x")) && x != null) androidView.x = x.inPixels(androidView.context)
+        if ((applyAll || properties.contains("y")) && y != null) androidView.y = y.inPixels(androidView.context)
+        if (applyAll || !properties.filter[it.indexOf("padding") != -1].empty) {
+	        var pLeft = (paddingLeft ?: padding).inPixelsInt(androidView.context)
+	        var pRight = (paddingRight ?: padding).inPixelsInt(androidView.context)
+	        var pTop = (paddingTop ?: padding).inPixelsInt(androidView.context)
+	        var pBottom = (paddingBottom ?: padding).inPixelsInt(androidView.context)
+	        
+	        androidView.setPadding(pLeft,pTop,pRight,pBottom);
+        }
+		if (androidView instanceof TextView) {        
+			if (applyAll || properties.contains("textColor")) {
+	            androidView.setTextColor(textColor.asColor);
+	        }
+	        if ((applyAll || properties.contains("fontSize")) && fontSize != null) {
                 androidView.textSize = fontSize.inPixelsInt(androidView.context);
             }
         }
         
+        
         // Layout Params
         var LayoutParams lp = androidView.layoutParams
-        lp.width = width.inPixelsInt(androidView.context)
-        lp.height = height.inPixelsInt(androidView.context)
-        if (lp instanceof MarginLayoutParams) {
-            if (margin != null) {
-                lp.leftMargin = margin.inPixelsInt(androidView.context)
-                lp.topMargin = margin.inPixelsInt(androidView.context)
-                lp.rightMargin = margin.inPixelsInt(androidView.context)
-                lp.bottomMargin = margin.inPixelsInt(androidView.context) 
-            }
-            
-            if (marginLeft != null) {
-                lp.leftMargin = marginLeft.inPixelsInt(androidView.context)
-            }
-            if (marginRight != null) {
-                lp.rightMargin = marginRight.inPixelsInt(androidView.context)
-            }
-            if (marginBottom != null) {
-                lp.bottomMargin = marginBottom.inPixelsInt(androidView.context)
-            }
-            if (marginTop != null) {
-                lp.topMargin = marginTop.inPixelsInt(androidView.context)
-            }
+        var lpChanged = false;
+		if (applyAll || properties.contains("width")) {
+        	lp.width = width.inPixelsInt(androidView.context)
+        	lpChanged = true;
         }
-        androidView.layoutParams = lp;
+        if (applyAll || properties.contains("height")) {
+        	lp.height = height.inPixelsInt(androidView.context);
+        	lpChanged = true;
+        }
+        if (applyAll || !properties.filter[it.indexOf("margin") != -1].empty) {
+	        if (lp instanceof MarginLayoutParams) {
+				lpChanged = true
+	            if (margin != null) {
+	                lp.leftMargin = margin.inPixelsInt(androidView.context)
+	                lp.topMargin = margin.inPixelsInt(androidView.context)
+	                lp.rightMargin = margin.inPixelsInt(androidView.context)
+	                lp.bottomMargin = margin.inPixelsInt(androidView.context) 
+	            }
+	            
+	            if (marginLeft != null) {
+	                lp.leftMargin = marginLeft.inPixelsInt(androidView.context)
+	            }
+	            if (marginRight != null) {
+	                lp.rightMargin = marginRight.inPixelsInt(androidView.context)
+	            }
+	            if (marginBottom != null) {
+	                lp.bottomMargin = marginBottom.inPixelsInt(androidView.context)
+	            }
+	            if (marginTop != null) {
+	                lp.topMargin = marginTop.inPixelsInt(androidView.context)
+	            }
+	        }
+        }
+        if (lpChanged) {
+        	androidView.layoutParams = lp;
+        }
     }
     
     
