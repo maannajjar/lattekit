@@ -2,27 +2,36 @@ package io.lattekit.android
 
 import android.app.Activity
 import android.os.Bundle
-import io.lattekit.Layout
+import io.lattekit.Latte
 import io.lattekit.stylesheet.MainStylesheet
 
 class MainActivity extends Activity {
 	
 	var latteCss = #[new MainStylesheet()];
 	
-	@Override 
-	override protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState)		
-		contentView = render().buildView(this);
-	}
-
-
-	@Layout(imports=#["io.lattekit.android", "android.support.v4.view"])
-	def render() '''
+	var String myTitle = "Hello";
+	
+	@Latte
+	var mainView = '''
 		<RelativeLayout style="width: match_parent;height: match_parent">
 			<CheckBox id="Button1" alignParentStart={true}  class="mainButton" label="Button 1" />
-			<Button cls="mainButton" onClick={System.out.println("CLICKED ON "+$0); } style="font-size: 10" id="Button2" alignParentEnd={true} text="BUTTON HI" />
+			<Button cls="mainButton" onClick={MainActivity.this.onClick();} style="font-size: 10" id="Button2" alignParentEnd={true} text={myTitle} />
 		
 		</RelativeLayout>
 	'''
+	
+	@Override 
+	override protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState)		
+		contentView = mainView.buildView(this);
+	}
+
+	
+	def onClick() {
+		myTitle ="WHAT IS UP";
+		mainView.onStateChanged();
+	}
+
+
 
 }
