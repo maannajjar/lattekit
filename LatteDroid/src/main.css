@@ -14,13 +14,15 @@
 	padding-right: 30;
 	width: wrap_content;
 	height: wrap_content;
-	font-size: 15sp;
+	font-size: 5sp;
 	padding-bottom: 0dp;
 	elevation: 3dp;
+	text-align: center;
 	text-color: #ffffff;
 	transition: width 300ms 200ms,
 				height 200ms 0ms,
 				margin-top 300ms 500ms,
+				y 300ms 500ms,
 				margin-left 300ms 800ms,
 				margin-right 300ms 800ms,           
 				corner-radius 300ms 800ms,
@@ -29,13 +31,17 @@
 				elevation 600ms 0ms;
 }
 
+.mainButton:disabled {
+	text-color: #333333;
+}
+
 .mainButton:touched {
 	font-size: 40sp;
 
 	border-width: 20dp;
 	corner-radius: 0;
 	width: match_parent;
-	height: wrap_content;
+	height: match_parent;
 	elevation: 10;
 	border-color: #0277BD;
 	margin-top: 0;
