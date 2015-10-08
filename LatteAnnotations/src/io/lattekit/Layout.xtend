@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets
 import java.util.List
 import java.util.Map
 import java.util.Stack
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 import javax.xml.parsers.SAXParser
 import javax.xml.parsers.SAXParserFactory
@@ -17,11 +18,13 @@ import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableTypeDeclaration
+import org.eclipse.xtend.lib.macro.declaration.Type
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.xml.sax.Attributes
 import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
-import org.eclipse.xtext.xbase.lib.Functions.Function2
+
+import static org.reflections.ReflectionUtils.*
 
 @Active(typeof(LayoutProcessor))
 annotation Layout {
@@ -60,6 +63,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 class LayoutParser extends DefaultHandler {
 	
 	@Accessors var String renderBody;
+	
 	TransformationContext context;
 	var Stack<Map<String,Object>> elStack = new Stack<Map<String,Object>>();
 	var List<String> errorList = newArrayList();
@@ -152,27 +156,33 @@ class LayoutParser extends DefaultHandler {
 	   var tagSimpleName = elName;
 	   var androidCreator = "";
 	   var isAndroidView = false;
-	   
+	   var Type androidViewType = null; 
 	   // Find Fully Qualified name
-		val viewType = context.findViewType(elName,importList);
-		if (viewType == null) {
+		var findViewType = context.findViewType(elName,importList);
+		if (findViewType == null) {
 			errorList += "Couldn't find view with type "+ elName;
 		} else {
-			elName = viewType.qualifiedName
+			elName = findViewType.qualifiedName
 			var androidView = context.findTypeGlobally("android.view.View");
-			if (androidView.isAssignableFrom(viewType)) {
+			if (androidView.isAssignableFrom(findViewType)) {
 				isAndroidView = true;
+				androidViewType = findViewType;
+				findViewType = context.findTypeGlobally("io.lattekit.ui.LatteView");
 				androidCreator = '''
-				it.setViewCreator(new org.eclipse.xtext.xbase.lib.Functions.Function1<android.content.Context,android.view.View>() {
-					public «viewType.qualifiedName» apply(android.content.Context context) {
+				it.setOnCreateAndroidView(new org.eclipse.xtext.xbase.lib.Functions.Function1<android.content.Context,android.view.View>() {
+					public «androidViewType.qualifiedName» apply(android.content.Context context) {
 							return new «elName»(context);
 					}
 				});'''
 				elName = "io.lattekit.ui.LatteView"
 			}
 		}
+		val viewType = findViewType;
+		
+		
 
 	   var attrsProc = "";
+	   var androidAttrsProc = "";
 	   for ( i : 0..< attributes.length) {
 			var attrName = attributes.getQName(i)
             if (attrName == null || attrName == "") {
@@ -206,13 +216,54 @@ class LayoutParser extends DefaultHandler {
 				context.getFunctionType(parameters.findFirst[true].type) != null
 			];	
 			
+			
+			
 			var hasSetter = !setterMethods.isEmpty
+			
 			var value = if (isJavaCode) {
 				attrValue.replaceAll("&quot;",'''"''');	
 			} else {
 				'"' + attrValue.replaceAll("&quot;",'''\"''') + '"';
 			}
-			if (procClosureSetter != null || fnClosureSetter != null) { 
+			var processed = false;
+			if (!hasSetter && isAndroidView) {
+				// Try Regular Setter:
+				var androidViewClass =  try { Class.forName(androidViewType.qualifiedName) } catch (Exception ex) { null };
+				var allMethods = getAllMethods(androidViewClass);
+				var regularSetter = allMethods.findFirst[name == propertySetter && parameterCount == 1];
+				if (regularSetter != null) {
+					processed = true;
+					var typedValue = if (regularSetter.parameters.get(0).type == String || regularSetter.parameters.get(0).type == CharSequence) {
+						value
+					} else value
+					
+					androidAttrsProc += '''
+						myView.«regularSetter.name»(«typedValue»);
+					'''
+				} else if (isJavaCode) {
+					
+					val androidListenerSetter = propertySetter +"Listener";
+					var listenerSetter = allMethods.findFirst[name == androidListenerSetter && parameterCount == 1]
+					if (listenerSetter != null) {
+						processed = true;
+						var listenerClass = listenerSetter.parameters.get(0).type
+						androidAttrsProc += '''
+	
+							 myView.«listenerSetter.name»( new «listenerClass.name.replace("$",".")»() { 
+								«FOR method: listenerClass.declaredMethods»
+									«val AtomicInteger paramCount = new AtomicInteger(-1)»
+									 public «method.returnType.name» «method.name»(«method.parameters.map[type.name +" $"+paramCount.incrementAndGet; ].join(",")») {
+										 «value»«if (!isJavaCode) /*TODO ADD PARAM*/"()" else ""»;
+									}
+								«ENDFOR»
+							});
+						
+						'''
+					}
+				
+				}
+			} 
+			if (!processed && (procClosureSetter != null || fnClosureSetter != null)) { 
 				val closureSetter = if (procClosureSetter != null ) procClosureSetter else fnClosureSetter; 
 				var closureType = if (procClosureSetter != null ) {
 					context.getProcedureType(closureSetter.parameters.findFirst[true].type).canonicalName
@@ -257,7 +308,7 @@ class LayoutParser extends DefaultHandler {
 			} else if (hasSetter) {
 				attrsProc += '''it.«propertySetter»(«value»);'''+"\n";
 				attrsProc += '''it.addNewProperty("«property»",«value»);'''+"\n";
-			} else {
+			} else if (!processed) {
 				attrsProc += '''it.setAttribute("«property»",«value»);'''+"\n";
 				attrsProc += '''it.addNewProperty("«property»",«value»);'''+"\n";
 			}
@@ -266,18 +317,23 @@ class LayoutParser extends DefaultHandler {
 	   
 	   currentProc = new StringBuilder();
 	   currentProc.append('''
-	   		
 			final org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«elName»> «attrProcName» = new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«elName»>() {
 			public void apply(final «elName» it) {
 					«androidCreator»
-					
+				«IF isAndroidView»					
+					it.setOnApplyAttributes(new Runnable() {
+						public void run() {
+							«androidViewType.qualifiedName» myView = («androidViewType.qualifiedName»)it.getAndroidView();
+							«androidAttrsProc»
+						}
+					});
+				«ENDIF»
 					«attrsProc»
 				}
 			};
 			
 			final org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«elName»> «childProcName» = new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«elName»>() {
 			public void apply(final «elName» it) {
-			
 	   ''');
 	   
 	   if (currentEl != null) {

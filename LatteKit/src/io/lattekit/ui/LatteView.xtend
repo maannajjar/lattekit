@@ -28,6 +28,7 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
+import android.widget.AdapterView
 
 @Latte
 public  class LatteView implements OnTouchListener, OnClickListener {
@@ -51,7 +52,9 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	@Accessors public Style normalStyle = new Style();
 	@Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
 	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];
-	@Accessors public (Context)=>View viewCreator;
+	
+	@Accessors public (Context)=>View onCreateAndroidView;
+	@Accessors public Runnable onApplyAttributes
 	
 	Style _style = new Style();	
 	@State public boolean enabled = true;
@@ -161,7 +164,9 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	def void initAndroidView() {
 		createBackgroundDrawable();
 		updateTextColorDrawable();
-		androidView.onClickListener = this;
+		if (!(androidView instanceof AdapterView)) {
+			androidView.onClickListener = this;
+		}
 		androidView.onTouchListener = this;
 		
 		if (normalStyle._computedX == null) {
@@ -173,8 +178,10 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		Log.d("Latte", "Loaded Stylesheet "+stylesheet);
 		stylesheet.apply(this.stylesheet);
 	}
+	
 	def void applyAttributes() {
 		if (androidView != null) {
+			onApplyAttributes?.run
 			updateStyles();
 			androidView.enabled = enabled;
 			
@@ -301,8 +308,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def View createAndroidView(Activity a) {
-		if (viewCreator != null) {
-			return viewCreator.apply(a);
+		if (onCreateAndroidView != null) {
+			return onCreateAndroidView.apply(a);
 		} 
 		null;
 	}
@@ -457,6 +464,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 			return this.subviews.get(0).buildAndroidViewTree(a, lp);
 		}
 		this.androidView = myView;
+		
 		if (this.androidView.id == -1 && this.id != null) {
 			this.androidView.id = this.id.hashCode
 		}
