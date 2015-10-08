@@ -60,19 +60,23 @@ public class RelativeLayout extends LatteView {
 			} else if (key == "alignStart") {
 				newParams.addRule(android.widget.RelativeLayout.ALIGN_START, viewIds.get(value));
 			} else if (key == "alignEnd") {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_END, viewIds.get(value));
+				 newParams.addRule(android.widget.RelativeLayout.ALIGN_END, viewIds.get(value));
 			} else if (key == "alignTop") {
 				newParams.addRule(android.widget.RelativeLayout.ALIGN_TOP, viewIds.get(value));
 			} else if (key == "alignBottom") {
 				newParams.addRule(android.widget.RelativeLayout.ALIGN_BOTTOM, viewIds.get(value));
-			} else if (key == "alignParentStart" && value == true) {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_START);
-			} else if (key == "alignParentEnd" && value == true) {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_END);
-			} else if (key == "alignParentTop" && value == true) {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);
-			} else if (key == "alignParentBottom" && value == true) {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM);
+			} else if (key == "alignParentStart" ) {
+				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_START);}
+				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_START);
+			} else if (key == "alignParentEnd") {
+				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_END); }
+				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_END);
+			} else if (key == "alignParentTop") {
+				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);}
+				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);
+			} else if (key == "alignParentBottom") {
+				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM); }
+				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM);
 			}
 
 		]
