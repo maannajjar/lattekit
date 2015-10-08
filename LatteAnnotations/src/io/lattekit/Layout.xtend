@@ -55,7 +55,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 		layoutParser.parseLayout(context, annotatedMethod.declaringType,  importList, layoutSource);
 		if (isAdHoc) {
-			annotatedMethod.returnType = findTypeGlobally("android.view.View").newTypeReference();
+			annotatedMethod.returnType = latteViewTR;
 		}
 		annotatedMethod.body = '''
 			«IF !isAdHoc»
@@ -65,7 +65,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 				«IF annotatedMethod.declaringType.findDeclaredField("latteCss") != null»
 					myView.loadStylesheets(this.latteCss);
 				«ENDIF»
-				return myView.buildView(«IF isContextClass»this«ELSE»context«ENDIF»);
+				return myView;
 			«ENDIF»
 		''';
 
