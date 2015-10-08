@@ -28,6 +28,7 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
+import android.os.Handler
 
 public  class LatteView implements OnTouchListener, OnClickListener {
 	
@@ -223,9 +224,11 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		}
 		if (enabled) { 
 			if (e.action == MotionEvent.ACTION_DOWN) {
-				touched = true;				
+				touched = true; 				
 			} else if (e.action == MotionEvent.ACTION_UP) {
-				touched = false;
+				//TODO: THIS IS DONE TO TEMPORARILY WORK AROUND ONCLICK EXECUTING AFTER THIS
+				// PLEASE FIND BETTER WAY
+				new Handler().postDelayed([ touched = false; ],5);
 			}
 		}
 		if (onTouch != null && e.action == MotionEvent.ACTION_UP) {
