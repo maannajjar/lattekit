@@ -25,6 +25,9 @@ import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
 
 import static org.reflections.ReflectionUtils.*
+import io.lattekit.ui.RelativeLayout
+import io.lattekit.ui.LatteView
+import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 
 @Active(typeof(LayoutProcessor))
 annotation Layout {
@@ -339,14 +342,16 @@ class LayoutParser extends DefaultHandler {
 	   if (currentEl != null) {
 			elStack.push(currentEl);
 	   }		       
-	   currentEl = #{ 
+	   currentEl = newHashMap( 
 		"name" -> if (isAndroidView)  "io.lattekit.ui.LatteView" else elName,
 		"simpleName" -> if (isAndroidView)  "LatteView" else tagSimpleName,
+		"tagSimpleName" -> tagSimpleName,
 		"childrenProcBody"-> currentProc,
 		"attrProcBody" -> "",
 		"childrenProcName" -> childProcName,
-		"attrProcName" -> attrProcName
-	   };
+		"attrProcName" -> attrProcName,
+		"childCount" -> 0
+	   );
 	     				
 	}
 	
@@ -362,15 +367,25 @@ class LayoutParser extends DefaultHandler {
 		''')
 		if (!elStack.isEmpty) { 
 			var myEl = currentEl;
-			var myProc = currentProc;		   			
+			var myProc = currentProc;
+					   			
 			currentEl = elStack.pop();
 			currentProc = currentEl.get("childrenProcBody") as StringBuilder;
+			var currentChildCount = currentEl.get("childCount") as Integer;
 			currentProc.append(myProc);
-			currentProc.append('''«myEl.get('name')».«myEl.get('simpleName')»(it, «myEl.get('attrProcName')», «myEl.get('childrenProcName')»);''')
+			currentProc.append('''
+				«myEl.get('name')» subView«myEl.get('tagSimpleName')»_«currentChildCount» = new «myEl.get('name')»();
+    			subView«myEl.get('tagSimpleName')»_«currentChildCount».processNode(it,«myEl.get('attrProcName')»,«myEl.get('childrenProcName')»);
+				
+			''');
+			currentEl.put("childCount",currentChildCount+1);
+//			currentProc.append('''«myEl.get('name')».«myEl.get('simpleName')»(it, «myEl.get('attrProcName')», «myEl.get('childrenProcName')»);''')
 		} else {
-			currentProc.append("LatteView myView = ");
-			currentProc.append('''«currentEl.get('name')».«currentEl.get('simpleName')»(this, «currentEl.get('attrProcName')», «currentEl.get('childrenProcName')»);''')
-			currentProc.append('''this.addChild(0,myView);''')
+			currentProc.append('''
+    			«currentEl.get('name')» myView = new «currentEl.get('name')»();
+    			myView.processNode(this,«currentEl.get('attrProcName')»,«currentEl.get('childrenProcName')»);
+				this.addChild(0,myView);
+			''')
 			renderBody = translateCode(currentProc.toString);		   			
 		}
 		

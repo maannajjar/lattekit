@@ -1,12 +1,10 @@
 package io.lattekit.ui
 
-import android.app.Activity
+import android.content.Context
 import android.util.Log
 import android.view.View
-import io.lattekit.Latte
 import java.util.HashMap
 
-@Latte
 public class RelativeLayout extends LatteView {
 	
 	
@@ -18,7 +16,7 @@ public class RelativeLayout extends LatteView {
 		var view = androidView as android.widget.RelativeLayout;
 	}
 	
-	override View createAndroidView(Activity a) {
+	override View createAndroidView(Context a) {
 		return new android.widget.RelativeLayout(a);
 	}
 

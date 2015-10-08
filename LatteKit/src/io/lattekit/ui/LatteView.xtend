@@ -18,9 +18,9 @@ import android.view.View.OnClickListener
 import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import android.widget.AdapterView
 import android.widget.FrameLayout
 import android.widget.TextView
-import io.lattekit.Latte
 import io.lattekit.State
 import io.lattekit.stylesheet.Stylesheet
 import java.util.List
@@ -28,9 +28,7 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
-import android.widget.AdapterView
 
-@Latte
 public  class LatteView implements OnTouchListener, OnClickListener {
 	
 	public final static int MATCH_PARENT = LayoutParams.MATCH_PARENT;
@@ -72,7 +70,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	@Accessors private List<LatteView> subviews = newArrayList;
 	private Map<String,Object> newProperties = newHashMap();
 	
-	public Activity activity;
+	public Context activity;
 	@Accessors View androidView;
 	
 	public ShapeDrawable shapeDrawable;
@@ -307,7 +305,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		}
 	}
 	
-	def View createAndroidView(Activity a) {
+	def View createAndroidView(Context a) {
 		if (onCreateAndroidView != null) {
 			return onCreateAndroidView.apply(a);
 		} 
@@ -338,7 +336,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	
 	
 	
-	def <T extends LatteView> void processNode(LatteView parent, String id, (T)=>void attrs, (T)=>void children) {
+	def <T extends LatteView> void processNode(LatteView parent, (T)=>void attrs, (T)=>void children) {
 		isRendering = true;
 		parentView = parent as LatteView;
 		if (parent != null) {
@@ -449,7 +447,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		return this.androidView
 	}
 	
-	def View buildAndroidViewTree(Activity a, ViewGroup.LayoutParams lp) {
+	def View buildAndroidViewTree(Context a, ViewGroup.LayoutParams lp) {
 		// First build my view
 		this.activity = a;
 		var myView = if (this.androidView == null) {
@@ -501,10 +499,17 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	
 	def void renderOn(Activity a) {
 		activity = a;
-		this.processNode(null,null,null, null);
+		this.processNode(null,null, null);
 		this.render();
 		this.buildAndroidViewTree(a, new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(a), this.normalStyle.height.inPixelsInt(a)))
 		a.setContentView(this.rootAndroidView);		
 	}
 	
+	def View buildView(Context context) {
+		activity = context;
+		this.processNode(null,null, null);
+		this.render();
+		this.buildAndroidViewTree(context, new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(context), this.normalStyle.height.inPixelsInt(context)))
+		return this.rootAndroidView;		
+	}
 }
