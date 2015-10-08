@@ -7,7 +7,7 @@ import io.lattekit.State
 import io.lattekit.ui.LatteView
 import io.lattekit.ui.Style
 
-@Latte
+
 class VirtualGroup extends LatteView {
 	
 	@State var int totalButtons = 3; 
@@ -26,15 +26,16 @@ class VirtualGroup extends LatteView {
 		<LinearLayout orientation="vertical" style={myStyle}>
 		for (int i =0; i< @totalRows; i++) {
 			final int j = i;
-			if (j%2 == 0) {
-				<Button label={"Button "+@totalButtons} onTap={self.myTap(j); } />
-			} else {
-				<Button label={"Button "+@totalButtons} onTap={@onButtonTap.apply($0); android.util.Log.d("Latte", "Total buttons"+@totalButtons); } />
-			}
 		} 
 		</LinearLayout>
 	'''
-	
+//	
+//				if (j%2 == 0) {
+//				<Button label={"Button "+@totalButtons} onTap={self.myTap(j); } />
+//			} else {
+//				<Button label={"Button "+@totalButtons} onTap={@onButtonTap.apply($0); android.util.Log.d("Latte", "Total buttons"+@totalButtons); } />
+//			}
+//	
 	def myTap(int j ) {
 		setTotalButtons(j);
 	}
