@@ -11,11 +11,13 @@ import java.util.regex.Pattern
 import javax.xml.parsers.SAXParser
 import javax.xml.parsers.SAXParserFactory
 import org.eclipse.xtend.lib.annotations.Accessors
+import org.eclipse.xtend.lib.macro.AbstractFieldProcessor
 import org.eclipse.xtend.lib.macro.AbstractMethodProcessor
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableTypeDeclaration
 import org.eclipse.xtend.lib.macro.declaration.Type
@@ -30,13 +32,13 @@ import static org.reflections.ReflectionUtils.*
 annotation Layout {
 	String[] imports = #[]
 }
+
 class LayoutProcessor extends AbstractMethodProcessor {
 	
 	override doTransform(MutableMethodDeclaration annotatedMethod, extension TransformationContext context) {
 		super.doTransform(annotatedMethod, context)
 
 		val layoutStr = annotatedMethod.body.toString
-//		annotatedMethod.addParameter("oldView", findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference)
 		annotatedMethod.markAsRead
 		
 		val latteViewTR = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference();
@@ -49,7 +51,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		if (importListParam.size > 0) {
 			importList += importListParam 
 		}
-		val isContextClass = findTypeGlobally("android.content.Context").isAssignableFrom(annotatedMethod.declaringType);
+
 		val isAdHoc = !(annotatedMethod.simpleName == "render" && latteViewTR.isAssignableFrom(annotatedMethod.declaringType.newTypeReference()));
 		val layoutParser = new LayoutParser(isAdHoc);
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
@@ -67,6 +69,52 @@ class LayoutProcessor extends AbstractMethodProcessor {
 				«ENDIF»
 				return myView;
 			«ENDIF»
+		''';
+
+	}
+	
+	
+}
+
+
+@Active(typeof(LayoutFieldProcessor))
+annotation Latte {
+	String[] imports = #[]
+}
+
+class LayoutFieldProcessor extends AbstractFieldProcessor {
+	
+	override doTransform(MutableFieldDeclaration annotatedField, extension TransformationContext context) {
+		super.doTransform(annotatedField, context)
+
+		val layoutStr = annotatedField.initializer.toString
+		annotatedField.markAsRead
+		
+		val latteViewTR = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference();
+		
+		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
+		var importListParam = annotatedField.annotations.findFirst[ a|
+			a.annotationTypeDeclaration == Latte.newTypeReference().type
+		].getStringArrayValue("imports")
+		
+		if (importListParam.size > 0) {
+			importList += importListParam 
+		}
+		val isAdHoc = true;
+		val layoutParser = new LayoutParser(isAdHoc);
+		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
+		layoutParser.parseLayout(context, annotatedField.declaringType,  importList, layoutSource);
+		annotatedField.type = latteViewTR;
+		annotatedField.initializer = ''' 
+			LatteView.adHoc(new LatteView.AdHocProxy() {
+				public io.lattekit.ui.LatteView doBuild() {
+					«layoutParser.renderBody»
+					«IF annotatedField.declaringType.findDeclaredField("latteCss") != null»
+						myView.loadStylesheets(«annotatedField.declaringType.simpleName».this.latteCss);
+					«ENDIF»
+					return myView;
+				}
+			});
 		''';
 
 	}

@@ -78,7 +78,12 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	protected (LatteView)=>void attributesProc;
 	protected (LatteView)=>void layoutProc;
 	private boolean isRendering = false;
+	private AdHocProxy adHocProxy;
 	
+	def static adHoc(AdHocProxy proxy) {
+		return proxy.doBuild();
+	}
+
 	def setStyle(String style) {
 		setStyle(Style.parseStyle(style));
 	}
@@ -510,6 +515,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		a.setContentView(this.rootAndroidView);		
 	}
 	
+
 	def View buildView(Context context) {
 		activity = context;
 		this.processNode(null,null, null);
@@ -518,4 +524,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		return this.rootAndroidView;		
 	}
 	
+	public interface AdHocProxy {
+		public def LatteView doBuild()
+	}
 }
