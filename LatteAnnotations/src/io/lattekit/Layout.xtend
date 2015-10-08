@@ -25,9 +25,6 @@ import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
 
 import static org.reflections.ReflectionUtils.*
-import io.lattekit.ui.RelativeLayout
-import io.lattekit.ui.LatteView
-import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 
 @Active(typeof(LayoutProcessor))
 annotation Layout {
@@ -42,6 +39,8 @@ class LayoutProcessor extends AbstractMethodProcessor {
 //		annotatedMethod.addParameter("oldView", findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference)
 		annotatedMethod.markAsRead
 		
+		val latteViewTR = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference();
+		
 		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
 		var importListParam = annotatedMethod.annotations.findFirst[ a|
 			a.annotationTypeDeclaration == Layout.newTypeReference().type
@@ -50,12 +49,24 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		if (importListParam.size > 0) {
 			importList += importListParam 
 		}
-		
-		val layoutParser = new LayoutParser();
+		val isContextClass = findTypeGlobally("android.content.Context").isAssignableFrom(annotatedMethod.declaringType);
+		val isAdHoc = !(annotatedMethod.simpleName == "render" && latteViewTR.isAssignableFrom(annotatedMethod.declaringType.newTypeReference()));
+		val layoutParser = new LayoutParser(isAdHoc);
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 		layoutParser.parseLayout(context, annotatedMethod.declaringType,  importList, layoutSource);
+		if (isAdHoc) {
+			annotatedMethod.returnType = findTypeGlobally("android.view.View").newTypeReference();
+		}
 		annotatedMethod.body = '''
-			«layoutParser.renderBody»
+			«IF !isAdHoc»
+				«layoutParser.renderBody»
+			«ELSE»
+				«layoutParser.renderBody»
+				«IF annotatedMethod.declaringType.findDeclaredField("latteCss") != null»
+					myView.loadStylesheets(this.latteCss);
+				«ENDIF»
+				return myView.buildView(«IF isContextClass»this«ELSE»context«ENDIF»);
+			«ENDIF»
 		''';
 
 	}
@@ -66,6 +77,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 class LayoutParser extends DefaultHandler {
 	
 	@Accessors var String renderBody;
+	@Accessors var boolean isAdHoc = false;
 	
 	TransformationContext context;
 	var Stack<Map<String,Object>> elStack = new Stack<Map<String,Object>>();
@@ -78,6 +90,10 @@ class LayoutParser extends DefaultHandler {
 	MutableTypeDeclaration declaringType;
 	
 	var tagsIncrement = 0;
+	
+	new(boolean isAdHoc) {
+		this.isAdHoc = isAdHoc;
+	}
 	
 	def String translateCode(String code) {
 		var regex = '''@([_a-z]\w*)'''
@@ -383,8 +399,10 @@ class LayoutParser extends DefaultHandler {
 		} else {
 			currentProc.append('''
     			«currentEl.get('name')» myView = new «currentEl.get('name')»();
-    			myView.processNode(this,«currentEl.get('attrProcName')»,«currentEl.get('childrenProcName')»);
-				this.addChild(0,myView);
+    			myView.processNode(«if (isAdHoc) "null" else "this"»,«currentEl.get('attrProcName')»,«currentEl.get('childrenProcName')»);
+    			«IF !this.isAdHoc»
+					this.addChild(0,myView);
+				«ENDIF»
 			''')
 			renderBody = translateCode(currentProc.toString);		   			
 		}

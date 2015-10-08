@@ -173,10 +173,15 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def void loadStylesheet(Stylesheet stylesheet) {
-		Log.d("Latte", "Loaded Stylesheet "+stylesheet);
 		stylesheet.apply(this.stylesheet);
 	}
-	
+
+
+	def void loadStylesheets(List<? extends Stylesheet> stylesheets) {
+		
+		stylesheets.forEach[ it.apply(this.stylesheet) ];
+	}
+		
 	def void applyAttributes() {
 		if (androidView != null) {
 			onApplyAttributes?.run
@@ -512,4 +517,5 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		this.buildAndroidViewTree(context, new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(context), this.normalStyle.height.inPixelsInt(context)))
 		return this.rootAndroidView;		
 	}
+	
 }
