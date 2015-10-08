@@ -110,38 +110,38 @@ class Style {
     
     
     
-    def applyStyle(Style appliedStyle) {
-        _backgroundColor = appliedStyle._backgroundColor ?: _backgroundColor
-        _rippleColor = appliedStyle._rippleColor ?: _rippleColor
-        _borderColor = appliedStyle._borderColor ?: _borderColor
-        _textColor = appliedStyle._textColor ?: _textColor
-        _backgroundDrawable = appliedStyle._backgroundDrawable ?: _backgroundDrawable
-        _cornerRadius = appliedStyle._cornerRadius ?: _cornerRadius
-        _borderWidth = appliedStyle._borderWidth ?: _borderWidth
-        _margin = appliedStyle._margin ?: _margin
-        _marginTop = appliedStyle._marginTop ?: _marginTop
-        _marginBottom = appliedStyle._marginBottom ?: _marginBottom
-        _marginLeft = appliedStyle._marginLeft ?: _marginLeft
-        _marginRight = appliedStyle._marginRight ?: _marginRight
-        _elevation = appliedStyle._elevation ?: _elevation
-        _translationX = appliedStyle._translationX ?: _translationX
-        _translationY = appliedStyle._translationY ?: _translationY
+    def overrideWithStyle(Style overridingStyle) {
+        _backgroundColor = overridingStyle._backgroundColor ?: _backgroundColor
+        _rippleColor = overridingStyle._rippleColor ?: _rippleColor
+        _borderColor = overridingStyle._borderColor ?: _borderColor
+        _textColor = overridingStyle._textColor ?: _textColor
+        _backgroundDrawable = overridingStyle._backgroundDrawable ?: _backgroundDrawable
+        _cornerRadius = overridingStyle._cornerRadius ?: _cornerRadius
+        _borderWidth = overridingStyle._borderWidth ?: _borderWidth
+        _margin = overridingStyle._margin ?: _margin
+        _marginTop = overridingStyle._marginTop ?: _marginTop
+        _marginBottom = overridingStyle._marginBottom ?: _marginBottom
+        _marginLeft = overridingStyle._marginLeft ?: _marginLeft
+        _marginRight = overridingStyle._marginRight ?: _marginRight
+        _elevation = overridingStyle._elevation ?: _elevation
+        _translationX = overridingStyle._translationX ?: _translationX
+        _translationY = overridingStyle._translationY ?: _translationY
         
-        _x = appliedStyle.x ?: _x
-        _y = appliedStyle.y ?: _y
+        _x = overridingStyle.x ?: _x
+        _y = overridingStyle.y ?: _y
         
-        _padding = appliedStyle._padding ?: _padding
-        _paddingTop = appliedStyle._paddingTop ?: _paddingTop
-        _paddingBottom = appliedStyle._paddingBottom ?: _paddingBottom
-        _paddingLeft = appliedStyle._paddingLeft ?: _paddingLeft
-        _paddingRight = appliedStyle._paddingRight ?: _paddingRight
+        _padding = overridingStyle._padding ?: _padding
+        _paddingTop = overridingStyle._paddingTop ?: _paddingTop
+        _paddingBottom = overridingStyle._paddingBottom ?: _paddingBottom
+        _paddingLeft = overridingStyle._paddingLeft ?: _paddingLeft
+        _paddingRight = overridingStyle._paddingRight ?: _paddingRight
         
-        _width = appliedStyle._width ?: _width
-        _height = appliedStyle._height ?: _height
+        _width = overridingStyle._width ?: _width
+        _height = overridingStyle._height ?: _height
         
-        _fontSize = appliedStyle._fontSize ?: _fontSize
+        _fontSize = overridingStyle._fontSize ?: _fontSize
         
-        _transitions = appliedStyle._transitions ?: new ArrayList<List<Object>>() as List<List<Object>>
+        _transitions = overridingStyle._transitions ?: new ArrayList<List<Object>>() as List<List<Object>>
     }
 
     def static Style parseStyle(String styleStr) {
@@ -265,7 +265,7 @@ class Style {
                     }  else if ( this.getProperty(it) != null) {
                         startStyle.setProperty(it, this.getProperty(it));
                     }
-                    startStyle.applyStyleAttributes(latteView,it)
+                    startStyle.applyToView(latteView,it)
                 ]
                 
                 
@@ -316,7 +316,7 @@ class Style {
                     anim.addUpdateListener([ 
                         if (latteView.currentAnimation == animSet) { 
                             startStyle.setProperty(propName, new NumberValue(animatedValue as Integer, 0));
-                            startStyle.applyStyleAttributes(latteView,propName)
+                            startStyle.applyToView(latteView,propName)
                         }
                     ]);
                 } else if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Float") {
@@ -326,7 +326,7 @@ class Style {
                     anim.addUpdateListener([
                         if (latteView.currentAnimation == animSet) { 
                             startStyle.setProperty(propName, new NumberValue(animatedValue as Float, 0));
-                            startStyle.applyStyleAttributes(latteView,propName)
+                            startStyle.applyToView(latteView,propName)
                         }
                     ]);
                 }
@@ -397,10 +397,7 @@ class Style {
 //      latteView.shapeDrawable.invalidateSelf
     }
     
-    def applyStyle(LatteView latteView) {
-    	applyStyleAttributes(latteView);
-    }
-    def applyStyleAttributes(LatteView latteView, String... properties) {
+    def applyToView(LatteView latteView, String... properties) {
     	
     	var applyAll = properties.isEmpty
     	

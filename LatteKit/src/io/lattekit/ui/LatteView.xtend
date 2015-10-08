@@ -80,7 +80,6 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	protected (LatteView)=>void attributesProc;
 	protected (LatteView)=>void layoutProc;
 	private boolean isRendering = false;
-	private AdHocProxy adHocProxy;
 	
 	def static adHoc(AdHocProxy proxy) {
 		return proxy.doBuild();
@@ -106,7 +105,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	
 	def applySubviewStyles() {
 		subviews.forEach[
-			it.activeStyle.applyStyle(it);
+			it.activeStyle.applyToView(it);
 		]
 	}
 	
@@ -125,12 +124,12 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 			cls.split(" ").forEach[
 				var style = stylesheet.getClass(it) 
 				if (style != null) {
-					classStyle.applyStyle(style);
+					classStyle.overrideWithStyle(style);
 				}
 				var touchedStyle = stylesheet.getClass(it+":touched");
-				if (touchedStyle != null) touchedClassStyle.applyStyle(touchedStyle); 
+				if (touchedStyle != null) touchedClassStyle.overrideWithStyle(touchedStyle); 
 				var disabledStyle = stylesheet.getClass(it+":disabled");
-				if (disabledStyle != null) disabledClassStyle.applyStyle(disabledStyle); 
+				if (disabledStyle != null) disabledClassStyle.overrideWithStyle(disabledStyle); 
 			]
 		}
 		
@@ -205,7 +204,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 				pendingStyle = activeStyle;
 				// Shouldn't clone, apply should have the same effect of clone
 				_style.deriveFrom(activeStyle);
-				activeStyle.applyStyle(this);
+				activeStyle.applyToView(this);
 			} else if (pendingStyle != activeStyle && pendingStyle != null) {
 				pendingStyle = activeStyle;
 				var oldAnim = currentAnimation; 
@@ -260,7 +259,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	def Point getMeasuredSize(Style forStyle) {
 		// Temporarily apply style to accurately measure size
 		// TODO: only apply attributes that affect size
-		forStyle.applyStyle(this);
+		forStyle.applyToView(this);
 	    var widthMeasureSpec = if (forStyle.width.inPixelsInt(androidView.context) == LayoutParams.MATCH_PARENT) {
 	    	var parentWidth = if (nonVirtualParent != null) {
 	    		nonVirtualParent.measuredSize.x;
@@ -284,7 +283,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	    }
 		androidView.measure(widthMeasureSpec, heightMeasureSpec);
 		// Go back to current style;
-		_style.applyStyle(this);
+		_style.applyToView(this);
 		return new Point(androidView.measuredWidth,androidView.measuredHeight);
 	}
 
