@@ -11,21 +11,18 @@ class MainActivity extends Activity {
 	
 	@Override 
 	override protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState)
-		var TestViewController c = new TestViewController()
-		c.renderOn(this)
-		
-//		contentView = render();
+		super.onCreate(savedInstanceState)		
+		contentView = render().buildView(this);
 	}
 
 
-//	@Layout(imports=#["io.lattekit.android", "android.support.v4.view"])
-//	def render() '''
-//		<RelativeLayout style="width: match_parent;height: match_parent">
-//			<CheckBox id="Button1" alignParentStart={true}  class="mainButton" label="Button 1" />
-//			<Button cls="mainButton" onClick={System.out.println("CLICKED ON "+$0); } style="font-size: 10" id="Button2" alignParentEnd={true} text="BUTTON HI" />
-//		
-//		</RelativeLayout>
-//	'''
+	@Layout(imports=#["io.lattekit.android", "android.support.v4.view"])
+	def render() '''
+		<RelativeLayout style="width: match_parent;height: match_parent">
+			<CheckBox id="Button1" alignParentStart={true}  class="mainButton" label="Button 1" />
+			<Button cls="mainButton" onClick={System.out.println("CLICKED ON "+$0); } style="font-size: 10" id="Button2" alignParentEnd={true} text="BUTTON HI" />
+		
+		</RelativeLayout>
+	'''
 
 }
