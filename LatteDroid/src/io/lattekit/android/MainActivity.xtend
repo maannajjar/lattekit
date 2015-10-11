@@ -4,24 +4,23 @@ import android.app.Activity
 import android.os.Bundle
 import io.lattekit.Latte
 import io.lattekit.stylesheet.MainStylesheet
+import io.lattekit.State
 
 class MainActivity extends Activity {
-	
+
 	var latteCss = #[new MainStylesheet()];
 	
-	var String myTitle = "Hello";
-	var totalButtons = 3;
+	String myTitle = "Hello";
 	
 	@Latte
 	var mainView = '''
-		<LinearLayout orientation="vertical" style="width: match_parent;height: match_parent">
-			for (int i =0 ; i< totalButtons; i++) {
-				final int j = i;
-				<Button id={"Button"+j} cls="mainButton" onClick={MainActivity.this.onClick();} style="font-size: 10" text={"Button"+j} />
-			}
-		</LinearLayout>
+		<RelativeLayout style="width: match_parent;height: match_parent">
+			<CheckBox id="Button1" alignParentStart={true}  class="mainButton" label="Button 1" />
+			<Button cls="mainButton" onClick={MainActivity.this.onClick();} style="font-size: 10" id="Button2" alignParentEnd={true} text={myTitle} />
+		
+		</RelativeLayout>
 	'''
-
+	
 	@Override 
 	override protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState)		
@@ -30,9 +29,8 @@ class MainActivity extends Activity {
 
 	
 	def onClick() {
-	
-//		totalButtons++;
-//		mainView.onStateChanged();
+		myTitle ="WHAT IS UP";
+		mainView.onStateChanged("Clicked");
 	}
 
 
