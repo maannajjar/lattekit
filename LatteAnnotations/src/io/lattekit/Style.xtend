@@ -114,15 +114,21 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 			annotatedField.declaringType.addMethod("set"+capiatlized) [
 				addParameter("value", String.newTypeReference())
 				body = '''
-					int unitType = android.util.TypedValue.COMPLEX_UNIT_PX;
-					if (value.indexOf("dp")  != -1) {
-						unitType = android.util.TypedValue.COMPLEX_UNIT_DIP;
-					} else if (value.indexOf("sp") != -1) {
-						unitType = android.util.TypedValue.COMPLEX_UNIT_SP;
-					} else if (value.indexOf("pt")  != -1) {
-						unitType = android.util.TypedValue.COMPLEX_UNIT_PT;
+					if (value.toLowerCase().equals("match_parent") || value.toLowerCase().equals("fill_parent")) {
+						_«rawName» = new NumberValue(io.lattekit.ui.LatteView.MATCH_PARENT,0);
+					} else if (value.toLowerCase().equals("wrap_content")) {
+						_«rawName» = new NumberValue(io.lattekit.ui.LatteView.WRAP_CONTENT,0);
+					} else {
+						int unitType = android.util.TypedValue.COMPLEX_UNIT_PX;
+						if (value.indexOf("dp")  != -1) {
+							unitType = android.util.TypedValue.COMPLEX_UNIT_DIP;
+						} else if (value.indexOf("sp") != -1) {
+							unitType = android.util.TypedValue.COMPLEX_UNIT_SP;
+						} else if (value.indexOf("pt")  != -1) {
+							unitType = android.util.TypedValue.COMPLEX_UNIT_PT;
+						}
+						_«rawName» = new NumberValue(Integer.parseInt(value.replaceAll("[^0-9]", "")),unitType);
 					}
-					_«rawName» = new NumberValue(Integer.parseInt(value.replaceAll("[^0-9]", "")),unitType);
 				'''
 			]
 			
