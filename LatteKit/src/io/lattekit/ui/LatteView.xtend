@@ -31,7 +31,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import static io.lattekit.xtend.ArrayLiterals2.*
 import android.widget.Button
 
-public  class LatteView implements OnTouchListener, OnClickListener {
+public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	public final static int MATCH_PARENT = LayoutParams.MATCH_PARENT;
 	public final static int WRAP_CONTENT = LayoutParams.WRAP_CONTENT;
@@ -40,13 +40,13 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	
 	/** Base Attributes */ 
 	@Accessors public String id;
-	@Accessors public (LatteView)=>void onTap;
-	@Accessors public (LatteView, MotionEvent)=>boolean onTouch;
+	@Accessors public (LatteView<?>)=>void onTap;
+	@Accessors public (LatteView<?>, MotionEvent)=>boolean onTouch;
 	
 	public var Animator currentAnimation;
 	public var List<Animator> pendingChildAnimations = newArrayList(); 
 	public var Style pendingStyle;
-
+	
 	Style classStyle;
 	Style touchedClassStyle;
 	Style disabledClassStyle;
@@ -80,11 +80,9 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	protected (LatteView)=>void attributesProc;
 	protected (LatteView)=>void layoutProc;
 	private boolean isRendering = false;
+	private boolean isMounted = false;
+	@Accessors protected (LatteView)=>void onViewMounted;
 	
-	def static adHoc(AdHocProxy proxy) {
-		return proxy.doBuild();
-	}
-
 	def setStyle(String style) {
 		setStyle(Style.parseStyle(style));
 	}
@@ -104,7 +102,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 	}
 	
 	def applySubviewStyles() {
-		subviews.forEach[
+		subviews.forEach[ LatteView<?> it |
 			it.activeStyle.applyToView(it);
 		]
 	}
@@ -123,6 +121,7 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		if (cls != null) {
 			cls.split(" ").forEach[
 				var style = stylesheet.getClass(it) 
+				Log.d("Latte","Looking for "+it +" : "+style);
 				if (style != null) {
 					classStyle.overrideWithStyle(style);
 				}
@@ -205,7 +204,8 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 				// Shouldn't clone, apply should have the same effect of clone
 				_style.deriveFrom(activeStyle);
 				activeStyle.applyToView(this);
-			} else if (pendingStyle != activeStyle && pendingStyle != null) {
+			} else /*if (pendingStyle != activeStyle && pendingStyle != null)*/ {
+				// Commented out above because even activeStyle may change its values
 				pendingStyle = activeStyle;
 				var oldAnim = currentAnimation; 
 				currentAnimation = pendingStyle.createAnimatorFrom(_style, this, activeStyle == normalStyle)
@@ -339,6 +339,11 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		// If not, then add new subview
 		if (index < subviews.size) {
 			if (sameView(subviews.get(index),newChild)) {
+				//TODO: Maybe need better way to clone states ?
+				subviews.get(index).normalStyle.cloneFrom(newChild.normalStyle);
+				subviews.get(index).touchedStyle.cloneFrom(newChild.touchedStyle);
+				subviews.get(index).disabledStyle.cloneFrom(newChild.disabledStyle);
+				
 				subviews.get(index).copyStateProps(newChild)
 				subviews.get(index).render();
 			} else {
@@ -398,36 +403,6 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		}
 		return false;
 	}
-	
-	def void compareView(LatteView newView, LatteView oldView) {
-		// Compare children 
-		// TODO: Should only copy properties
-		oldView.normalStyle.cloneFrom(newView.normalStyle);
-		oldView.touchedStyle.cloneFrom(newView.touchedStyle);
-		oldView.disabledStyle.cloneFrom(newView.disabledStyle);
-		var stateChanged = oldView.copyStateProps(newView)
-		
-		for (var i =0; i < newView.subviews.size; i++) {
-			if (oldView.subviews.size <= i) {
-				newView.subviews.get(i).parentView = oldView;
-				oldView.subviews.add(newView.subviews.get(i))
-			} else {
-				var oldChildView = oldView.subviews.get(i);
-				var newChildView = newView.subviews.get(i);
-				if (this.sameView(oldChildView,newChildView)) {
-					compareView(newChildView, oldChildView);
-				} else {
-					// Not accepted, replace with the new child
-					newChildView.parentView = oldView;
-					// RODO: Maybe recycle old view ?
-					oldView.subviews.set(i, newChildView);								
-				}
-			}					
-		}
-
-	}
-	
-	
 	def LayoutParams createLayoutParams(int width, int height) {
 		return null;
 	}
@@ -462,6 +437,9 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		return this.androidView
 	}
 	
+	def T getNativeView() {
+		return androidView as T
+	}
 	def View buildAndroidViewTree(Context a, ViewGroup.LayoutParams lp) {
 		// First build my view
 		this.activity = a;
@@ -474,7 +452,12 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		} else this.androidView;
 		if (myView == null) {
 			// If we don't have native android view, then we are virtual node
-			return this.subviews.get(0).buildAndroidViewTree(a, lp);
+			var subAndroid =  this.subviews.get(0).buildAndroidViewTree(a, lp);
+			if (!isMounted) {
+				isMounted = true;
+				onViewMounted();
+			}
+			return subAndroid;
 		}
 		this.androidView = myView;
 		
@@ -508,8 +491,17 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		} else {
 			this.applyAttributes();
 		}
-		
+		if (!isMounted) {
+			isMounted = true;
+			onViewMounted();
+		}
 		return myView;
+	}
+	
+	def void onViewMounted() {
+		if (onViewMounted != null) {
+			onViewMounted.apply(this);
+		}
 	}
 	
 	def void renderOn(Activity a) {
@@ -525,11 +517,11 @@ public  class LatteView implements OnTouchListener, OnClickListener {
 		activity = context;
 		this.processNode(null,null, null);
 		this.render();
-		this.buildAndroidViewTree(context, new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(context), this.normalStyle.height.inPixelsInt(context)))
+		var layoutParam = new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(context), this.normalStyle.height.inPixelsInt(context));
+		this.buildAndroidViewTree(context, layoutParam)
+		Log.d("Latte","Subview "+ this.subviews.get(0) +" width "+ this.subviews.get(0).classStyle.width.inPixelsInt(context) +" vs "+LinearLayout.MATCH_PARENT);
+		
 		return this.rootAndroidView;		
 	}
 	
-	public interface AdHocProxy {
-		public def LatteView doBuild()
-	}
 }
