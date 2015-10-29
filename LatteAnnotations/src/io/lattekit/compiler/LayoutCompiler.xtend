@@ -499,7 +499,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		var rootView = viewStack.length == 1
 		var latteViewType = "io.lattekit.ui.LatteView";
 		
-		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
+		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget", "android.view");
 		
 				
 		var isNativeView = false;
