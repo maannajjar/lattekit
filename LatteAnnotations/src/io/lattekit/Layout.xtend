@@ -1,5 +1,6 @@
 package io.lattekit
 
+import io.lattekit.compiler.LayoutCompiler
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
@@ -17,6 +18,7 @@ import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableTypeDeclaration
@@ -27,8 +29,6 @@ import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
 
 import static org.reflections.ReflectionUtils.*
-import io.lattekit.compiler.LayoutCompiler
-import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 
 @Active(typeof(LayoutProcessor))
 annotation Layout {
@@ -58,7 +58,7 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		
 		
 		
-		val layoutParser = new LayoutParserOld(isAdHoc);
+
 		
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 		val StringBuffer output = new StringBuffer();
@@ -117,7 +117,6 @@ class LayoutFieldProcessor extends AbstractFieldProcessor {
 			importList += importListParam 
 		}
 		val isAdHoc = true;
-		val layoutParser = new LayoutParserOld(isAdHoc);
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 //		layoutParser.parseLayout(context, annotatedField.declaringType,  importList, layoutSource);
 		val layoutCode = LayoutCompiler.compileLayout(context,layoutSource,annotatedField.declaringType as MutableClassDeclaration,"this");

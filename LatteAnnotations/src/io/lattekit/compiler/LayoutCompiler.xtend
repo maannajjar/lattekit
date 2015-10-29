@@ -29,14 +29,12 @@ import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.FieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
-import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
+
 import static org.reflections.ReflectionUtils.*
 
 class LayoutCompiler {
-	var double z = 3.0;
-	var jjj = #[1,2,3,4]
-	
+
 	def static compileLayout( extension TransformationContext context, String input, MutableClassDeclaration myClass, String attachToObjectName) {
 		var lexer = new LatteXtendLexer(new ANTLRInputStream(new StringReader(input)));
     	var parser = new LatteXtendParser(new CommonTokenStream(lexer));
@@ -52,11 +50,7 @@ class LayoutCompiler {
 	def getOut() {
 		return System.out
 	}
-	def static void main(String... args) {
-		System.out.println(compileLayout(null, '''
-				<RelativeLayout cls="SS">
-				</RelativeLayout>''',  null, "this"))
-	}
+	
 }
 
 class CompiledExpression {
@@ -66,7 +60,6 @@ class CompiledExpression {
 	@Accessors List<CompiledExpression> children = newArrayList();
 	
 	// For Identifier expressions
-
 	@Accessors FieldDeclaration mutableField
 	@Accessors Iterable<? extends MethodDeclaration> mutableSetterMethods
 	@Accessors Iterable<? extends MethodDeclaration> mutableAllMethods
@@ -88,18 +81,32 @@ class Type {
 	public Class<?> clazz;
 	public ClassDeclaration xtendClazz;
 	public Field field;
+	public FieldDeclaration xtendField;
 	public Package pkg;
 	public boolean isNull;
 	public boolean isLayout;
 	public boolean isPrimitive;
 	public boolean isArray;
+	public boolean isArrayLiteral;
 	public boolean isPackageRef;
 	public boolean isClassRef;
+	public boolean isBoxed;
 	public int arrayDimensions;
+	public Type arrayChildType;
 	
 	new() {}
 	new(boolean isNull) { this.isNull = isNull;}
-	
+	def static Type newBuiltInType(String typeName,boolean isPrimitive, boolean isBoxed) {
+		var t = new Type();
+		t.typeName = typeName;
+		t.isPrimitive = isPrimitive
+		t.isBoxed = isBoxed;
+		try {
+			t.clazz = Class.forName(typeName);
+		} catch (Exception ex) {}
+		return t;
+		
+	}
 	def static Type newBuiltInType(String typeName,boolean isPrimitive) {
 		var t = new Type();
 		t.typeName = typeName;
@@ -133,7 +140,12 @@ class Type {
 		type.typeName = tr.name
 		return type;
 	}
-	
+	def static Type arrayLiteralWithType(Type childrenType) {
+		var type = new Type();
+		type.arrayChildType = childrenType;
+		type.isArrayLiteral = true;
+		return type;
+	}
 	def static Type fromField(Field field) {	
 		var type = fromClass(field.type)
 		type.field = field;
@@ -164,15 +176,31 @@ class Type {
 	
 	def static Type fromFieldTypeReference(TypeReference typeReference, FieldDeclaration field) {
 		var type = new Type();
-		type.xtendClazz = field.declaringType as ClassDeclaration;
+//		type.xtendClazz = field.type as ClassDeclaration;
+		type.xtendField = field
 		type.isPrimitive = typeReference.isPrimitive;		
 		type.typeName = typeReference.name
 		type.isArray = typeReference.isArray
 		return type;
 	}	
 	
+	def getBoxed() {
+		if (isPrimitive) {
+			return boxedTypes.get(typeName)
+		} else {
+			return this;
+		}
+	}
 	
 	def getTypeParameter() {
+		if (xtendField != null) {
+			if (xtendField.type.inferred) {
+			//	TODO: Compile initializer and infer type
+			//				return xtendField.initializer.toString
+			} else {
+				return xtendField.type.actualTypeArguments.get(0).simpleName
+			}
+		}
 		return (field.genericType as ParameterizedType).actualTypeArguments.get(0).typeName
 	}
 	
@@ -196,6 +224,16 @@ class Type {
 		'char'-> CHAR,
 		'java.lang.String'-> STRING
 	}
+	public val static boxedTypes = #{
+		'boolean'-> newBuiltInType("java.lang.Boolean", false,true),
+		'float'-> newBuiltInType("java.lang.Float", false,true),
+		'double'-> newBuiltInType("java.lang.Double", false,true),
+		'long'-> newBuiltInType("java.lang.Long", false,true),
+		'int'-> newBuiltInType("java.lang.Integer", false,true),
+		'char'-> newBuiltInType("java.lang.Char", false,true),
+		'java.lang.String'-> STRING
+	}
+	
 }
 
 
@@ -351,8 +389,12 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				xType = lookupType(ctx.enhancedForControl.type);
 			} else {
 				// TODO: infer type from ctx.expression
-				xType = compiledExpr.type
-				compiled.generatedCode = compiled.generatedCode + xType.typeParameter
+				if (compiledExpr.type.isArrayLiteral) {
+					xType = compiledExpr.type.arrayChildType
+				} else {
+					xType = lookupType(compiledExpr.type.typeParameter)
+				}
+				compiled.generatedCode = compiled.generatedCode + xType.typeName
 				
 			}
 			compiled.generatedCode = compiled.generatedCode + " "+ ctx.enhancedForControl.variableDeclaratorId.text +" : "+compiledExpr.generatedCode +") "
@@ -365,7 +407,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			}
 			var compiledTestExpr = if (ctx.expression != null) visit(ctx.expression) else null
 			var compiledUpdate = if (ctx.forUpdate?.expressionList != null) visit(ctx.forUpdate.expressionList) else null;
-			compiled.generatedCode = "("+compiledInit.generatedCode +";"
+			compiled.generatedCode = "("+compiledInit.generatedCode
 			if (compiledTestExpr != null) compiled.generatedCode = compiled.generatedCode + compiledTestExpr.generatedCode 
 			else compiled.generatedCode  = compiled.generatedCode +";"
 			compiled.generatedCode = compiled.generatedCode +";"
@@ -408,6 +450,22 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		return importList.map[ findTypeGlobally(it+"."+view) ].findFirst[ it != null ]
 	}
 	
+	
+	def Iterable<? extends TypeReference> findDeclaringClasses(extension TransformationContext context, TypeReference classRef, String methodName) {
+		var classes = classRef.declaredSuperTypes.filter[
+			var methods = declaredResolvedMethods.filter[
+				declaration.simpleName == methodName;
+			]
+			!methods.isEmpty
+		]
+		
+		if (classes.isEmpty) {
+			var upstreamClasses = classRef.declaredSuperTypes.map[ context.findDeclaringClasses(it, methodName)]
+			return upstreamClasses.flatten
+		}
+		return classes
+	}
+	
 	override visitXmlElement(XmlElementContext ctx) {
 		val compiled = new CompiledExpression();
 		compiled.type = Type.VOID
@@ -447,7 +505,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 
 		
 		val List<String> attrCode = newArrayList()
-		var mutableType = transformationContext.findTypeGlobally(latteViewType)
+		val mutableType = transformationContext.findTypeGlobally(latteViewType)
 		val viewType = Type.fromTypeReference(transformationContext.newTypeReference(mutableType),mutableType as ClassDeclaration)
 		compiled.generatedCode = "// "+ mutableType.simpleName
 		
@@ -457,9 +515,33 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			val propertySetter = "set"+attr.Identifier.text.substring(0,1).toUpperCase+attr.Identifier.text.substring(1)
 			var compiledExpr = new CompiledExpression();
 			findReferencedMember(compiledExpr,viewType,attr.Identifier.text, false);
+			
+			
+			var List<MethodDeclaration> setterMethods = newArrayList();						
+			var currentClass = mutableType as ClassDeclaration
+			var methods = currentClass.declaredMethods.filter[
+				simpleName == propertySetter && parameters.size == 1
+			]
+			setterMethods += methods
+			var declaringClasses = transformationContext.findDeclaringClasses(transformationContext.newTypeReference(currentClass),propertySetter)
+			var upstreamMethods = declaringClasses.map[ declaredResolvedMethods ].flatten.map[ declaration ]
+			setterMethods += upstreamMethods.filter[
+				simpleName == propertySetter && parameters.size == 1
+			]
+
+//			val procClosureSetter = setterMethods.findFirst[
+//				transformationContext.getProcedureType(parameters.findFirst[true].type) != null
+//			];	
+//			
+//			val fnClosureSetter = setterMethods.findFirst[
+//				transformationContext.getFunctionType(parameters.findFirst[true].type) != null
+//			];	
+			
+			var hasSetter = !setterMethods.isEmpty
+									
 			var code = "";
 			var value = "";
-			if (compiledExpr.preferredAccess == null) {
+			if (compiledExpr.preferredAccess == null && !hasSetter) {
 				if (isAndroidView) {
 					if (attr.expression !=null) {
 						// JavaCode
@@ -493,11 +575,12 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					}									
 					
 				}
-			} else {
+			} else if (hasSetter) {
 				if (viewType.xtendClazz != null) {
-					code = "it."+compiledExpr.mutableSetterMethods.get(0).simpleName+"(";
+//					code = "it."+compiledExpr.mutableSetterMethods.get(0).simpleName+"(";
+					code = "it."+propertySetter+"(";
 				} else {
-					code = "it."+compiledExpr.setterMethods.get(0).name+"(";
+					code = "it."+propertySetter+"(";
 				}			
 				if (attr.expression !=null) {
 					// JavaCode
@@ -566,8 +649,13 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	def lookupLocalVariableType(String variableName) {
 		return scope.findLast[ containsKey(variableName) ]?.get(variableName)
 	}
-
+	
+	def Type lookupType(String typeName) {
+		var type = transformationContext.findTypeGlobally(typeName)
+		var typeReference = transformationContext.newTypeReference(type);
+		Type.fromTypeReference(typeReference,null);
 		
+	}
 	def Type lookupType(TypeContext typeContext) {
 		if (typeContext.classOrInterfaceType != null) {
 			var String className = typeContext.classOrInterfaceType.Identifier.map[text].reduce[p1, p2| p1+"."+p2];
@@ -618,13 +706,16 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		var initializer = visit(ctx.variableDeclarator.variableInitializer.expression)
 		compiled.generatedCode = compiled.generatedCode + " "+ ctx.variableDeclarator.variableDeclaratorId.text
 		compiled.generatedCode = compiled.generatedCode +" = "+initializer.generatedCode
+		if (!compiled.generatedCode.endsWith(";")) {
+			compiled.generatedCode = compiled.generatedCode +";";
+		}
 		scope.last.put(ctx.variableDeclarator.variableDeclaratorId.text, compiled.type);
 		return compiled;
 	}
 	
 	
 	override visitExpression(ExpressionContext ctx) {
-		var compiled = new CompiledExpression();
+		val compiled = new CompiledExpression();
 		compiled.context = ctx;
 		
 		if (ctx.op_math != null) {
@@ -639,7 +730,6 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			}  else {
 				compiled.type = rightCompiled.type
 			}
-//			compiled.generatedCode  = 
 			compiled.children += leftCompiled;
 			compiled.children += rightCompiled;
 			compiled.generatedCode = leftCompiled.generatedCode + ctx.op_math.text + rightCompiled.generatedCode 	
@@ -685,7 +775,43 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			} else {
 				compiled.generatedCode = ctx.prefix_op.text + expr.generatedCode 
 			}
-		}  else if (ctx.dot != null && ctx.member != null) {
+		} else if (ctx.range_op != null) {
+			
+			var left = this.visit(ctx.left);
+			var right = this.visit(ctx.right); 
+			var typeNumbers = #[ "double", "float", "long", "int", "char"]
+			// TODO: Check incompatible types
+			var leftNum = typeNumbers.indexOf(left.type.typeName);
+			var rightNum = typeNumbers.indexOf(right.type.typeName);
+			var type =  (if (leftNum < rightNum) left.type else  right.type).boxed
+			compiled.type = Type.arrayLiteralWithType(type) /* TODO: FIND COMMON ANCESRTOR */
+			compiled.type.typeName = '''org.eclipse.xtext.xbase.lib.«type.typeName.replace("java.lang.","")»Range''';
+			compiled.generatedCode = '''new org.eclipse.xtext.xbase.lib.«type.typeName.replace("java.lang.","")»Range(«left.generatedCode»,«right.generatedCode»)'''
+			
+		} else if (ctx.arrayLiteral != null || ctx.newArrayList != null) {
+			var immutable = ctx.arrayLiteral != null;
+			var compiledExpressions = ctx.expressionList.expression.map[expr | 
+				var c = visit(expr); 
+				compiled.children += c;
+				return c
+			];
+			
+			val childType = compiledExpressions.map[type.boxed].reduce([c1, c2 | return c1 ])
+			compiled.type = Type.arrayLiteralWithType(childType) /* TODO: FIND COMMON ANCESRTOR */
+			var compiledList = compiledExpressions.map[
+				if (childType.isBoxed) {
+					childType.typeName+".valueOf("+generatedCode+")"
+				} else {
+					generatedCode
+				}
+			].reduce([c1, c2 |
+				c1 +"," + c2
+			])
+			
+			compiled.generatedCode = '''org.eclipse.xtext.xbase.lib.CollectionLiterals.<«childType.typeName»>newArrayList(«compiledList»)'''
+			if (immutable) compiled.generatedCode = '''Collections.<«childType.typeName»>unmodifiableList(«compiled.generatedCode»)''';
+			
+		} else if (ctx.dot != null && ctx.member != null) {
 			var left = visit(ctx.left)
 			var Class<?> staticInner;
 
@@ -722,6 +848,8 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					compiled.generatedCode = left.generatedCode +"."+ctx.member
 				} else  {
 					findReferencedMember(compiled, left.type, ctx.member.text, true);
+					// Since we don't know if this dot reference is for get or set access, we set a prefix
+					// When we evaluate the whole expression we can only then generate the code
 					compiled.prefix = left.generatedCode;
 				}
 				
@@ -739,7 +867,8 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				}  else {
 					left.generatedCode =(if (left.prefix!=null) left.prefix+"." else"")+left.field.name
 				}
-				
+				// Since we don't know if this dot reference is for get or set access, we set a prefix
+				// When we evaluate the whole expression we can only then generate the code				
 				compiled.prefix = left.generatedCode;
 				findReferencedMember(compiled, left.type, ctx.member.text, false);
 			}
@@ -840,7 +969,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		}	
 		if (compiled.mutableField != null && (myType == null || left.xtendClazz == jvmContext.myClass)) {
 			compiled.preferredAccess = "mutableField"
-			myType = Type.fromFieldTypeReference(transformationContext.newTypeReference(compiled.mutableField.declaringType),compiled.mutableField)
+			myType = Type.fromFieldTypeReference(compiled.mutableField.type,compiled.mutableField)
 		}
 		compiled.type = myType;
 	}
@@ -963,7 +1092,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 							}
 						}
 					} 
-					compiled.generatedCode = "/*Couldn't find it */ "+ctx.Identifier.text
+					compiled.generatedCode = ctx.Identifier.text
 				} else {
 					// TODO: Check whether should use method or identifier directly
 					var prefix = jvmContext.myClass.simpleName+".this.";

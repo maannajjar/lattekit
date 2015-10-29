@@ -590,33 +590,34 @@ constantExpression
 
 
 expression
- 	:   primaryExpression=primary
-    |   left=expression dot='.' member=Identifier { this.exprTypes.put(_localctx, ExpressionType.MemberReference); }
-    |   left=expression dot='.' member='this' { this.exprTypes.put(_localctx, ExpressionType.ThisReference); }
-    |   expression dot='.' method='new' nonWildcardTypeArguments? innerCreator  { this.exprTypes.put(_localctx, ExpressionType.SubAnonymouseClass); }
-    |   expression dot='.' method='super' superSuffix  { this.exprTypes.put(_localctx, ExpressionType.SuperInvocation); }
-    |   expression dot='.' generic_method=explicitGenericInvocation { this.exprTypes.put(_localctx, ExpressionType.ExplicitGenericInvocation); }
-    |   array_ref_expr=expression '[' array_index=expression ']'  { this.exprTypes.put(_localctx, ExpressionType.ArraySubscript); }
-    |   method_call_expr=expression '(' invocation_parameters=expressionList? ')'  { this.exprTypes.put(_localctx, ExpressionType.MethodInvocation); }
-    |   constructor='new' creator  { this.exprTypes.put(_localctx, ExpressionType.CreatorExpression); }
-    |   newArrayList='newArrayList' '(' expressionList? ')' { this.exprTypes.put(_localctx, ExpressionType.MutableArrayLiteral); }
-    |   newHashMap='newHashMap' '(' expressionList? ')' { this.exprTypes.put(_localctx, ExpressionType.MutableMapLiteral); }
-    |   expression as_op='as' type { this.exprTypes.put(_localctx, ExpressionType.TypeCasting); }
-    |   expr=expression (postfix_op='++' | postfix_op='--') { this.exprTypes.put(_localctx, ExpressionType.PostfixOperator); }
-    |   (prefix_op='+'|prefix_op='-'|prefix_op='++'|prefix_op='--') expr=expression { this.exprTypes.put(_localctx, ExpressionType.PrefixOperator); }
-    |   (/*negate_op='~'|*/logical_not_op='!') expression { this.exprTypes.put(_localctx, ExpressionType.Negate); }
-    |   left=expression (op_math='*'|op_math='/'|op_math='%') right=expression { this.exprTypes.put(_localctx, ExpressionType.Arithmetic); } 
-    |   left=expression (op_math='+'|op_math='-') right=expression { this.exprTypes.put(_localctx, ExpressionType.Arithmetic); }
-    |   left=expression (bit_op='<<' | bit_op='>>>' | bitop='>>') right=expression { this.exprTypes.put(_localctx, ExpressionType.Logical); }
-    |   left=expression (logical_op='<=' | logical_op='>=' | logical_op='>' | logical_op='<') right=expression { this.exprTypes.put(_localctx, ExpressionType.Logical); }
-    |   left=expression instanceof_op='instanceof' type { this.exprTypes.put(_localctx, ExpressionType.InstanceOf); }
-    |   left=expression (logical_op='==' | logical_op='!=') right=expression { this.exprTypes.put(_localctx, ExpressionType.EqualTest); }
+    :   primaryExpression=primary
+    |   left=expression dot='.' member=Identifier
+    |   left=expression dot='.' member='this'
+    |   expression dot='.' method='new' nonWildcardTypeArguments? innerCreator 
+    |   expression dot='.' method='super' superSuffix 
+    |   expression dot='.' generic_method=explicitGenericInvocation
+    |   array_ref_expr=expression '[' array_index=expression ']' 
+    |   method_call_expr=expression '(' invocation_parameters=expressionList? ')' 
+    |   constructor='new' creator 
+    |   arrayLiteral='#' '[' expressionList? ']'
+    |   newArrayList='newArrayList' '(' expressionList? ')'
+    |   newHashMap='newHashMap' '(' expressionList? ')'
+    |   expression as_op='as' type
+    |   expr=expression (postfix_op='++' | postfix_op='--')
+    |   (prefix_op='+'|prefix_op='-'|prefix_op='++'|prefix_op='--') expr=expression
+    |   (/*negate_op='~'|*/logical_not_op='!') expression
+    |   left=expression (op_math='*'|op_math='/'|op_math='%') right=expression 
+    |   left=expression (op_math='+'|op_math='-') right=expression
+    |   left=expression (bit_op='<<' | bit_op='>>>' | bitop='>>') right=expression
+    |   left=expression (logical_op='<=' | logical_op='>=' | logical_op='>' | logical_op='<') right=expression
+    |   left=expression instanceof_op='instanceof' type
+    |   left=expression (logical_op='==' | logical_op='!=') right=expression
 //    |   expression '&' expression
 //    |   expression '^' expression
 //    |   expression '|' expression
-    |   expression boolean_op='&&' expression { this.exprTypes.put(_localctx, ExpressionType.Logical); }
-    |   expression boolean_op='||' expression { this.exprTypes.put(_localctx, ExpressionType.Logical); }
-    |   expression range_op='..' expression { this.exprTypes.put(_localctx, ExpressionType.Range); }
+    |   expression boolean_op='&&' expression
+    |   expression boolean_op='||' expression
+    |   left=expression range_op='..' right=expression
 //    |   expression '?' expression ':' expression
     |   <assoc=right> left=expression
         (   assign_op='='
@@ -632,7 +633,7 @@ expression
         |   assign_op='<<='
         |   assign_op='%='
         )
-        right=expression { this.exprTypes.put(_localctx, ExpressionType.AssignWithOp); }
+        right=expression
     ;
 
 primary
