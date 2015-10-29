@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<genmodel:GenModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:genmodel="http://www.eclipse.org/emf/2002/GenModel" modelDirectory="/io.lattekit.dsl.layout/src-gen" editDirectory="/io.lattekit.dsl.layout.edit/src"
+    editorDirectory="/io.lattekit.dsl.layout.editor/src" modelPluginID="io.lattekit.dsl.layout"
+    forceOverwrite="true" modelName="Layout" updateClasspath="false" rootExtendsClass="org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container"
+    complianceLevel="6.0" copyrightFields="false" editPluginID="io.lattekit.dsl.layout.edit"
+    editorPluginID="io.lattekit.dsl.layout.editor" runtimeVersion="2.10" usedGenPackages="platform:/resource/org.eclipse.xtext.xbase/model/Xbase.genmodel#//xbase">
+  <genPackages prefix="Layout" basePackage="io.lattekit.dsl.layout" disposableProviderFactory="true"
+      fileExtensions="lxml" ecorePackage="Layout.ecore#/">
+    <genClasses ecoreClass="Layout.ecore#//TemplateAttributeList">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Layout.ecore#//TemplateAttributeList/key"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Layout.ecore#//TemplateAttributeList/str"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Layout.ecore#//TemplateAttributeList/expr"/>
+    </genClasses>
+    <genClasses ecoreClass="Layout.ecore#//LayoutFile"/>
+    <genClasses ecoreClass="Layout.ecore#//TemplateExpression">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Layout.ecore#//TemplateExpression/tagName"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Layout.ecore#//TemplateExpression/attrs"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Layout.ecore#//TemplateExpression/closingTagName"/>
+    </genClasses>
+  </genPackages>
+</genmodel:GenModel>

@@ -1,0 +1,33 @@
+grammar io.lattekit.dsl.layout.Layout with org.eclipse.xtext.xbase.Xbase
+
+generate layout "http://www.lattekit.io/dsl/layout/Layout"
+import "http://www.eclipse.org/xtext/xbase/Xbase"
+/*
+LayoutFile returns XBlockExpression:
+	{LayoutFile}
+	(expressions+=XExpressionOrVarDeclaration ';'?)*;
+
+*/
+LayoutFile returns XBlockExpression:
+	{LayoutFile}
+	(expressions+=LayoutXpression)*
+;
+
+
+LayoutXpression returns XExpression:
+	TemplateExpression | XExpressionOrVarDeclaration ';'?;
+	
+TemplateExpression returns XBlockExpression:
+	{TemplateExpression}
+	'<' tagName=ValidID  (attrs+=TemplateAttributeList)* '>' 
+	(expressions+=LayoutXpression)*
+	'</' closingTagName=ValidID '>'
+;
+
+TemplateAttributeList:
+	key=ValidID '=' str=XStringLiteral |
+	key=ValidID '{' expr=XBlockExpression '}' 
+;
+
+
+

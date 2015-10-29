@@ -42,9 +42,6 @@
     <genClasses ecoreClass="LatteCSS.ecore#//FontFamilyProperty">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//FontFamilyProperty/value"/>
     </genClasses>
-    <genClasses ecoreClass="LatteCSS.ecore#//FontWeightProperty">
-      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//FontWeightProperty/value"/>
-    </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//FontStyleProperty">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//FontStyleProperty/value"/>
     </genClasses>
@@ -65,6 +62,15 @@
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//TransitionValue/duration"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//TransitionValue/timingFunction"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//TransitionValue/delay"/>
+    </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//DrawableProperty">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//DrawableProperty/value"/>
+    </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//BackgroundRepeatProperty">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundRepeatProperty/values"/>
+    </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//BackgroundGravityProperty">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundGravityProperty/values"/>
     </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//ColorProperty">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//ColorProperty/value"/>

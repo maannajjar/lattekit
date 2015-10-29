@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<plugin>
+
+  <extension point="org.eclipse.emf.ecore.generated_package">
+    <package 
+       uri = "http://www.lattekit.io/dsl/layout/Layout" 
+       class = "io.lattekit.dsl.layout.layout.LayoutPackage"
+       genModel = "model/generated/Layout.genmodel" /> 
+	
+  </extension>
+
+
+
+
+</plugin>

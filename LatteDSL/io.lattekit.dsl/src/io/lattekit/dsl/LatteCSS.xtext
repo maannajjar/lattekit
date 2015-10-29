@@ -41,11 +41,13 @@ CSSProperty:
 		TransitionProperty | 
 		FontFamilyProperty |
 		FontStyleProperty |
-		FontWeightProperty |
 		SizeProperty |
 		ViewSizeProperty |
 		PaintProperty |
 		ColorProperty |
+		DrawableProperty |
+		BackgroundRepeatProperty |
+		BackgroundGravityProperty |
 		AlignmentProperty
 	) ';'
 ;
@@ -54,20 +56,14 @@ CSSProperty:
 FontFamilyProperty:
 	property=(
 		'font-family'
-	) ':' value=FontFamily
-;
-
-FontWeightProperty:
-	property=(
-		'font-weight'
-	) ':' value=('normal' | 'bold')
+	) ':' value=STRING
 ;
 
 
 FontStyleProperty:
 	property=(
 		'font-style'
-	) ':' value=FontStyleValue
+	) ':' value=('normal' | 'bold'  | 'bold-italic')
 ;
 
 
@@ -105,7 +101,21 @@ TransitionValue:
 	propertyName=PropertyNameValue  duration=TimeValue (timingFunction=TimingFunction)? (delay=TimeValue)?  
 ;
 
+DrawableProperty:
+	property=('background-drawable') ':' value=STRING
+;
+BackgroundRepeatProperty:
+	property=('background-repeat') ':' values+=(RepeatValue) values+=(RepeatValue)?
+;
 
+RepeatValue: 'repeat-x'|'mirror-x'|'clamp-x'|'no-repeat-x' | 'repeat-y'|'mirror-y'|'clamp-y'|'no-repeat-y';
+
+GravityValue: 'top' | 'bottom' | 'left' | 'right' | 'center_vertical' | 'fill_vertical' | 'center_horizontal' | 
+	'fill_horizontal' | 'center' | 'fill' | 'clip_vertical' | 'clip_horizontal' | 'start' | 'end'
+;
+BackgroundGravityProperty:
+	property=('background-gravity') ':' values+=GravityValue (',' values+=GravityValue)*
+;
 
 ColorProperty:
 	property=('border-color' | 'ripple-color' | 'background-color' | 'text-color') ':' value=ColorValue

@@ -4,9 +4,11 @@
 package io.lattekit.dsl.generator
 
 import com.google.common.base.CaseFormat
+import io.lattekit.dsl.latteCSS.BackgroundRepeatProperty
 import io.lattekit.dsl.latteCSS.CSS
 import io.lattekit.dsl.latteCSS.ColorProperty
 import io.lattekit.dsl.latteCSS.Definition
+import io.lattekit.dsl.latteCSS.DrawableProperty
 import io.lattekit.dsl.latteCSS.SizeProperty
 import io.lattekit.dsl.latteCSS.TransitionProperty
 import io.lattekit.dsl.latteCSS.ViewSizeProperty
@@ -14,6 +16,9 @@ import java.util.Map
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IGenerator
+import io.lattekit.dsl.latteCSS.FontStyleProperty
+import io.lattekit.dsl.latteCSS.BackgroundGravityProperty
+import io.lattekit.dsl.latteCSS.FontFamilyProperty
 
 /**
  * Generates code from your model files on save.
@@ -100,7 +105,19 @@ class LatteCSSGenerator implements IGenerator {
 		  	«ELSEIF property instanceof ColorProperty»
 		  		«compileProperty(varName,property as ColorProperty)»
 		  	«ELSEIF property instanceof TransitionProperty»
-		  		«compileProperty(varName,property as TransitionProperty)»		  		
+		  		«compileProperty(varName,property as TransitionProperty)»
+		  	«ELSEIF property instanceof DrawableProperty»
+		  		«compileProperty(varName,property as DrawableProperty)»		  		
+		  	«ELSEIF property instanceof BackgroundGravityProperty»
+		  		«compileProperty(varName,property as BackgroundGravityProperty)»		  		
+		  	«ELSEIF property instanceof BackgroundRepeatProperty»
+		  		«compileProperty(varName,property as BackgroundRepeatProperty)»		  		
+		  	«ELSEIF property instanceof FontFamilyProperty»
+		  		«compileProperty(varName,property as FontFamilyProperty)»		  		
+		  	«ELSEIF property instanceof FontStyleProperty»
+		  		«compileProperty(varName,property as FontStyleProperty)»		  		
+
+
 		  	«ENDIF»
 		  «ENDFOR»
 		'''
@@ -137,6 +154,26 @@ class LatteCSSGenerator implements IGenerator {
 			«ENDIF»
 		«ENDIF»
 
+	'''
+	def compileProperty(String object, FontFamilyProperty prop) '''
+		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
+	'''
+	
+	def compileProperty(String object, FontStyleProperty prop) '''
+		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
+	'''
+	
+	
+	def compileProperty(String object, BackgroundGravityProperty prop) '''
+		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.values.join(",")»");		
+	'''
+	
+	def compileProperty(String object, BackgroundRepeatProperty prop) '''
+		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.values.join(" ")»");		
+	'''
+	
+	def compileProperty(String object, DrawableProperty prop) '''
+		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
 	'''
 	def compileProperty(String object, TransitionProperty transitionProperty) '''
 		List<List<Object>> «object»_transitions = new ArrayList<>(); 
