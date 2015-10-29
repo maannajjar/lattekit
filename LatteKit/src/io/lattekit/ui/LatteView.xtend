@@ -6,7 +6,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Point
-import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.os.Build
@@ -20,6 +21,7 @@ import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.widget.AdapterView
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
 import io.lattekit.State
@@ -29,7 +31,6 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
-import android.widget.Button
 
 public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
@@ -76,7 +77,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	@Accessors View androidView;
 	
 	public ShapeDrawable shapeDrawable;
-	public GradientDrawable backgroundDrawable;
+	public LayerDrawable backgroundDrawable;
 	protected (LatteView)=>void attributesProc;
 	protected (LatteView)=>void layoutProc;
 	private boolean isRendering = false;
@@ -289,7 +290,10 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 
 	def createBackgroundDrawable() {
 		if (backgroundDrawable == null) {
-			backgroundDrawable = new GradientDrawable();
+			normalStyle.updateDrawables(this);
+			backgroundDrawable = new LayerDrawable(#[new ColorDrawable(), new ColorDrawable()])
+			backgroundDrawable.setId(0,0)
+			backgroundDrawable.setId(1,1)
 			shapeDrawable = new ShapeDrawable();
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 				androidView.background = new RippleDrawable(new ColorStateList(#[], #[]),this.backgroundDrawable, this.shapeDrawable);

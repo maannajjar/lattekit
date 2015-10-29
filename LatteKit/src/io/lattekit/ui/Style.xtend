@@ -9,14 +9,19 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Shader.TileMode
 import android.graphics.Typeface
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
 import android.os.Handler
 import android.util.Log
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
@@ -79,7 +84,9 @@ class Style {
     @StyleProperty public Object textColor = Color.BLACK;
     
 
-    @StyleProperty public Integer backgroundDrawable;
+    @StyleProperty public String backgroundDrawable = "";
+    @StyleProperty public String backgroundRepeat = "no-repeat-x no-repeat-y";
+    @StyleProperty public String backgroundGravity = "fill_vertical, fill_horizontal";
         
     @StyleProperty public NumberValue cornerRadius = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
     @StyleProperty public NumberValue borderWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
@@ -114,6 +121,9 @@ class Style {
     @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
     
     static Map<String,Typeface> allFonts;
+    
+    protected GradientDrawable backgroundGradientDrawable;
+    protected Drawable backgroundImageDrawable;
     
     def static initFonts(Context context) {
     	if (allFonts == null) {
@@ -155,6 +165,8 @@ class Style {
         _borderColor = overridingStyle._borderColor ?: _borderColor
         _textColor = overridingStyle._textColor ?: _textColor
         _backgroundDrawable = overridingStyle._backgroundDrawable ?: _backgroundDrawable
+        _backgroundRepeat = overridingStyle._backgroundRepeat ?: _backgroundRepeat
+        _backgroundGravity = overridingStyle._backgroundGravity ?: _backgroundGravity
         _cornerRadius = overridingStyle._cornerRadius ?: _cornerRadius
         _borderWidth = overridingStyle._borderWidth ?: _borderWidth
         _margin = overridingStyle._margin ?: _margin
@@ -231,6 +243,8 @@ class Style {
         this.borderColor = form.borderColor
         this.textColor = form.textColor
         this.backgroundDrawable = form.backgroundDrawable
+        this.backgroundRepeat = form.backgroundRepeat;
+        this.backgroundGravity = form.backgroundGravity;
         this.cornerRadius = form.cornerRadius
         this.borderWidth = form.borderWidth
         this.margin = form.margin
@@ -261,6 +275,8 @@ class Style {
         this.borderColor = form._borderColor
         this.textColor = form._textColor
         this.backgroundDrawable = form._backgroundDrawable
+        this.backgroundRepeat = form._backgroundRepeat
+        this.backgroundGravity = form._backgroundGravity
         this.cornerRadius = form._cornerRadius
         this.borderWidth = form._borderWidth
         this.margin = form._margin
@@ -402,11 +418,67 @@ class Style {
     }
     
     
+    def int gravityFromString(String gravity) {
+    	gravity.split(",").map[
+    		switch(it.toLowerCase().trim()) {
+    			case "top": Gravity.TOP
+    			case "bottom": Gravity.BOTTOM
+    			case "left": Gravity.LEFT
+    			case "right": Gravity.RIGHT
+    			case "center_vertical": Gravity.CENTER_VERTICAL
+    			case "center_horizontal": Gravity.CENTER_HORIZONTAL
+    			case "fill_vertical": Gravity.FILL_VERTICAL
+    			case "fill_horizontal": Gravity.FILL_HORIZONTAL
+    			case "center": Gravity.CENTER
+    			case "clip_vertical": Gravity.CLIP_VERTICAL
+    			case "clip_horizontal": Gravity.CLIP_HORIZONTAL
+    			case "start": Gravity.START
+    			case "end": Gravity.END    		
+    			default: 0	
+    		}
+    	].reduce[g,i|  g.bitwiseOr(i) ]
+    }
+    
+    def updateDrawables(LatteView view) {
+    	if (backgroundGradientDrawable == null) {
+    		backgroundGradientDrawable = new GradientDrawable();
+    	}
+        backgroundGradientDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
+        backgroundGradientDrawable.setStroke(borderWidth.inPixelsInt(view.androidView.context), borderColor.asColor);
+        backgroundGradientDrawable.setCornerRadius(cornerRadius.inPixels(view.androidView.context));
+    	
+    	if (backgroundDrawable != null && backgroundDrawable != "") {
+    		var drawableResourceId = view.androidView.context.getResources().getIdentifier(backgroundDrawable, "drawable", view.androidView.context.getPackageName());
+    		backgroundImageDrawable = view.androidView.context.resources.getDrawable(drawableResourceId).mutate;
+    		if (backgroundImageDrawable instanceof BitmapDrawable) {
+	    		val bg = (backgroundImageDrawable as BitmapDrawable);
+	    		if (backgroundGravity != null) { 
+	    			bg.gravity = gravityFromString(backgroundGravity);
+	    		}
+	    		
+	    		if (backgroundRepeat != null) {
+	    			bg.tileModeY = null;
+	    			bg.tileModeX = null;
+	    			backgroundRepeat.split(" ").forEach[
+	    				if (it == "repeat-x") { bg.tileModeX = TileMode.REPEAT;  }
+	    				else if (it == "mirror-x") { bg.tileModeX = TileMode.MIRROR; }
+	    				else if (it == "clamp-x") { bg.tileModeX = TileMode.CLAMP; }
+	    				else if (it == "no-repeat-x") { bg.tileModeX = null; }
+	    				if (it == "repeat-y") { bg.tileModeY = TileMode.REPEAT;  }
+	    				else if (it == "mirror-y") { bg.tileModeY = TileMode.MIRROR; }
+	    				else if (it == "clamp-y") { bg.tileModeY = TileMode.CLAMP; }
+	    				else if (it == "no-repeat-y") { bg.tileModeY = null; }
+	    			]
+	    		}
+			}    			
+    	} else {
+    		backgroundImageDrawable = new ColorDrawable(Color.TRANSPARENT);
+    	}
+    	
+    }
 
     def applyDrawableStyle(LatteView view) {
-        view.backgroundDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
-        view.backgroundDrawable.setStroke(borderWidth.inPixelsInt(view.androidView.context), borderColor.asColor);
-        view.backgroundDrawable.setCornerRadius(cornerRadius.inPixels(view.androidView.context));
+		updateDrawables(view);
 //      Todo: investigate whether we need to call this
 //      view.backgroundDrawable.invalidateSelf
 //      view.updateBackgroundDrawable();
@@ -423,6 +495,13 @@ class Style {
         }
         colorStates += #[R.attr.state_enabled,-R.attr.state_pressed]
         colorList += backgroundColor.asColor;
+        
+        
+        view.backgroundDrawable.setDrawableByLayerId(0, backgroundGradientDrawable);
+        view.backgroundDrawable.setDrawableByLayerId(1, backgroundImageDrawable);
+        view.backgroundDrawable.setLayerInset(0,0,0,0,0);
+        view.backgroundDrawable.setLayerInset(1,0,0,0,0);
+        view.backgroundDrawable.invalidateSelf
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             (view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
@@ -451,7 +530,7 @@ class Style {
             androidView.elevation = elevation.inPixels(androidView.context);
         }
         
-        if (applyAll || !properties.filter[#["cornerRadius","backgroundColor","rippleColor","borderWidth"].contains(it)].empty) {
+        if (applyAll || !properties.filter[#["cornerRadius","backgroundDrawable","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth"].contains(it)].empty) {
         	applyDrawableStyle(latteView);
         }
         if (applyAll || !properties.filter[#["cornerRadius","borderWidth"].contains(it)].empty) {
