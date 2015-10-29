@@ -6,8 +6,10 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.AssetManager
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.shapes.RoundRectShape
@@ -22,6 +24,7 @@ import android.widget.TextView
 import io.lattekit.StyleProperty
 import java.util.ArrayList
 import java.util.List
+import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
@@ -74,40 +77,67 @@ class Style {
     @StyleProperty public Object rippleColor;
     @StyleProperty public Object borderColor = Color.WHITE;
     @StyleProperty public Object textColor = Color.BLACK;
+    
 
     @StyleProperty public Integer backgroundDrawable;
         
-    @StyleProperty public NumberValue cornerRadius = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_DIP);
-    @StyleProperty public NumberValue borderWidth = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_DIP);
+    @StyleProperty public NumberValue cornerRadius = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
+    @StyleProperty public NumberValue borderWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
     
-    @StyleProperty public NumberValue margin = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty public NumberValue margin = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue marginTop;
     @StyleProperty public NumberValue marginBottom;
     @StyleProperty public NumberValue marginLeft;
     @StyleProperty public NumberValue marginRight;
     
-    @StyleProperty public NumberValue elevation = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue translationY = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue translationX = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty public NumberValue elevation = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty public NumberValue translationY = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty public NumberValue translationX = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue x;
     @StyleProperty public NumberValue y;
     public Float _computedX;
     public Float _computedY;
     
-    @StyleProperty public NumberValue padding = new NumberValue(0,android.util.TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty public NumberValue padding = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue paddingTop;
     @StyleProperty public NumberValue paddingBottom;
     @StyleProperty public NumberValue paddingLeft;
     @StyleProperty public NumberValue paddingRight;
     
+    @StyleProperty public String fontFamily = "default";
+    @StyleProperty public String fontStyle = "bold";
     @StyleProperty public NumberValue fontSize;
     
     @StyleProperty public List<List<Object>> transitions;
     
-    @StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, android.util.TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, android.util.TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
     
+    static Map<String,Typeface> allFonts;
     
+    def static initFonts(Context context) {
+    	if (allFonts == null) {
+    		allFonts = newHashMap();
+    		loadFontsInAssetPath(context.assets, "", allFonts);
+    	}
+    }
+    
+    def static void loadFontsInAssetPath(AssetManager assets, String path, Map<String,Typeface> fonts) {
+    	assets.list(path).forEach[
+    		if (assets.list(it).length > 0 ){
+    			loadFontsInAssetPath(assets,it,fonts);
+    		} else {
+    			if (it.endsWith(".ttf") || it.endsWith(".otf")) {
+    				try {
+    					var font = Typeface.createFromAsset(assets, it);
+    					allFonts.put(it.substring(0,it.length-4).toLowerCase(), font);
+    				} catch (Exception ex) {
+    					
+    				}
+    			}
+    		}
+    	]
+    }
     def static Style newStyle(Object... keysAndValues) {
     	var Style style = new Style=> [
 			keysAndValues.forEach[ Object v, int index |
@@ -148,6 +178,8 @@ class Style {
         _width = overridingStyle._width ?: _width
         _height = overridingStyle._height ?: _height
         
+        _fontStyle = overridingStyle._fontStyle ?: _fontStyle
+        _fontFamily = overridingStyle._fontFamily ?: _fontFamily
         _fontSize = overridingStyle._fontSize ?: _fontSize
         
         _transitions = overridingStyle._transitions ?: new ArrayList<List<Object>>() as List<List<Object>>
@@ -217,6 +249,8 @@ class Style {
         this.width = form.width
         this.height = form.height
         this.fontSize = form.fontSize
+        this.fontStyle = form.fontStyle
+        this.fontFamily = form.fontFamily
         this.transitions = form.transitions
         this.x = form.x
         this.y = form.y
@@ -245,6 +279,8 @@ class Style {
         this.width = form._width
         this.height = form._height
         this.fontSize = form._fontSize
+        this.fontStyle = form._fontStyle
+        this.fontFamily = form._fontFamily
         this.transitions = form._transitions
         this.x = form._x
         this.y = form._y
@@ -406,8 +442,8 @@ class Style {
 //      latteView.shapeDrawable.invalidateSelf
     }
     
-    def applyToView(LatteView latteView, String... properties) {
-    	
+    def applyToView(LatteView<?> latteView, String... properties) {
+    	initFonts(latteView.androidView.context)
     	var applyAll = properties.isEmpty
     	
         var androidView = latteView.androidView;
@@ -441,6 +477,25 @@ class Style {
 	        }
 	        if ((applyAll || properties.contains("fontSize")) && fontSize != null) {
                 androidView.textSize = fontSize.inPixelsInt(androidView.context);
+            }
+            
+	        if ((applyAll || properties.contains("fontFamily")) && fontFamily != null) {
+	        	if (fontFamily == "default") {
+	        		androidView.typeface = if (fontStyle == "bold" || fontStyle == "bold-italic") Typeface.DEFAULT_BOLD else Typeface.DEFAULT;
+	        	} else {
+                	androidView.typeface = allFonts.get(fontFamily.toLowerCase())
+                }
+            }
+            if ((applyAll || properties.contains("fontStyle")) && fontStyle != null) {
+            	if (fontStyle == "bold") {
+            		androidView.setTypeface(androidView.typeface, Typeface.BOLD);	
+            	} else if (fontStyle == "bold-italic") {
+            		androidView.setTypeface(androidView.typeface, Typeface.BOLD_ITALIC);
+            	}  else if (fontStyle == "italic") {
+            		androidView.setTypeface(androidView.typeface, Typeface.ITALIC);
+            	} else {
+            		androidView.setTypeface(androidView.typeface, Typeface.NORMAL);
+            	}
             }
         }
         
