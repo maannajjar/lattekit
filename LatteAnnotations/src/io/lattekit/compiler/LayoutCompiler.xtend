@@ -32,6 +32,7 @@ import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
 
 import static org.reflections.ReflectionUtils.*
+import io.lattekit.compiler.LatteXtendParser.StyleMapLiteralBodyContext
 
 class LayoutCompiler {
 
@@ -72,6 +73,7 @@ class CompiledExpression {
 	
 	@Accessors String preferredAccess;
 	@Accessors String prefix;
+	@Accessors String generatedVariableName;
 	
 }
 
@@ -301,12 +303,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			compiled.type = compiledStatement.type;
 			compiled.generatedCode = compiledStatement.generatedCode
 			
-		} else if (ctx.xmlElement != null) {
-			var compiledXML = visit(ctx.xmlElement);
-			compiled.children += compiledXML;
-			compiled.type = compiledXML.type;
-			compiled.generatedCode = compiledXML.generatedCode
-		}
+		} 
 		
 		return compiled
 	}
@@ -466,15 +463,41 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		return classes
 	}
 	
+	override visitStyleMapLiteralBody(StyleMapLiteralBodyContext ctx) {
+		var compiled = new CompiledExpression();
+		var styleType = transformationContext.findTypeGlobally("io.lattekit.ui.Style")
+		compiled.type = Type.fromTypeReference(transformationContext.newTypeReference(styleType), styleType as ClassDeclaration);
+		
+		compiled.generatedCode = "io.lattekit.ui.Style.newStyle("+ctx.styleMapLiteralElement.map[
+			var valueCode = if (value != null) {
+				value.visit.generatedCode
+			} else if (sizeLiteral != null) {
+				switch (sizeLiteral.text) {
+					case "fill_parent": "new io.lattekit.ui.NumberValue(io.lattekit.ui.LatteView.MATCH_PARENT,0)"
+					case "match_parent": "new io.lattekit.ui.NumberValue(io.lattekit.ui.LatteView.MATCH_PARENT,0)"
+					case "wrap_content": "new io.lattekit.ui.NumberValue(io.lattekit.ui.LatteView.WRAP_CONTENT,0)"
+				}
+				
+			}
+			if (Identifier != null) {
+				'"'+Identifier.text + "\","+ valueCode
+			} else {
+				key.visit.generatedCode + ","+ valueCode
+			}
+		].join(",")+")"
+		return compiled
+	}
+	
 	override visitXmlElement(XmlElementContext ctx) {
 		val compiled = new CompiledExpression();
 		compiled.type = Type.VOID
 		compiled.type.typeName = "XMLLAYOUT";
 		compiled.type.isLayout = true;
 		val variableName = if (viewStack.empty) "myView"  else "subView"+ viewCounter++;
+		compiled.generatedVariableName = variableName;
 		viewStack += variableName 
 		var rootView = viewStack.length == 1
-		var latteViewType = "io.lattekit.ui.LatteView"
+		var latteViewType = "io.lattekit.ui.LatteView";
 		
 		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
 		
@@ -497,16 +520,15 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 							return new «findViewType.qualifiedName»(context);
 					}
 				});'''
-				
 			} else {
 				latteViewType = findViewType.qualifiedName
 			}
 		}
 
-		
 		val List<String> attrCode = newArrayList()
-		val mutableType = transformationContext.findTypeGlobally(latteViewType)
+		val mutableType = transformationContext.findTypeGlobally(latteViewType);
 		val viewType = Type.fromTypeReference(transformationContext.newTypeReference(mutableType),mutableType as ClassDeclaration)
+		compiled.type = viewType;
 		compiled.generatedCode = "// "+ mutableType.simpleName
 		
 		val isAndroidView = isNativeView;
@@ -541,7 +563,13 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 									
 			var code = "";
 			var value = "";
-			if (compiledExpr.preferredAccess == null && !hasSetter) {
+			if (attr.Identifier.text == "style"  && attr.styleMapLiteralBody != null) {
+				// TODO: Handle regular map literal body (not style)
+				var valueExpr = visit(attr.styleMapLiteralBody);
+				value = valueExpr.generatedCode;
+				code = '''it.setStyle(«value»);'''
+				
+			} else if (compiledExpr.preferredAccess == null && !hasSetter) {
 				if (isAndroidView) {
 					if (attr.expression !=null) {
 						// JavaCode
@@ -644,8 +672,6 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	}
 	
 	
-	
-	
 	def lookupLocalVariableType(String variableName) {
 		return scope.findLast[ containsKey(variableName) ]?.get(variableName)
 	}
@@ -717,8 +743,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	override visitExpression(ExpressionContext ctx) {
 		val compiled = new CompiledExpression();
 		compiled.context = ctx;
-		
-		if (ctx.op_math != null) {
+		if (ctx.xmlElement != null) {
+			return visit(ctx.xmlElement);
+		} else if (ctx.op_math != null) {
 			var leftCompiled = this.visit(ctx.left)
 			var rightCompiled = this.visit(ctx.right)
 			var typeNumbers = #[ "java.lang.String", "double", "float", "long", "int", "char"]
@@ -732,7 +759,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			}
 			compiled.children += leftCompiled;
 			compiled.children += rightCompiled;
-			compiled.generatedCode = leftCompiled.generatedCode + ctx.op_math.text + rightCompiled.generatedCode 	
+			compiled.generatedCode = leftCompiled.generatedCode + ctx.op_math.text + rightCompiled.generatedCode
 			
 			return compiled
 		} else if (ctx.logical_op != null) {
@@ -751,7 +778,11 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			compiled.type = left.type
 			compiled.children += left;
 			compiled.children += right			
-			compiled.generatedCode = left.generatedCode + ctx.assign_op.text + right.generatedCode
+			if (right.generatedVariableName != null) {
+				compiled.generatedCode =  right.generatedCode +"\n" +left.generatedCode  + ctx.assign_op.text + right.generatedVariableName+";"
+			} else {
+				compiled.generatedCode = left.generatedCode + ctx.assign_op.text + right.generatedCode
+			}
 			return compiled
 		} else if (ctx.instanceof_op != null) {
 			// TODO: Type checking			
@@ -1046,11 +1077,14 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			compiled.children += compiledSub;
 			compiled.generatedCode = "("+compiledSub.generatedCode+")";
 		} else if (ctx.text == "this") {
-			var cls = jvmContext.findClass(ctx.Identifier.text)
-			compiled.type = Type.fromClass(cls);
+			
 			compiled.generatedCode = "this"
 			compiled.prefix = "this"
-			compiled.preferredAccess = "this";		
+			compiled.preferredAccess = "this";
+			try {
+				var cls = jvmContext.findClass(ctx.Identifier.text)		
+				compiled.type = Type.fromClass(cls);
+			} catch(Exception e) {}
 	
 		} else if (ctx.text == "super") {
 			// TODO: Lookup "this" class

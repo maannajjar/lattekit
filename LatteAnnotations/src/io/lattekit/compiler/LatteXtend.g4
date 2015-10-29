@@ -474,7 +474,6 @@ blockStatement
     :   localVariableDeclarationStatement
     |   statement
     |   typeDeclaration
-    |   xmlElement
     ;
 
 xmlElement
@@ -482,9 +481,20 @@ xmlElement
 	| '<' el=Identifier xmlAttribute* '/>'
 	;
 
+
 xmlAttribute
 	: Identifier '=' StringLiteral
 	| Identifier '=' '{' expression '}'
+	| Identifier '=' '{{' styleMapLiteralBody '}}'
+	;
+
+styleMapLiteralBody
+	: styleMapLiteralElement ((','|';') styleMapLiteralElement)*
+	;
+	
+styleMapLiteralElement
+	: Identifier ':' (value=expression|sizeLiteral=('match_parent'|'wrap_content'|'fill_parent'))
+	| key=expression ':' (value=expression|sizeLiteral=('match_parent'|'wrap_content'|'fill_parent'))
 	;
 
 localVariableDeclarationStatement
@@ -591,6 +601,7 @@ constantExpression
 
 expression
     :   primaryExpression=primary
+    |	xmlElement
     |   left=expression dot='.' member=Identifier
     |   left=expression dot='.' member='this'
     |   expression dot='.' method='new' nonWildcardTypeArguments? innerCreator 

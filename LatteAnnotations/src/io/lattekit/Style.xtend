@@ -5,6 +5,7 @@ import org.eclipse.xtend.lib.macro.AbstractFieldProcessor
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
+import com.google.common.base.CaseFormat
 
 @Active(typeof(StylePropertyProcessor))
 annotation StyleProperty {
@@ -33,16 +34,27 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 			]
 						
 			annotatedField.declaringType.addMethod("setProperty") [
-				addParameter("propertyName", String.newTypeReference())
+				addParameter("key", String.newTypeReference())
 				addParameter("value", Object.newTypeReference())
 				val allSetters = new StringBuffer();
 				
 				properties.forEach[
 					val name = if (it.simpleName.startsWith("_")) it.simpleName.substring(1) else it.simpleName;
-					allSetters.append('''if (propertyName.equals("«name»")) { set«name.substring(0,1).toUpperCase+name.substring(1)»((«it.type.name»)value); }
-					''');
+					if (it.type.name == "io.lattekit.ui.NumberValue") {
+						allSetters.append('''if (propertyName.equals("«name»") && value instanceof io.lattekit.ui.NumberValue) { set«name.substring(0,1).toUpperCase+name.substring(1)»((io.lattekit.ui.NumberValue)value); }
+						''');				
+						allSetters.append('''if (propertyName.equals("«name»") && value instanceof String) { set«name.substring(0,1).toUpperCase+name.substring(1)»((String)value); }
+						''');														
+					} else {
+						allSetters.append('''if (propertyName.equals("«name»")) { set«name.substring(0,1).toUpperCase+name.substring(1)»((«it.type.name»)value); }
+					''');						
+					}
 				];
 				body = '''
+					String propertyName = key;
+					if (!_properties.contains(key)) {
+						propertyName = com.google.common.base.CaseFormat.LOWER_HYPHEN.to(com.google.common.base.CaseFormat.LOWER_CAMEL,key);
+					}
 					«allSetters.toString»
 				'''
 			]
@@ -91,12 +103,29 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 		];
 		
 		if (rawType.simpleName == "NumberValue") {
+			
 			annotatedField.declaringType.addMethod("set"+capiatlized) [
 				addParameter("value", Integer.newTypeReference())
 				body = '''
 					_«rawName» = new NumberValue(value,0);
 				'''
 			]
+			
+			annotatedField.declaringType.addMethod("set"+capiatlized) [
+				addParameter("value", String.newTypeReference())
+				body = '''
+					int unitType = android.util.TypedValue.COMPLEX_UNIT_PX;
+					if (value.indexOf("dp")  != -1) {
+						unitType = android.util.TypedValue.COMPLEX_UNIT_DIP;
+					} else if (value.indexOf("sp") != -1) {
+						unitType = android.util.TypedValue.COMPLEX_UNIT_SP;
+					} else if (value.indexOf("pt")  != -1) {
+						unitType = android.util.TypedValue.COMPLEX_UNIT_PT;
+					}
+					_«rawName» = new NumberValue(Integer.parseInt(value.replaceAll("[^0-9]", "")),unitType);
+				'''
+			]
+			
 		}
 
 		annotatedField.declaringType.addMethod("set" + capiatlized) [

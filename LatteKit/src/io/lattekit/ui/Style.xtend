@@ -108,7 +108,16 @@ class Style {
     @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, android.util.TypedValue.COMPLEX_UNIT_PX);
     
     
-    
+    def static Style newStyle(Object... keysAndValues) {
+    	var Style style = new Style=> [
+			keysAndValues.forEach[ Object v, int index |
+				if (index %2 == 0) {
+					setProperty(v as String, keysAndValues.get(index+1));
+				}
+			]    		
+    	]
+    	return style;
+    }
     
     def overrideWithStyle(Style overridingStyle) {
         _backgroundColor = overridingStyle._backgroundColor ?: _backgroundColor
