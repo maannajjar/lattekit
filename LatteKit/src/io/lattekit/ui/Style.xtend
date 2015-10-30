@@ -33,6 +33,7 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
+import io.lattekit.ui.drawable.BorderDrawable
 
 class NumberValue {
     @Accessors var int value;
@@ -124,6 +125,8 @@ class Style {
     
     protected GradientDrawable backgroundGradientDrawable;
     protected Drawable backgroundImageDrawable;
+    
+    protected BorderDrawable borderDrawable;
     
     def static initFonts(Context context) {
     	if (allFonts == null) {
@@ -444,7 +447,7 @@ class Style {
     		backgroundGradientDrawable = new GradientDrawable();
     	}
         backgroundGradientDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
-        backgroundGradientDrawable.setStroke(borderWidth.inPixelsInt(view.androidView.context), borderColor.asColor);
+//        backgroundGradientDrawable.setStroke(borderWidth.inPixelsInt(view.androidView.context), backgroundColor.asColor);
         backgroundGradientDrawable.setCornerRadius(cornerRadius.inPixels(view.androidView.context));
     	
     	if (backgroundDrawable != null && backgroundDrawable != "") {
@@ -475,6 +478,26 @@ class Style {
     		backgroundImageDrawable = new ColorDrawable(Color.TRANSPARENT);
     	}
     	
+    	if (borderDrawable == null) {
+    		borderDrawable = new BorderDrawable();
+    	}
+    	
+        borderDrawable.topBorderWidth = borderWidth.inPixels(view.androidView.context);
+        borderDrawable.bottomBorderWidth = borderWidth.inPixels(view.androidView.context);
+        borderDrawable.leftBorderWidth = borderWidth.inPixels(view.androidView.context);
+        borderDrawable.rightBorderWidth = borderWidth.inPixels(view.androidView.context);
+        
+        borderDrawable.topLeftRadius = 2*cornerRadius.inPixels(view.androidView.context);
+        borderDrawable.topRightRadius = 2*cornerRadius.inPixels(view.androidView.context);
+        borderDrawable.bottomLeftRadius = 2*cornerRadius.inPixels(view.androidView.context);
+        borderDrawable.bottomRightRadius = 2*cornerRadius.inPixels(view.androidView.context);
+    	
+    	borderDrawable.topBorderColor = borderColor.asColor;
+    	borderDrawable.bottomBorderColor = borderColor.asColor;
+    	borderDrawable.leftBorderColor = borderColor.asColor;
+    	borderDrawable.rightBorderColor = borderColor.asColor;
+    	
+    	
     }
 
     def applyDrawableStyle(LatteView view) {
@@ -499,6 +522,8 @@ class Style {
         
         view.backgroundDrawable.setDrawableByLayerId(0, backgroundGradientDrawable);
         view.backgroundDrawable.setDrawableByLayerId(1, backgroundImageDrawable);
+        view.backgroundDrawable.setDrawableByLayerId(2, borderDrawable);
+        //TODO: Should inset with border width ?
         view.backgroundDrawable.setLayerInset(0,0,0,0,0);
         view.backgroundDrawable.setLayerInset(1,0,0,0,0);
         view.backgroundDrawable.invalidateSelf

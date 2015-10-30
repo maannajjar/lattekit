@@ -291,9 +291,10 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def createBackgroundDrawable() {
 		if (backgroundDrawable == null) {
 			normalStyle.updateDrawables(this);
-			backgroundDrawable = new LayerDrawable(#[new ColorDrawable(), new ColorDrawable()])
+			backgroundDrawable = new LayerDrawable(#[new ColorDrawable(), new ColorDrawable(),new ColorDrawable()])
 			backgroundDrawable.setId(0,0)
 			backgroundDrawable.setId(1,1)
+			backgroundDrawable.setId(2,2)
 			shapeDrawable = new ShapeDrawable();
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 				androidView.background = new RippleDrawable(new ColorStateList(#[], #[]),this.backgroundDrawable, this.shapeDrawable);
