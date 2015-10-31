@@ -76,7 +76,7 @@ ViewSizeProperty:
 
 SizeProperty:
 	property=(
-		 'border-width' | 'corner-radius'
+		 'border-width' | 'border-radius'
 		| 'font-size'
 		| 'translate-x' | 'translate-y'
 		| 'margin-left' | 'margin-right' | 'margin-top' | 'margin-bottom' | 'margin'
@@ -146,7 +146,7 @@ PropertyNameValue:
 	'margin' | 'margin-top' | 'margin-bottom' | 'margin-left' | 'margin-right' |
 	'padding' | 'padding-top' | 'padding-bottom' | 'padding-left' | 'padding-right' |
 	'width' | 'height' | 'translateX' | 'translateY' | 'x' | 'y' | 'elevation' | 'font-size' | 'border-width' |
-	'corner-radius'
+	'border-radius'
 ;
 
 NumberValue:

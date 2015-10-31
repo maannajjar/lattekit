@@ -89,7 +89,7 @@ class Style {
     @StyleProperty public String backgroundRepeat = "no-repeat-x no-repeat-y";
     @StyleProperty public String backgroundGravity = "fill_vertical, fill_horizontal";
         
-    @StyleProperty public NumberValue cornerRadius = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
+    @StyleProperty public NumberValue borderRadius = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
     @StyleProperty public NumberValue borderWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
     
     @StyleProperty public NumberValue margin = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
@@ -170,7 +170,7 @@ class Style {
         _backgroundDrawable = overridingStyle._backgroundDrawable ?: _backgroundDrawable
         _backgroundRepeat = overridingStyle._backgroundRepeat ?: _backgroundRepeat
         _backgroundGravity = overridingStyle._backgroundGravity ?: _backgroundGravity
-        _cornerRadius = overridingStyle._cornerRadius ?: _cornerRadius
+        _borderRadius = overridingStyle._borderRadius ?: _borderRadius
         _borderWidth = overridingStyle._borderWidth ?: _borderWidth
         _margin = overridingStyle._margin ?: _margin
         _marginTop = overridingStyle._marginTop ?: _marginTop
@@ -248,7 +248,7 @@ class Style {
         this.backgroundDrawable = form.backgroundDrawable
         this.backgroundRepeat = form.backgroundRepeat;
         this.backgroundGravity = form.backgroundGravity;
-        this.cornerRadius = form.cornerRadius
+        this.borderRadius = form.borderRadius
         this.borderWidth = form.borderWidth
         this.margin = form.margin
         this.marginTop = form.marginTop
@@ -280,7 +280,7 @@ class Style {
         this.backgroundDrawable = form._backgroundDrawable
         this.backgroundRepeat = form._backgroundRepeat
         this.backgroundGravity = form._backgroundGravity
-        this.cornerRadius = form._cornerRadius
+        this.borderRadius = form._borderRadius
         this.borderWidth = form._borderWidth
         this.margin = form._margin
         this.marginTop = form._marginTop
@@ -448,7 +448,7 @@ class Style {
     	}
         backgroundGradientDrawable.colors = #[backgroundColor.asColor, backgroundColor.asColor]
 //        backgroundGradientDrawable.setStroke(borderWidth.inPixelsInt(view.androidView.context), backgroundColor.asColor);
-        backgroundGradientDrawable.setCornerRadius(cornerRadius.inPixels(view.androidView.context));
+        backgroundGradientDrawable.setCornerRadius(borderRadius.inPixels(view.androidView.context));
     	
     	if (backgroundDrawable != null && backgroundDrawable != "") {
     		var drawableResourceId = view.androidView.context.getResources().getIdentifier(backgroundDrawable, "drawable", view.androidView.context.getPackageName());
@@ -487,10 +487,10 @@ class Style {
         borderDrawable.leftBorderWidth = borderWidth.inPixels(view.androidView.context);
         borderDrawable.rightBorderWidth = borderWidth.inPixels(view.androidView.context);
         
-        borderDrawable.topLeftRadius = 2*cornerRadius.inPixels(view.androidView.context);
-        borderDrawable.topRightRadius = 2*cornerRadius.inPixels(view.androidView.context);
-        borderDrawable.bottomLeftRadius = 2*cornerRadius.inPixels(view.androidView.context);
-        borderDrawable.bottomRightRadius = 2*cornerRadius.inPixels(view.androidView.context);
+        borderDrawable.topLeftRadius = 2*borderRadius.inPixels(view.androidView.context);
+        borderDrawable.topRightRadius = 2*borderRadius.inPixels(view.androidView.context);
+        borderDrawable.bottomLeftRadius = 2*borderRadius.inPixels(view.androidView.context);
+        borderDrawable.bottomRightRadius = 2*borderRadius.inPixels(view.androidView.context);
     	
     	borderDrawable.topBorderColor = borderColor.asColor;
     	borderDrawable.bottomBorderColor = borderColor.asColor;
@@ -536,8 +536,8 @@ class Style {
     }
     
     def applyDrawableShape(LatteView latteView) {
-        var float[] radii = if (cornerRadius != null) { 
-            var radius = cornerRadius.inPixels(latteView.androidView.context)
+        var float[] radii = if (borderRadius != null) { 
+            var radius = borderRadius.inPixels(latteView.androidView.context)
             #[radius,radius,radius,radius,radius,radius,radius,radius];
         } else null;
         var shape = new RoundRectShape(radii, null,null);
@@ -555,10 +555,10 @@ class Style {
             androidView.elevation = elevation.inPixels(androidView.context);
         }
         
-        if (applyAll || !properties.filter[#["cornerRadius","backgroundDrawable","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth"].contains(it)].empty) {
+        if (applyAll || !properties.filter[#["borderRadius","backgroundDrawable","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth"].contains(it)].empty) {
         	applyDrawableStyle(latteView);
         }
-        if (applyAll || !properties.filter[#["cornerRadius","borderWidth"].contains(it)].empty) {
+        if (applyAll || !properties.filter[#["borderRadius","borderWidth"].contains(it)].empty) {
         	applyDrawableShape(latteView);
         }
         
