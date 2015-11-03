@@ -554,22 +554,22 @@ class Style {
         borderDrawable.rightBorderWidth = (borderRightWidth ?: borderWidth).inPixels(view.androidView.context);
         
         
-        borderDrawable.topLeftRadius = 2*borderRadius.inPixels(view.androidView.context);
-        borderDrawable.topRightRadius = 2*borderRadius.inPixels(view.androidView.context);
-        borderDrawable.bottomLeftRadius = 2*borderRadius.inPixels(view.androidView.context);
-        borderDrawable.bottomRightRadius = 2*borderRadius.inPixels(view.androidView.context);
+        borderDrawable.topLeftRadius = borderRadius.inPixels(view.androidView.context);
+        borderDrawable.topRightRadius = borderRadius.inPixels(view.androidView.context);
+        borderDrawable.bottomLeftRadius = borderRadius.inPixels(view.androidView.context);
+        borderDrawable.bottomRightRadius = borderRadius.inPixels(view.androidView.context);
         
         if (borderTopRightRadius != null) {
-        	borderDrawable.topRightRadius = 2*borderTopRightRadius.inPixels(view.androidView.context);
+        	borderDrawable.topRightRadius = borderTopRightRadius.inPixels(view.androidView.context);
         }
         if (borderTopLeftRadius != null) {
-        	borderDrawable.topLeftRadius = 2*borderTopLeftRadius.inPixels(view.androidView.context);	
+        	borderDrawable.topLeftRadius = borderTopLeftRadius.inPixels(view.androidView.context);	
         }
         if (borderBottomLeftRadius != null) {
-        	borderDrawable.bottomLeftRadius = 2*borderBottomLeftRadius.inPixels(view.androidView.context);
+        	borderDrawable.bottomLeftRadius = borderBottomLeftRadius.inPixels(view.androidView.context);
         }
         if (borderBottomRightRadius != null) {
-        	borderDrawable.bottomRightRadius = 2*borderBottomRightRadius.inPixels(view.androidView.context);
+        	borderDrawable.bottomRightRadius = borderBottomRightRadius.inPixels(view.androidView.context);
     	}
     	    	
     	borderDrawable.topBorderColor = (borderTopColor ?: borderColor).asColor;
@@ -603,8 +603,8 @@ class Style {
         var bottomBorder = (borderBottomWidth ?: borderWidth).inPixelsInt(view.androidView.context)
         var leftBorder =(borderLeftWidth ?: borderWidth).inPixelsInt(view.androidView.context)
         
-        view.backgroundDrawable.setLayerInset(0,leftBorder/2,topBorder/2,rightBorder/2,bottomBorder/2);
-        view.backgroundDrawable.setLayerInset(1,leftBorder/2,topBorder/2,rightBorder/2,bottomBorder/2);
+        view.backgroundDrawable.setLayerInset(0,leftBorder,topBorder,rightBorder,bottomBorder);
+        view.backgroundDrawable.setLayerInset(1,leftBorder,topBorder,rightBorder,bottomBorder);
         view.backgroundDrawable.invalidateSelf
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -615,10 +615,10 @@ class Style {
     }
     
     def float[] getCornerRadii(LatteView latteView) {
-		var topLeft = (borderTopLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)
-        var topRight = (borderTopRightRadius ?: borderRadius).inPixels(latteView.androidView.context)
-        var bottomLeft = (borderBottomLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)
-        var bottomRight = (borderBottomRightRadius ?: borderRadius).inPixels(latteView.androidView.context)
+		var topLeft = (borderTopLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
+        var topRight = (borderTopRightRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
+        var bottomLeft = (borderBottomLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
+        var bottomRight = (borderBottomRightRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
     	return #[topLeft,topLeft,topRight,topRight,bottomRight,bottomRight,bottomLeft,bottomLeft];
     }
     

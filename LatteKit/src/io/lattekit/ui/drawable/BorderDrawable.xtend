@@ -3,13 +3,14 @@ package io.lattekit.ui.drawable
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorFilter
+import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Paint.Style
 import android.graphics.Path
-import android.graphics.Rect
-import android.graphics.drawable.Drawable
-import org.eclipse.xtend.lib.annotations.Accessors
 import android.graphics.RectF
+import android.graphics.drawable.Drawable
+import android.util.Log
+import org.eclipse.xtend.lib.annotations.Accessors
 
 class BorderDrawable extends Drawable {
 
@@ -38,7 +39,124 @@ class BorderDrawable extends Drawable {
 		path = new Path();		
 	}
 	
+	
+	def drawSegment(Canvas canvas,Path path, RectF bounds,float segementWidth, float firstCornerRadius,float firstAdjacentWidth, float secondCornerRadius,float secondAdjacentWidth) {
+		path.reset()
+		// Outer line
+		if (firstCornerRadius > 0) {
+			path.arcTo(bounds.left,bounds.top,bounds.left+firstCornerRadius*2,bounds.top+firstCornerRadius*2,-135,45, true);
+		} else {
+			path.moveTo(bounds.left,bounds.top);
+		}
+		
+		path.lineTo(bounds.right/2.0f,bounds.top);
+		path.lineTo(bounds.right/2.0f,bounds.top+segementWidth);
+		
+		//Inner line
+		// We're multiplying inner radius with 2 to keep the inner radius consistent with outer radius (similar to iOS)
+		// If we want to mimic  CSS, we should multiply by 1 and adjust outer radius  
+		// But that means we should make the border drawn outside the view which means the border affects view size (not intuitive in android)
+		var innerRadiusLeft = (firstCornerRadius-firstAdjacentWidth)*2;
+		var innerRadiusTop = (firstCornerRadius-segementWidth)*2;
+		
+		if (firstCornerRadius > 0 && innerRadiusLeft > 0 && innerRadiusTop > 0) {
+			path.lineTo(bounds.left+firstAdjacentWidth+innerRadiusLeft,bounds.top+segementWidth);
+			path.arcTo(bounds.left+firstAdjacentWidth,bounds.top+segementWidth,
+					bounds.left+firstAdjacentWidth+innerRadiusLeft,bounds.top+segementWidth+innerRadiusTop,-90,-45, false);
+		} else {
+			path.lineTo(bounds.left+firstAdjacentWidth,bounds.top+segementWidth);
+		}
+		path.close();
+		canvas.drawPath(path,paint);	
+		path.reset()
+		// Outer line
+		if (secondCornerRadius > 0) {
+			path.arcTo(bounds.right-secondCornerRadius*2,bounds.top,bounds.right,bounds.top+secondCornerRadius*2,-45,-45, true);
+		} else {
+			path.moveTo(bounds.right,bounds.top);
+		}
+		
+		path.lineTo(bounds.right/2.0f,bounds.top);
+		path.lineTo(bounds.right/2.0f,bounds.top+segementWidth);
+		
+		//Inner line
+		var innerRadiusRight = (secondCornerRadius-secondAdjacentWidth)*2;
+		var innerRadiusTop2 = (secondCornerRadius-segementWidth)*2;
+		
+					
+		if (secondCornerRadius > 0 && innerRadiusRight > 0 && innerRadiusTop2 > 0) {
+			path.lineTo(bounds.right-secondAdjacentWidth-innerRadiusRight,bounds.top+segementWidth);
+			path.arcTo(bounds.right-secondAdjacentWidth-innerRadiusRight,bounds.top+segementWidth,
+					bounds.right-secondAdjacentWidth,bounds.top+segementWidth+innerRadiusTop2,-90,45, false);
+		} else {
+			path.lineTo(bounds.right-secondAdjacentWidth,bounds.top+segementWidth);
+		}
+		path.close();
+		canvas.drawPath(path,paint);		
+		
+		
+	}
+	
 	override draw(Canvas canvas) {
+		canvas.save()
+		paint.style = Paint.Style.FILL_AND_STROKE;
+		paint.strokeWidth = 0.5f
+		
+
+		canvas.rotate(-90,bounds.centerX,bounds.centerY);
+		if (leftBorderWidth > 0) {
+			paint.color = leftBorderColor;
+			drawSegment(canvas,path, new RectF(bounds), leftBorderWidth, bottomLeftRadius, bottomBorderWidth, topLeftRadius, topBorderWidth);
+		}
+		
+		canvas.rotate(90,bounds.centerX,bounds.centerY);
+		if (topBorderWidth > 0) {
+			paint.color = topBorderColor;
+			drawSegment(canvas,path, new RectF(bounds), topBorderWidth, topLeftRadius, leftBorderWidth, topRightRadius, rightBorderWidth);
+		}
+		
+		canvas.rotate(90,bounds.centerX,bounds.centerY);
+		if (rightBorderWidth > 0) {
+			paint.color = rightBorderColor;
+			drawSegment(canvas,path, new RectF(bounds), rightBorderWidth, topRightRadius, topBorderWidth, bottomRightRadius, bottomBorderWidth);
+		}
+
+		canvas.rotate(90,bounds.centerX,bounds.centerY);
+		if (bottomBorderWidth > 0) {
+			paint.color = bottomBorderColor;
+			drawSegment(canvas,path, new RectF(bounds), bottomBorderWidth, bottomRightRadius, rightBorderWidth, bottomLeftRadius, leftBorderWidth);
+		}
+		
+		canvas.restore();
+		
+		
+//		// Outer line
+//		if (topLeftRadius > 0) {
+//			path.arcTo(bounds.left,bounds.top,bounds.left+topLeftRadius*2,bounds.top+topLeftRadius*2,-135,45, true);
+//		} else {
+//			path.moveTo(bounds.left,bounds.top);
+//		}
+//		
+//		path.lineTo(bounds.right/2.0f,bounds.top);
+//		path.lineTo(bounds.right/2.0f,bounds.top+topBorderWidth);
+//		
+//		//Inner line
+//		path.lineTo(bounds.left+leftBorderWidth+topLeftRadius,bounds.top+topBorderWidth);			
+//		if (topLeftRadius > 0) {
+//			path.arcTo(bounds.left+leftBorderWidth,bounds.top+topBorderWidth,
+//					bounds.left+leftBorderWidth+topLeftRadius,bounds.top+topBorderWidth+topLeftRadius,-90,-45, false);
+//		} else {
+//			path.lineTo(bounds.left+leftBorderWidth+topLeftRadius,bounds.top+topBorderWidth);
+//		}
+		
+		
+		
+		
+		
+		
+		canvas.restore()
+	}
+	def drawOld(Canvas canvas) {
 		rect = new RectF(copyBounds());
 		rect.left += leftBorderWidth/2.0f;
 		rect.right -= rightBorderWidth/2.0f;
@@ -50,6 +168,10 @@ class BorderDrawable extends Drawable {
 		paint.strokeCap = Paint.Cap.BUTT
 		paint.strokeJoin = Paint.Join.MITER;
 		paint.style = Paint.Style.STROKE
+		
+				  var cornerPathEffect = new DashPathEffect(#[10.0f, 20.0f,10.0f, 20.0f],0);
+				paint.setPathEffect(cornerPathEffect);
+		
 		
 		canvas.save();
 		
