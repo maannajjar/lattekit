@@ -119,7 +119,9 @@ BackgroundGravityProperty:
 ;
 
 ColorProperty:
-	property=('border-color' | 'ripple-color' | 'background-color' | 'text-color') ':' value=ColorValue
+	property=('border-color' | 'border-top-color' |  'border-left-color' | 'border-right-color' | 'border-bottom-color' |
+			 'ripple-color' | 'background-color' | 'text-color'
+	) ':' value=ColorValue
 ;
 
 AlignmentProperty:

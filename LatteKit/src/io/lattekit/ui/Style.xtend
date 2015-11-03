@@ -81,13 +81,20 @@ class Style {
     @Accessors Style parentStyle;
     @StyleProperty public Object backgroundColor = Color.WHITE;
     @StyleProperty public Object rippleColor;
-    @StyleProperty public Object borderColor = Color.WHITE;
+    
     @StyleProperty public Object textColor = Color.BLACK;
     
 
     @StyleProperty public String backgroundDrawable = "";
     @StyleProperty public String backgroundRepeat = "no-repeat-x no-repeat-y";
     @StyleProperty public String backgroundGravity = "fill_vertical, fill_horizontal";
+    
+    @StyleProperty public Object borderColor = Color.WHITE;
+    @StyleProperty public Object borderLeftColor;
+    @StyleProperty public Object borderTopColor;
+    @StyleProperty public Object borderRightColor;
+    @StyleProperty public Object borderBottomColor;
+    
         
     @StyleProperty public NumberValue borderRadius = new NumberValue(0,TypedValue.COMPLEX_UNIT_DIP);
     @StyleProperty public NumberValue borderTopLeftRadius;
@@ -100,6 +107,9 @@ class Style {
     @StyleProperty public NumberValue borderTopWidth;
     @StyleProperty public NumberValue borderRightWidth;
     @StyleProperty public NumberValue borderBottomWidth;
+    
+    
+    
     
     @StyleProperty public NumberValue margin = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue marginTop;
@@ -175,6 +185,11 @@ class Style {
         _backgroundColor = overridingStyle._backgroundColor ?: _backgroundColor
         _rippleColor = overridingStyle._rippleColor ?: _rippleColor
         _borderColor = overridingStyle._borderColor ?: _borderColor
+        _borderLeftColor = overridingStyle._borderLeftColor ?: _borderLeftColor
+        _borderTopColor = overridingStyle._borderTopColor ?: _borderTopColor
+        _borderRightColor = overridingStyle._borderRightColor ?: _borderRightColor
+        _borderBottomColor = overridingStyle._borderBottomColor ?: _borderBottomColor
+        
         _textColor = overridingStyle._textColor ?: _textColor
         _backgroundDrawable = overridingStyle._backgroundDrawable ?: _backgroundDrawable
         _backgroundRepeat = overridingStyle._backgroundRepeat ?: _backgroundRepeat
@@ -264,6 +279,11 @@ class Style {
         this.backgroundColor = form.backgroundColor
         this.rippleColor = form.rippleColor
         this.borderColor = form.borderColor
+        this.borderTopColor = form.borderTopColor
+        this.borderLeftColor = form.borderLeftColor
+        this.borderRightColor = form.borderRightColor
+        this.borderBottomColor = form.borderBottomColor
+        
         this.textColor = form.textColor
         this.backgroundDrawable = form.backgroundDrawable
         this.backgroundRepeat = form.backgroundRepeat;
@@ -306,6 +326,11 @@ class Style {
         this.backgroundColor = form._backgroundColor
         this.rippleColor = form._rippleColor
         this.borderColor = form._borderColor
+        this.borderTopColor = form._borderTopColor
+        this.borderLeftColor = form._borderLeftColor
+        this.borderRightColor = form._borderRightColor
+        this.borderBottomColor = form._borderBottomColor
+        
         this.textColor = form._textColor
         this.backgroundDrawable = form._backgroundDrawable
         this.backgroundRepeat = form._backgroundRepeat
@@ -547,10 +572,10 @@ class Style {
         	borderDrawable.bottomRightRadius = 2*borderBottomRightRadius.inPixels(view.androidView.context);
     	}
     	    	
-    	borderDrawable.topBorderColor = borderColor.asColor;
-    	borderDrawable.bottomBorderColor = borderColor.asColor;
-    	borderDrawable.leftBorderColor = borderColor.asColor;
-    	borderDrawable.rightBorderColor = borderColor.asColor;
+    	borderDrawable.topBorderColor = (borderTopColor ?: borderColor).asColor;
+    	borderDrawable.bottomBorderColor = (borderBottomColor ?: borderColor).asColor;
+    	borderDrawable.leftBorderColor = (borderLeftColor ?: borderColor).asColor;
+    	borderDrawable.rightBorderColor = (borderRightColor ?: borderColor).asColor;
     }
 
     def applyDrawableStyle(LatteView view) {
@@ -573,8 +598,13 @@ class Style {
         view.backgroundDrawable.setDrawableByLayerId(1, backgroundImageDrawable);
         view.backgroundDrawable.setDrawableByLayerId(2, borderDrawable);
         //TODO: Should inset with border width ?
-        view.backgroundDrawable.setLayerInset(0,0,0,0,0);
-        view.backgroundDrawable.setLayerInset(1,0,0,0,0);
+		var topBorder = (borderTopWidth ?: borderWidth).inPixelsInt(view.androidView.context)
+        var rightBorder = (borderRightWidth ?: borderWidth).inPixelsInt(view.androidView.context)
+        var bottomBorder = (borderBottomWidth ?: borderWidth).inPixelsInt(view.androidView.context)
+        var leftBorder =(borderLeftWidth ?: borderWidth).inPixelsInt(view.androidView.context)
+        
+        view.backgroundDrawable.setLayerInset(0,leftBorder,topBorder,rightBorder,bottomBorder);
+        view.backgroundDrawable.setLayerInset(1,leftBorder,topBorder,rightBorder,bottomBorder);
         view.backgroundDrawable.invalidateSelf
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -608,7 +638,7 @@ class Style {
             androidView.elevation = elevation.inPixels(androidView.context);
         }
         
-        if (applyAll || !properties.filter[#["borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","backgroundDrawable","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
+        if (applyAll || !properties.filter[#["borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","backgroundDrawable","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
         	applyDrawableStyle(latteView);
         }
         if (applyAll || !properties.filter[#["borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
