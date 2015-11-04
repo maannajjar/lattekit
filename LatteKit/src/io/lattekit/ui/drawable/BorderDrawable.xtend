@@ -4,13 +4,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorFilter
 import android.graphics.Paint
-import android.graphics.Paint.Style
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import org.eclipse.xtend.lib.annotations.Accessors
-import android.graphics.DashPathEffect
-import android.graphics.PathDashPathEffect
 
 class BorderDrawable extends Drawable {
 
@@ -30,15 +27,12 @@ class BorderDrawable extends Drawable {
 	@Accessors float bottomRightRadius = 0;
 	
 	private Paint paint;
-	private RectF rect;
 	private Path path;
-	var cornerPath = new Path();
 	
 	new() {
 		paint = new Paint();
 		path = new Path();		
 	}
-	
 	
 	def drawSegment(Canvas canvas,Path path, RectF bounds,float segementWidth, float firstCornerRadius,float firstAdjacentWidth, float secondCornerRadius,float secondAdjacentWidth) {
 		path.reset()
