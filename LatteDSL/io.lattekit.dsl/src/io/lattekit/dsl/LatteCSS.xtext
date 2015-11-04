@@ -47,6 +47,7 @@ CSSProperty:
 		ColorProperty |
 		DrawableProperty |
 		BackgroundRepeatProperty |
+		BackgroundFilterTypeProperty |
 		BackgroundGravityProperty |
 		AlignmentProperty
 	) ';'
@@ -118,9 +119,18 @@ BackgroundGravityProperty:
 	property=('background-gravity') ':' values+=GravityValue (',' values+=GravityValue)*
 ;
 
+FilterValue: 'add' | 'clear' | 'darken' | 'dst' | 'dst_atop' | 'dst_in' | 'dst_out' | 
+	'dst_over' | 'lighten' | 'multiply' | 'overlay' | 'screen' | 'src' | 'src_atop' | 'src_in' | 'src_out'
+	| 'src_over' | 'xor'
+;
+BackgroundFilterTypeProperty:
+	property=('background-filter-type') ':' value=FilterValue
+;
+
+
 ColorProperty:
 	property=('border-color' | 'border-top-color' |  'border-left-color' | 'border-right-color' | 'border-bottom-color' |
-			 'ripple-color' | 'background-color' | 'text-color'
+			 'ripple-color' | 'background-color' | 'text-color' |  'background-filter-color'
 	) ':' value=ColorValue
 ;
 

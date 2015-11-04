@@ -19,6 +19,7 @@ import org.eclipse.xtext.generator.IGenerator
 import io.lattekit.dsl.latteCSS.FontStyleProperty
 import io.lattekit.dsl.latteCSS.BackgroundGravityProperty
 import io.lattekit.dsl.latteCSS.FontFamilyProperty
+import io.lattekit.dsl.latteCSS.BackgroundFilterTypeProperty
 
 /**
  * Generates code from your model files on save.
@@ -107,17 +108,17 @@ class LatteCSSGenerator implements IGenerator {
 		  	«ELSEIF property instanceof TransitionProperty»
 		  		«compileProperty(varName,property as TransitionProperty)»
 		  	«ELSEIF property instanceof DrawableProperty»
-		  		«compileProperty(varName,property as DrawableProperty)»		  		
+		  		«compileProperty(varName,property as DrawableProperty)»
 		  	«ELSEIF property instanceof BackgroundGravityProperty»
-		  		«compileProperty(varName,property as BackgroundGravityProperty)»		  		
+		  		«compileProperty(varName,property as BackgroundGravityProperty)»
 		  	«ELSEIF property instanceof BackgroundRepeatProperty»
-		  		«compileProperty(varName,property as BackgroundRepeatProperty)»		  		
+		  		«compileProperty(varName,property as BackgroundRepeatProperty)»
+		  	«ELSEIF property instanceof BackgroundFilterTypeProperty»
+		  		«compileProperty(varName,property as BackgroundFilterTypeProperty)»
 		  	«ELSEIF property instanceof FontFamilyProperty»
-		  		«compileProperty(varName,property as FontFamilyProperty)»		  		
+		  		«compileProperty(varName,property as FontFamilyProperty)»
 		  	«ELSEIF property instanceof FontStyleProperty»
-		  		«compileProperty(varName,property as FontStyleProperty)»		  		
-
-
+		  		«compileProperty(varName,property as FontStyleProperty)»
 		  	«ENDIF»
 		  «ENDFOR»
 		'''
@@ -171,6 +172,10 @@ class LatteCSSGenerator implements IGenerator {
 	def compileProperty(String object, BackgroundRepeatProperty prop) '''
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.values.join(" ")»");		
 	'''
+	def compileProperty(String object, BackgroundFilterTypeProperty prop) '''
+		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
+	'''
+	
 	
 	def compileProperty(String object, DrawableProperty prop) '''
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		

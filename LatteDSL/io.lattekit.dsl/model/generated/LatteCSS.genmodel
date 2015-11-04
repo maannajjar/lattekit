@@ -72,6 +72,9 @@
     <genClasses ecoreClass="LatteCSS.ecore#//BackgroundGravityProperty">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundGravityProperty/values"/>
     </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//BackgroundFilterTypeProperty">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundFilterTypeProperty/value"/>
+    </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//ColorProperty">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//ColorProperty/value"/>
     </genClasses>

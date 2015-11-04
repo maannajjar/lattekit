@@ -34,6 +34,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
 import io.lattekit.ui.drawable.BorderDrawable
+import android.graphics.PorterDuff.Mode
 
 class NumberValue {
     @Accessors var int value;
@@ -88,6 +89,9 @@ class Style {
     @StyleProperty public String backgroundDrawable = "";
     @StyleProperty public String backgroundRepeat = "no-repeat-x no-repeat-y";
     @StyleProperty public String backgroundGravity = "fill_vertical, fill_horizontal";
+    @StyleProperty public Object backgroundFilterColor;
+    @StyleProperty public String backgroundFilterType = "SRC_ATOP";
+    
     
     @StyleProperty public Object borderColor = Color.WHITE;
     @StyleProperty public Object borderLeftColor;
@@ -192,6 +196,9 @@ class Style {
         
         _textColor = overridingStyle._textColor ?: _textColor
         _backgroundDrawable = overridingStyle._backgroundDrawable ?: _backgroundDrawable
+        _backgroundFilterColor = overridingStyle._backgroundFilterColor ?: _backgroundFilterColor
+        _backgroundFilterType = overridingStyle._backgroundFilterType ?: _backgroundFilterType
+        
         _backgroundRepeat = overridingStyle._backgroundRepeat ?: _backgroundRepeat
         _backgroundGravity = overridingStyle._backgroundGravity ?: _backgroundGravity
         _borderRadius = overridingStyle._borderRadius ?: _borderRadius
@@ -286,6 +293,9 @@ class Style {
         
         this.textColor = form.textColor
         this.backgroundDrawable = form.backgroundDrawable
+        this.backgroundFilterColor = form.backgroundFilterColor
+        this.backgroundFilterType = form.backgroundFilterType
+        
         this.backgroundRepeat = form.backgroundRepeat;
         this.backgroundGravity = form.backgroundGravity;
         this.borderRadius = form.borderRadius
@@ -333,6 +343,9 @@ class Style {
         
         this.textColor = form._textColor
         this.backgroundDrawable = form._backgroundDrawable
+        this.backgroundFilterColor = form._backgroundFilterColor
+        this.backgroundFilterType = form._backgroundFilterType
+        
         this.backgroundRepeat = form._backgroundRepeat
         this.backgroundGravity = form._backgroundGravity
         this.borderRadius = form._borderRadius
@@ -521,6 +534,10 @@ class Style {
     		backgroundImageDrawable = view.androidView.context.resources.getDrawable(drawableResourceId).mutate;
     		if (backgroundImageDrawable instanceof BitmapDrawable) {
 	    		val bg = (backgroundImageDrawable as BitmapDrawable);
+	    		if (backgroundFilterColor != null) {
+	    			bg.setColorFilter(backgroundFilterColor.asColor, Mode.valueOf(backgroundFilterType.toUpperCase));	
+	    		}
+	    		
 	    		if (backgroundGravity != null) { 
 	    			bg.gravity = gravityFromString(backgroundGravity);
 	    		}
@@ -638,7 +655,7 @@ class Style {
             androidView.elevation = elevation.inPixels(androidView.context);
         }
         
-        if (applyAll || !properties.filter[#["borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","backgroundDrawable","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
+        if (applyAll || !properties.filter[#["borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
         	applyDrawableStyle(latteView);
         }
         if (applyAll || !properties.filter[#["borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
