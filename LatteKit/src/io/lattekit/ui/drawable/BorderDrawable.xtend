@@ -6,11 +6,11 @@ import android.graphics.ColorFilter
 import android.graphics.Paint
 import android.graphics.Paint.Style
 import android.graphics.Path
-import android.graphics.Path.Direction
-import android.graphics.PathDashPathEffect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import org.eclipse.xtend.lib.annotations.Accessors
+import android.graphics.DashPathEffect
+import android.graphics.PathDashPathEffect
 
 class BorderDrawable extends Drawable {
 
@@ -124,224 +124,90 @@ class BorderDrawable extends Drawable {
 			paint.color = bottomBorderColor;
 			drawSegment(canvas,path, new RectF(bounds), bottomBorderWidth, bottomRightRadius, rightBorderWidth, bottomLeftRadius, leftBorderWidth);
 		}
-		
-		canvas.restore();
-		
-		
-//		// Outer line
-//		if (topLeftRadius > 0) {
-//			path.arcTo(bounds.left,bounds.top,bounds.left+topLeftRadius*2,bounds.top+topLeftRadius*2,-135,45, true);
-//		} else {
-//			path.moveTo(bounds.left,bounds.top);
-//		}
-//		
-//		path.lineTo(bounds.right/2.0f,bounds.top);
-//		path.lineTo(bounds.right/2.0f,bounds.top+topBorderWidth);
-//		
-//		//Inner line
-//		path.lineTo(bounds.left+leftBorderWidth+topLeftRadius,bounds.top+topBorderWidth);			
-//		if (topLeftRadius > 0) {
-//			path.arcTo(bounds.left+leftBorderWidth,bounds.top+topBorderWidth,
-//					bounds.left+leftBorderWidth+topLeftRadius,bounds.top+topBorderWidth+topLeftRadius,-90,-45, false);
-//		} else {
-//			path.lineTo(bounds.left+leftBorderWidth+topLeftRadius,bounds.top+topBorderWidth);
-//		}
-		
-		
-		
-		
-		
-		
-		canvas.restore()
-	}
-	def drawOld(Canvas canvas) {
-		rect = new RectF(copyBounds());
-		rect.left += leftBorderWidth/2.0f;
-		rect.right -= rightBorderWidth/2.0f;
-		rect.top += topBorderWidth/2.0f;
-		rect.bottom -= bottomBorderWidth/2.0f;
-		paint.setPathEffect(null);
-		paint.setAntiAlias(true);
-		paint.dither = true;
-		paint.strokeCap = Paint.Cap.BUTT
-		paint.strokeJoin = Paint.Join.MITER;
-		paint.style = Paint.Style.STROKE
-				
-		canvas.save();
-		
-		if (topBorderWidth > 0) {
-			var paint = new Paint();
-			
-			
-			paint.color = topBorderColor;
-			path.reset();
-			if (topLeftRadius > 0) {
-				path.arcTo(rect.left,rect.top,rect.left+topLeftRadius,rect.top+topLeftRadius,-135,45, true);
-			} else {
-				path.moveTo(rect.left+leftBorderWidth/2.0f,rect.top);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.left,bounds.top);
-				cornerPath.lineTo(bounds.left+leftBorderWidth,bounds.top);
-				cornerPath.lineTo(bounds.left+leftBorderWidth,bounds.top+topBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
-				
-			}
-			
-			if (topRightRadius > 0) {
-				path.lineTo(rect.right - Math.min(rect.width/2.0f, topRightRadius/2.0f),rect.top);
-				path.arcTo(rect.right - topRightRadius,rect.top,rect.right,rect.top+topRightRadius,-90,45, false);
-			} else {
-				path.lineTo(rect.right - rightBorderWidth/2.0f,rect.top);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.right,bounds.top);
-				cornerPath.lineTo(bounds.right-rightBorderWidth,bounds.top);
-				cornerPath.lineTo(bounds.right-rightBorderWidth,bounds.top+topBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
-				
-			}
-			
-			paint.strokeWidth = topBorderWidth;
-			paint.style = Paint.Style.STROKE
-			canvas.drawPath(path,paint);
-		}
-		
-		if (leftBorderWidth > 0) {
-			paint.strokeWidth = leftBorderWidth	
-			paint.color = leftBorderColor;
-			path.reset();
-			if (topLeftRadius > 0) {
-				// Top Left Corner
-				path.arcTo(rect.left,rect.top,rect.left+topLeftRadius,rect.top+topLeftRadius,-135,-45, true);
-			} else {
-				path.moveTo(rect.left,rect.top+topBorderWidth/2.0f);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.left,bounds.top);
-				cornerPath.lineTo(bounds.left,bounds.top+topBorderWidth);
-				cornerPath.lineTo(bounds.left+leftBorderWidth,bounds.top+topBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
-				
-			}
-			
-			if (bottomLeftRadius > 0) {
-				// Line
-				path.lineTo(rect.left,rect.bottom - Math.min(rect.height/2.0f,bottomLeftRadius/2.0f));
-				// Bottom Left Corner
-				path.arcTo(rect.left,rect.bottom - bottomLeftRadius,rect.left+bottomLeftRadius,rect.bottom,-180,-45,false);								
-			} else {
-				path.lineTo(rect.left,rect.bottom - bottomBorderWidth/2.0f);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.left,bounds.bottom);
-				cornerPath.lineTo(bounds.left,bounds.bottom-bottomBorderWidth);
-				cornerPath.lineTo(bounds.left+leftBorderWidth,bounds.bottom-bottomBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
-			}
-			paint.strokeWidth = leftBorderWidth;
-			paint.style = Paint.Style.STROKE
-			canvas.drawPath(path,paint);
-		}
-		
-		
-		if (rightBorderWidth > 0) {
-			paint.strokeWidth = rightBorderWidth	
-			paint.setStyle(Style.STROKE);
-			paint.color = rightBorderColor;
-			path.reset();
-			
-			if (topRightRadius > 0) {
-				path.arcTo(rect.right-topRightRadius,rect.top,rect.right,rect.top+topRightRadius,-45,45,true);	
-			} else {
-				path.moveTo(rect.right,rect.top+topBorderWidth/2.0f);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.right,bounds.top);
-				cornerPath.lineTo(bounds.right,bounds.top+topBorderWidth);
-				cornerPath.lineTo(bounds.right-rightBorderWidth,bounds.top+topBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
 
-			}
-			if (bottomRightRadius > 0) {
-				path.lineTo(rect.right,rect.bottom - Math.min(rect.height/2.0f,bottomRightRadius/2.0f));
-				path.arcTo(rect.right-bottomRightRadius,rect.bottom - bottomRightRadius,rect.right,rect.bottom,0,45, false)
-			} else {
-				path.lineTo(rect.right,rect.bottom - bottomBorderWidth/2.0f);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.right,bounds.bottom);
-				cornerPath.lineTo(bounds.right,bounds.bottom-bottomBorderWidth);
-				cornerPath.lineTo(bounds.right-rightBorderWidth,bounds.bottom-bottomBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
-				
-			}
-			paint.strokeWidth = rightBorderWidth;
-			paint.style = Paint.Style.STROKE
-			canvas.drawPath(path,paint);
-		}
-		
-		
-		if (bottomBorderWidth > 0) {
-			var paint = new Paint();
-			paint.strokeWidth = bottomBorderWidth;
-			paint.style = Paint.Style.STROKE
-			paint.color = bottomBorderColor;
-			path.reset();
-			if (bottomLeftRadius > 0) {
-				path.arcTo(rect.left,rect.bottom-bottomLeftRadius,rect.left+bottomLeftRadius,rect.bottom,-180-45,-45,true);
-			} else {
-				path.moveTo(rect.left+leftBorderWidth/2.0f,rect.bottom);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.left,bounds.bottom);
-				cornerPath.lineTo(bounds.left+leftBorderWidth,bounds.bottom);
-				cornerPath.lineTo(bounds.left+leftBorderWidth,bounds.bottom-bottomBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
-				
-			}
-			if (bottomRightRadius > 0) {
-				path.lineTo(rect.right - Math.min(rect.width/2.0f, bottomRightRadius/2.0f),rect.bottom);
-				path.arcTo(rect.right-bottomRightRadius,rect.bottom-bottomRightRadius,rect.right,rect.bottom,90,-45, false);
-			} else {
-				path.lineTo(rect.right - rightBorderWidth/2.0f,rect.bottom);
-				
-				cornerPath.reset();
-				cornerPath.moveTo(bounds.right,bounds.bottom);
-				cornerPath.lineTo(bounds.right-rightBorderWidth,bounds.bottom);
-				cornerPath.lineTo(bounds.right-rightBorderWidth,bounds.bottom-bottomBorderWidth);
-				cornerPath.close
-				paint.style = Paint.Style.FILL
-				paint.strokeWidth = 1;
-				canvas.drawPath(cornerPath,paint);
-			}
-			
-			paint.strokeWidth = bottomBorderWidth;
-			paint.style = Paint.Style.STROKE			
-			canvas.drawPath(path,paint);
-		}
 		canvas.restore();
+	}
+	
+	def drawByOutlines(Canvas canvas) {
+		paint.style = Paint.Style.FILL;
+		paint.strokeWidth = 2f
+		paint.color = Color.RED;
+		
+		var path = outerPath
+		path.op(innerPath,Path.Op.DIFFERENCE);
+		canvas.drawPath(path,paint);
+	}
+	
+	def getInnerPath() {
+		var bounds = new RectF(copyBounds());
+		bounds.left += leftBorderWidth;
+		bounds.top += topBorderWidth;
+		bounds.right -= rightBorderWidth;
+		bounds.bottom -= bottomBorderWidth;
+		
+        var innerPath = new Path();
+		
+		var innerRadiusWidth = (topLeftRadius-leftBorderWidth);
+		var innerRadiusHeight = (topLeftRadius-topBorderWidth);
+		
+        if (innerRadiusHeight > 0 || innerRadiusWidth >0) {
+            innerPath.arcTo(bounds.left,bounds.top,bounds.left+innerRadiusWidth*2,bounds.top+innerRadiusHeight*2,-180,90,true);
+        } else {
+            innerPath.moveTo(bounds.left,bounds.top);
+        }
+		innerRadiusWidth = (topRightRadius-rightBorderWidth);
+		innerRadiusHeight = (topRightRadius-topBorderWidth);
+		        
+        innerPath.lineTo(bounds.right-innerRadiusWidth,bounds.top);
+        if ( innerRadiusHeight >0) {
+            innerPath.arcTo(bounds.right-innerRadiusWidth*2,bounds.top,bounds.right,bounds.top+innerRadiusHeight*2,-90,90,false);
+        }
+        
+		innerRadiusWidth = (bottomRightRadius-rightBorderWidth);
+		innerRadiusHeight = (bottomRightRadius-bottomBorderWidth);
+        
+        innerPath.lineTo(bounds.right,bounds.bottom-innerRadiusHeight);
+        if (innerRadiusWidth > 0 || innerRadiusHeight > 0) {
+            innerPath.arcTo(bounds.right-innerRadiusWidth*2,bounds.bottom-innerRadiusHeight*2,bounds.right,bounds.bottom,0,90,false);
+        }
+        
+		innerRadiusWidth = (bottomLeftRadius-leftBorderWidth);
+		innerRadiusHeight = (bottomLeftRadius-bottomBorderWidth);        
+        innerPath.lineTo(bounds.left+innerRadiusWidth,bounds.bottom);
+        
+        if (innerRadiusWidth > 0 || innerRadiusHeight > 0) {
+            innerPath.arcTo(bounds.left,bounds.bottom-innerRadiusHeight*2,bounds.left+innerRadiusWidth*2,bounds.bottom,90,90,false);
+        }
+        
+		innerRadiusHeight = (topLeftRadius-topBorderWidth);        
+        innerPath.lineTo(bounds.left,bounds.top+innerRadiusHeight);
+        return innerPath;   
+	}
+	
+
+	
+	def getOuterPath() {
+        var outerPath = new Path();
+        if (topLeftRadius > 0) {
+            outerPath.arcTo(bounds.left,bounds.top,bounds.left+topLeftRadius*2,bounds.top+topLeftRadius*2,-180,90,true);
+        } else {
+            outerPath.moveTo(bounds.left,bounds.top);
+        }
+        outerPath.lineTo(bounds.right-topRightRadius,bounds.top);
+        if (topRightRadius > 0) {
+            outerPath.arcTo(bounds.right-topRightRadius*2,bounds.top,bounds.right,bounds.top+topRightRadius*2,-90,90,false);
+        }
+        outerPath.lineTo(bounds.right,bounds.bottom-bottomRightRadius);
+        if (bottomRightRadius > 0) {
+            outerPath.arcTo(bounds.right-bottomRightRadius*2,bounds.bottom-bottomRightRadius*2,bounds.right,bounds.bottom,0,90,false);
+        }
+        outerPath.lineTo(bounds.left+bottomLeftRadius,bounds.bottom);
+        
+        if (bottomLeftRadius > 0) {
+            outerPath.arcTo(bounds.left,bounds.bottom-bottomLeftRadius*2,bounds.left+bottomLeftRadius*2,bounds.bottom,90,90,false);
+        }
+        outerPath.lineTo(bounds.left,bounds.top+topLeftRadius);
+		return outerPath;	
 	}
 	
 	override getOpacity() {
