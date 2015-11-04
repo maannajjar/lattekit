@@ -615,10 +615,10 @@ class Style {
     }
     
     def float[] getCornerRadii(LatteView latteView) {
-		var topLeft = (borderTopLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
-        var topRight = (borderTopRightRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
-        var bottomLeft = (borderBottomLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
-        var bottomRight = (borderBottomRightRadius ?: borderRadius).inPixels(latteView.androidView.context)/2.0f
+		var topLeft = (borderTopLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)
+        var topRight = (borderTopRightRadius ?: borderRadius).inPixels(latteView.androidView.context)
+        var bottomLeft = (borderBottomLeftRadius ?: borderRadius).inPixels(latteView.androidView.context)
+        var bottomRight = (borderBottomRightRadius ?: borderRadius).inPixels(latteView.androidView.context)
     	return #[topLeft,topLeft,topRight,topRight,bottomRight,bottomRight,bottomLeft,bottomLeft];
     }
     
