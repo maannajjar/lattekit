@@ -3,13 +3,13 @@ package io.lattekit.ui.drawable
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorFilter
-import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Paint.Style
 import android.graphics.Path
+import android.graphics.Path.Direction
+import android.graphics.PathDashPathEffect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
-import android.util.Log
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class BorderDrawable extends Drawable {
@@ -44,7 +44,7 @@ class BorderDrawable extends Drawable {
 		path.reset()
 		// Outer line
 		if (firstCornerRadius > 0) {
-			path.arcTo(bounds.left,bounds.top,bounds.left+firstCornerRadius*2,bounds.top+firstCornerRadius*2,-135,45, true);
+			path.arcTo(bounds.left,bounds.top,bounds.left+firstCornerRadius,bounds.top+firstCornerRadius,-135,45, true);
 		} else {
 			path.moveTo(bounds.left,bounds.top);
 		}
@@ -56,8 +56,8 @@ class BorderDrawable extends Drawable {
 		// We're multiplying inner radius with 2 to keep the inner radius consistent with outer radius (similar to iOS)
 		// If we want to mimic  CSS, we should multiply by 1 and adjust outer radius  
 		// But that means we should make the border drawn outside the view which means the border affects view size (not intuitive in android)
-		var innerRadiusLeft = (firstCornerRadius-firstAdjacentWidth)*2;
-		var innerRadiusTop = (firstCornerRadius-segementWidth)*2;
+		var innerRadiusLeft = (firstCornerRadius-firstAdjacentWidth);
+		var innerRadiusTop = (firstCornerRadius-segementWidth);
 		
 		if (firstCornerRadius > 0 && innerRadiusLeft > 0 && innerRadiusTop > 0) {
 			path.lineTo(bounds.left+firstAdjacentWidth+innerRadiusLeft,bounds.top+segementWidth);
@@ -71,7 +71,7 @@ class BorderDrawable extends Drawable {
 		path.reset()
 		// Outer line
 		if (secondCornerRadius > 0) {
-			path.arcTo(bounds.right-secondCornerRadius*2,bounds.top,bounds.right,bounds.top+secondCornerRadius*2,-45,-45, true);
+			path.arcTo(bounds.right-secondCornerRadius,bounds.top,bounds.right,bounds.top+secondCornerRadius,-45,-45, true);
 		} else {
 			path.moveTo(bounds.right,bounds.top);
 		}
@@ -80,8 +80,8 @@ class BorderDrawable extends Drawable {
 		path.lineTo(bounds.right/2.0f,bounds.top+segementWidth);
 		
 		//Inner line
-		var innerRadiusRight = (secondCornerRadius-secondAdjacentWidth)*2;
-		var innerRadiusTop2 = (secondCornerRadius-segementWidth)*2;
+		var innerRadiusRight = (secondCornerRadius-secondAdjacentWidth);
+		var innerRadiusTop2 = (secondCornerRadius-segementWidth);
 		
 					
 		if (secondCornerRadius > 0 && innerRadiusRight > 0 && innerRadiusTop2 > 0) {
@@ -101,8 +101,6 @@ class BorderDrawable extends Drawable {
 		canvas.save()
 		paint.style = Paint.Style.FILL_AND_STROKE;
 		paint.strokeWidth = 0.5f
-		
-
 		canvas.rotate(-90,bounds.centerX,bounds.centerY);
 		if (leftBorderWidth > 0) {
 			paint.color = leftBorderColor;
@@ -168,11 +166,7 @@ class BorderDrawable extends Drawable {
 		paint.strokeCap = Paint.Cap.BUTT
 		paint.strokeJoin = Paint.Join.MITER;
 		paint.style = Paint.Style.STROKE
-		
-				  var cornerPathEffect = new DashPathEffect(#[10.0f, 20.0f,10.0f, 20.0f],0);
-				paint.setPathEffect(cornerPathEffect);
-		
-		
+				
 		canvas.save();
 		
 		if (topBorderWidth > 0) {

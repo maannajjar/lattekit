@@ -603,8 +603,8 @@ class Style {
         var bottomBorder = (borderBottomWidth ?: borderWidth).inPixelsInt(view.androidView.context)
         var leftBorder =(borderLeftWidth ?: borderWidth).inPixelsInt(view.androidView.context)
         
-        view.backgroundDrawable.setLayerInset(0,leftBorder,topBorder,rightBorder,bottomBorder);
-        view.backgroundDrawable.setLayerInset(1,leftBorder,topBorder,rightBorder,bottomBorder);
+//        view.backgroundDrawable.setLayerInset(0,leftBorder/2,topBorder/2,rightBorder/2,bottomBorder);
+//        view.backgroundDrawable.setLayerInset(1,leftBorder,topBorder,rightBorder,bottomBorder);
         view.backgroundDrawable.invalidateSelf
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
