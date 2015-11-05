@@ -1,0 +1,20 @@
+//see https://github.com/xtext/xtext-gradle-plugin/tree/master/xtext-idea-gradle-plugin
+apply plugin: 'org.xtext.idea-plugin'
+apply plugin: 'org.xtext.idea-repository'
+
+dependencies {
+	compile project(':LatteCSS')
+	compile project(':LatteCSS.ide')
+}
+
+ideaDevelopment {
+	ideaVersion = '142.5047.6'
+	pluginRepositories {
+		url "http://download.eclipse.org/modeling/tmf/xtext/idea/${xtextVersion}/updatePlugins.xml"
+	}
+	pluginDependencies {
+		id 'org.eclipse.xtext.idea' version xtextVersion
+	}
+}
+
+ideaRepository.rootUrl = "${buildDir}/ideaRepository"

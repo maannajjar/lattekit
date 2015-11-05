@@ -1,0 +1,93 @@
+<idea-plugin version="2">
+	<extensions defaultExtensionNs="org.eclipse.xtext.idea">
+		<package
+			uri="http://www.lattekit.io/dsl/LatteCSS"
+			class="io.lattekit.dsl.latteCSS.LatteCSSPackage"
+		/>
+		<resourceFactory 
+			type="css"
+			class="org.eclipse.xtext.resource.IResourceFactory"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+		/>
+		<resourceServiceProvider
+			uriExtension="css"
+			class="org.eclipse.xtext.idea.resource.IResourceIdeaServiceProvider"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+		/>
+
+		<lang.setup
+			language="io.lattekit.dsl.LatteCSS"
+			implementationClass="io.lattekit.dsl.idea.LatteCSSIdeaSetup"
+		/>
+	</extensions>
+
+	<extensions defaultExtensionNs="com.intellij">
+		<psi.treeChangePreprocessor implementation="io.lattekit.dsl.idea.lang.psi.LatteCSSCodeBlockModificationListener"/>
+
+		<fileTypeFactory implementation="io.lattekit.dsl.idea.lang.LatteCSSFileTypeFactory"/>
+		<stubElementTypeHolder class="io.lattekit.dsl.idea.lang.LatteCSSElementTypeProvider"/>
+		<lang.ast.factory 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.lang.BaseXtextASTFactory"
+		/>
+		<lang.parserDefinition 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="io.lattekit.dsl.idea.lang.parser.LatteCSSParserDefinition"
+		/>
+		<lang.findUsagesProvider 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.findusages.BaseXtextFindUsageProvider"
+		/>
+		<lang.refactoringSupport 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.refactoring.BaseXtextRefactoringSupportProvider"
+		/>
+		<lang.namesValidator 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="com.intellij.lang.refactoring.NamesValidator"
+		/>
+		<lang.syntaxHighlighterFactory key="io.lattekit.dsl.LatteCSS" implementationClass="io.lattekit.dsl.idea.highlighting.LatteCSSSyntaxHighlighterFactory" />
+		<lang.braceMatcher 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="com.intellij.lang.PairedBraceMatcher"
+		/>
+		<annotator 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="org.eclipse.xtext.idea.annotation.IssueAnnotator"
+		/>
+		<completion.contributor language="io.lattekit.dsl.LatteCSS" implementationClass="io.lattekit.dsl.idea.completion.LatteCSSCompletionContributor"/>
+		<pom.declarationSearcher implementation="io.lattekit.dsl.idea.lang.pom.LatteCSSPomDeclarationSearcher"/>
+
+		<lang.psiStructureViewFactory 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="com.intellij.lang.PsiStructureViewFactory"
+		/>
+		<facetType implementation="io.lattekit.dsl.idea.facet.LatteCSSFacetType"/>
+      	<lang.documentationProvider 
+      		language="io.lattekit.dsl.LatteCSS"
+      		factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+      		implementationClass="org.eclipse.xtext.idea.documentation.IdeaDocumentationProvider"
+      	/>
+		<colorSettingsPage implementation="io.lattekit.dsl.idea.highlighting.LatteCSSColorSettingsPage"/>
+		<highlightVisitor implementation="io.lattekit.dsl.idea.highlighting.LatteCSSSemanticHighlightVisitor"/>
+
+		<lang.formatter 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="com.intellij.formatting.FormattingModelBuilder"
+		/>
+		<lang.commenter 
+			language="io.lattekit.dsl.LatteCSS"
+			factoryClass="io.lattekit.dsl.idea.LatteCSSExtensionFactory"
+			implementationClass="com.intellij.lang.CodeDocumentationAwareCommenter"
+		/>
+	</extensions>
+</idea-plugin>
