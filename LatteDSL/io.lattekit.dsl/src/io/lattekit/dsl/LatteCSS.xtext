@@ -42,6 +42,9 @@ CSSProperty:
 		FontFamilyProperty |
 		FontStyleProperty |
 		SizeProperty |
+		ShorthandSizeProperty |
+		ShorthandColorProperty |
+		BorderRadiusProperty |
 		ViewSizeProperty |
 		PaintProperty |
 		ColorProperty |
@@ -49,6 +52,8 @@ CSSProperty:
 		BackgroundRepeatProperty |
 		BackgroundFilterTypeProperty |
 		BackgroundGravityProperty |
+		BackgroundFilterProperty | 
+		BorderProperty |
 		AlignmentProperty
 	) ';'
 ;
@@ -75,14 +80,26 @@ ViewSizeProperty:
 ;
 
 
+ShorthandSizeProperty:
+	property=(
+		 'border-width' | 'border-radius' | 'margin'  | 'padding'
+	) ':' values+=SizeValue+
+;
+
+BorderRadiusProperty:
+	property=(
+		 'border-top-left-radius' | 'border-top-right-radius' | 'border-bottom-left-radius' | 'border-bottom-right-radius'
+	) ':' values+=SizeValue+
+;
+
+
 SizeProperty:
 	property=(
-		 'border-width' | 'border-left-width' | 'border-right-width'  | 'border-top-width' | 'border-bottom-width'
-		| 'border-radius' | 'border-top-left-radius' | 'border-top-right-radius' | 'border-bottom-left-radius' | 'border-bottom-right-radius'
+		'border-left-width' | 'border-right-width'  | 'border-top-width' | 'border-bottom-width'
 		| 'font-size'
 		| 'translate-x' | 'translate-y'
-		| 'margin-left' | 'margin-right' | 'margin-top' | 'margin-bottom' | 'margin'
-		| 'padding-left' | 'padding-right' | 'padding-top' | 'padding-bottom' | 'padding'
+		| 'margin-left' | 'margin-right' | 'margin-top' | 'margin-bottom'
+		| 'padding-left' | 'padding-right' | 'padding-top' | 'padding-bottom'
 		| 'x' | 'y'
 		| 'elevation'
 	) ':' value=SizeValue
@@ -110,6 +127,14 @@ BackgroundRepeatProperty:
 	property=('background-repeat') ':' values+=(RepeatValue) values+=(RepeatValue)?
 ;
 
+BorderProperty:
+	property=('border' | 'border-top' | 'border-bottom' | 'border-left' | 'border-right') ':' width=SizeValue? style=('solid' | 'dashed' | 'dotted') color=ColorValue?
+;
+BackgroundFilterProperty:
+	property=('background-filter') ':' color=ColorValue filter=FilterValue?
+;
+
+
 RepeatValue: 'repeat-x'|'mirror-x'|'clamp-x'|'no-repeat-x' | 'repeat-y'|'mirror-y'|'clamp-y'|'no-repeat-y';
 
 GravityValue: 'top' | 'bottom' | 'left' | 'right' | 'center_vertical' | 'fill_vertical' | 'center_horizontal' | 
@@ -127,9 +152,12 @@ BackgroundFilterTypeProperty:
 	property=('background-filter-type') ':' value=FilterValue
 ;
 
+ShorthandColorProperty:
+	property=('border-color') ':' values+=ColorValue+
+;
 
 ColorProperty:
-	property=('border-color' | 'border-top-color' |  'border-left-color' | 'border-right-color' | 'border-bottom-color' |
+	property=('border-top-color' |  'border-left-color' | 'border-right-color' | 'border-bottom-color' |
 			 'ripple-color' | 'background-color' | 'text-color' |  'background-filter-color'
 	) ':' value=ColorValue
 ;
@@ -160,7 +188,9 @@ PropertyNameValue:
 	'padding' | 'padding-top' | 'padding-bottom' | 'padding-left' | 'padding-right' |
 	'width' | 'height' | 'translateX' | 'translateY' | 'x' | 'y' | 'elevation' | 'font-size' | 
 	'border-radius' | 'border-top-left-radius' | 'border-top-right-radius' | 'border-bottom-left-radius' | 'border-bottom-right-radius' |
-	'border-width' | 'border-left-width' | 'border-right-width'  | 'border-top-width' | 'border-bottom-width'
+	'border-width' | 'border-left-width' | 'border-right-width'  | 'border-top-width' | 'border-bottom-width' |
+	'border' 
+	
 
 ;
 

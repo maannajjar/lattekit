@@ -48,6 +48,12 @@
     <genClasses ecoreClass="LatteCSS.ecore#//ViewSizeProperty">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//ViewSizeProperty/value"/>
     </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//ShorthandSizeProperty">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//ShorthandSizeProperty/values"/>
+    </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//BorderRadiusProperty">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//BorderRadiusProperty/values"/>
+    </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//SizeProperty">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//SizeProperty/value"/>
     </genClasses>
@@ -69,11 +75,23 @@
     <genClasses ecoreClass="LatteCSS.ecore#//BackgroundRepeatProperty">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundRepeatProperty/values"/>
     </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//BorderProperty">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//BorderProperty/width"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BorderProperty/style"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//BorderProperty/color"/>
+    </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//BackgroundFilterProperty">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//BackgroundFilterProperty/color"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundFilterProperty/filter"/>
+    </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//BackgroundGravityProperty">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundGravityProperty/values"/>
     </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//BackgroundFilterTypeProperty">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//BackgroundFilterTypeProperty/value"/>
+    </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//ShorthandColorProperty">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//ShorthandColorProperty/values"/>
     </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//ColorProperty">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//ColorProperty/value"/>

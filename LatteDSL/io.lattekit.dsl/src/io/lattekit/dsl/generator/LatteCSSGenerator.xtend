@@ -4,22 +4,30 @@
 package io.lattekit.dsl.generator
 
 import com.google.common.base.CaseFormat
+import io.lattekit.dsl.latteCSS.BackgroundFilterProperty
+import io.lattekit.dsl.latteCSS.BackgroundFilterTypeProperty
+import io.lattekit.dsl.latteCSS.BackgroundGravityProperty
 import io.lattekit.dsl.latteCSS.BackgroundRepeatProperty
+import io.lattekit.dsl.latteCSS.BorderProperty
 import io.lattekit.dsl.latteCSS.CSS
 import io.lattekit.dsl.latteCSS.ColorProperty
+import io.lattekit.dsl.latteCSS.ColorValue
 import io.lattekit.dsl.latteCSS.Definition
 import io.lattekit.dsl.latteCSS.DrawableProperty
+import io.lattekit.dsl.latteCSS.FontFamilyProperty
+import io.lattekit.dsl.latteCSS.FontStyleProperty
+import io.lattekit.dsl.latteCSS.ShorthandColorProperty
+import io.lattekit.dsl.latteCSS.ShorthandSizeProperty
 import io.lattekit.dsl.latteCSS.SizeProperty
+import io.lattekit.dsl.latteCSS.SizeValue
 import io.lattekit.dsl.latteCSS.TransitionProperty
 import io.lattekit.dsl.latteCSS.ViewSizeProperty
+import java.util.List
 import java.util.Map
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IGenerator
-import io.lattekit.dsl.latteCSS.FontStyleProperty
-import io.lattekit.dsl.latteCSS.BackgroundGravityProperty
-import io.lattekit.dsl.latteCSS.FontFamilyProperty
-import io.lattekit.dsl.latteCSS.BackgroundFilterTypeProperty
+import io.lattekit.dsl.latteCSS.BorderRadiusProperty
 
 /**
  * Generates code from your model files on save.
@@ -115,10 +123,20 @@ class LatteCSSGenerator implements IGenerator {
 		  		«compileProperty(varName,property as BackgroundRepeatProperty)»
 		  	«ELSEIF property instanceof BackgroundFilterTypeProperty»
 		  		«compileProperty(varName,property as BackgroundFilterTypeProperty)»
+		  	«ELSEIF property instanceof BackgroundFilterProperty»
+		  		«compileProperty(varName,property as BackgroundFilterProperty)»
+		  	«ELSEIF property instanceof BorderProperty»
+		  		«compileProperty(varName,property as BorderProperty)»
 		  	«ELSEIF property instanceof FontFamilyProperty»
 		  		«compileProperty(varName,property as FontFamilyProperty)»
 		  	«ELSEIF property instanceof FontStyleProperty»
 		  		«compileProperty(varName,property as FontStyleProperty)»
+		  	«ELSEIF property instanceof ShorthandSizeProperty»
+		  		«compileProperty(varName,property as ShorthandSizeProperty)»
+		  	«ELSEIF property instanceof ShorthandColorProperty»
+		  		«compileProperty(varName,property as ShorthandColorProperty)»
+		  	«ELSEIF property instanceof BorderRadiusProperty»
+		  		«compileProperty(varName,property as BorderRadiusProperty)»		  		
 		  	«ENDIF»
 		  «ENDFOR»
 		'''
@@ -156,6 +174,7 @@ class LatteCSSGenerator implements IGenerator {
 		«ENDIF»
 
 	'''
+	
 	def compileProperty(String object, FontFamilyProperty prop) '''
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
 	'''
@@ -163,7 +182,6 @@ class LatteCSSGenerator implements IGenerator {
 	def compileProperty(String object, FontStyleProperty prop) '''
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
 	'''
-	
 	
 	def compileProperty(String object, BackgroundGravityProperty prop) '''
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.values.join(",")»");		
@@ -176,6 +194,31 @@ class LatteCSSGenerator implements IGenerator {
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
 	'''
 	
+	def compileProperty(String object, BackgroundFilterProperty prop) {
+		var colorValue = if (prop.color == null || prop.color.rgb == null) {
+			"null";}
+		 else if (prop.color.rgb.hex != null) {
+				'''Color.parseColor("«prop.color.rgb.hex»")'''
+		} else if (prop.color.rgb.alpha != null) {
+				'''Color.argb(«prop.color.rgb.alpha»,«prop.color.rgb.r»,«prop.color.rgb.g»,«prop.color.rgb.b»")'''
+		}
+	'''
+		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»(«colorValue», «if (prop.filter != null) '"'+prop.filter+'"' else "null"»);		
+	'''
+	}
+	def compileProperty(String object, BorderProperty prop) {
+		var sizeValue = if ( prop.width != null) '''new NumberValue(«prop.width.value»,«unitToInt(prop.width.dimension)»)''' else "null";
+		var colorValue = if (prop.color == null || prop.color.rgb == null) {
+			"null";}
+		 else if (prop.color.rgb.hex != null) {
+				'''Color.parseColor("«prop.color.rgb.hex»")'''
+		} else if (prop.color.rgb.alpha != null) {
+				'''Color.argb(«prop.color.rgb.alpha»,«prop.color.rgb.r»,«prop.color.rgb.g»,«prop.color.rgb.b»")'''
+		}
+		return '''
+			«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»(«sizeValue», "«prop.style»",«colorValue»);		
+		'''
+	}	
 	
 	def compileProperty(String object, DrawableProperty prop) '''
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+prop.property)»("«prop.value»");		
@@ -218,6 +261,32 @@ class LatteCSSGenerator implements IGenerator {
 		«ENDFOR»
 	'''
 
+	def compileSize(List<SizeValue> list, int index) '''«IF list.length > index»new NumberValue(«list.get(index).value»,«unitToInt(list.get(index).dimension)»)«ELSE»null«ENDIF»'''
+	def compileColor(List<ColorValue> list, int index) {
+		if (list.length <= index || list.get(index).rgb == null) {
+			"null";
+		 } else if (list.get(index).rgb.hex != null) {
+			'''Color.parseColor("«list.get(index).rgb.hex»")'''
+		} else if (list.get(index).rgb.alpha != null) {
+			'''Color.argb(«list.get(index).rgb.alpha»,«list.get(index).rgb.r»,«list.get(index).rgb.g»,«list.get(index).rgb.b»")'''
+		}		
+	}
+	
+	def getPropertySetter(String property) '''«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+property)»'''
+	
+	def compileProperty(String object, BorderRadiusProperty sizeProperty) '''
+		«object».«sizeProperty.property.propertySetter»(«sizeProperty.values.compileSize(0)»,«sizeProperty.values.compileSize(1)»);
+	'''
+	
+	
+	def compileProperty(String object, ShorthandSizeProperty sizeProperty) '''
+		«object».«sizeProperty.property.propertySetter»(«sizeProperty.values.compileSize(0)»,«sizeProperty.values.compileSize(1)»,«sizeProperty.values.compileSize(2)»,«sizeProperty.values.compileSize(3)»);
+	'''
+	
+	def compileProperty(String object, ShorthandColorProperty sizeProperty) '''
+		«object».«sizeProperty.property.propertySetter»(«sizeProperty.values.compileColor(0)»,«sizeProperty.values.compileColor(1)»,«sizeProperty.values.compileColor(2)»,«sizeProperty.values.compileColor(3)»);
+	'''
+	
 
 	def compileProperty(String object, SizeProperty sizeProperty) '''
 		«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+sizeProperty.property)»(new NumberValue(«sizeProperty.value.value»,«unitToInt(sizeProperty.value.dimension)»));

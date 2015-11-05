@@ -46,6 +46,14 @@
     <eStructuralFeatures xsi:type="ecore:EReference" name="value" eType="#//ViewSizeValue"
         containment="true"/>
   </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ShorthandSizeProperty" eSuperTypes="#//CSSProperty">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="values" upperBound="-1"
+        eType="#//SizeValue" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BorderRadiusProperty" eSuperTypes="#//CSSProperty">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="values" upperBound="-1"
+        eType="#//SizeValue" containment="true"/>
+  </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="SizeProperty" eSuperTypes="#//CSSProperty">
     <eStructuralFeatures xsi:type="ecore:EReference" name="value" eType="#//SizeValue"
         containment="true"/>
@@ -73,12 +81,28 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="values" unique="false"
         upperBound="-1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
   </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BorderProperty" eSuperTypes="#//CSSProperty">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="width" eType="#//SizeValue"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="style" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="color" eType="#//ColorValue"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BackgroundFilterProperty" eSuperTypes="#//CSSProperty">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="color" eType="#//ColorValue"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="filter" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="BackgroundGravityProperty" eSuperTypes="#//CSSProperty">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="values" unique="false"
         upperBound="-1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="BackgroundFilterTypeProperty" eSuperTypes="#//CSSProperty">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ShorthandColorProperty" eSuperTypes="#//CSSProperty">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="values" upperBound="-1"
+        eType="#//ColorValue" containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="ColorProperty" eSuperTypes="#//CSSProperty">
     <eStructuralFeatures xsi:type="ecore:EReference" name="value" eType="#//ColorValue"
