@@ -97,33 +97,49 @@ class BorderDrawable extends Drawable {
 	}
 	
 	override draw(Canvas canvas) {
-		canvas.save()
 		paint.style = Paint.Style.FILL_AND_STROKE;
 		paint.strokeWidth = 0.5f
+		
+		var myBounds = new RectF(bounds);
+		
+		
+		canvas.save()
+		canvas.translate(-(bounds.width-bounds.height)/2.0f, (bounds.height-bounds.width)/2.0f);
 		canvas.rotate(-90,bounds.centerX,bounds.centerY);
 		if (leftBorderWidth > 0) {
 			paint.color = leftBorderColor;
-			drawSegment(canvas,path, new RectF(bounds), leftBorderWidth, bottomLeftRadiusV,bottomLeftRadiusH, bottomBorderWidth, topLeftRadiusV, topLeftRadiusH, topBorderWidth);
+			var mb = new RectF(bounds);
+			mb.right = mb.left + (bounds.height);
+			drawSegment(canvas,path, mb, leftBorderWidth, bottomLeftRadiusV,bottomLeftRadiusH, bottomBorderWidth, topLeftRadiusV, topLeftRadiusH, topBorderWidth);
 		}
+		canvas.restore();
 		
-		canvas.rotate(90,bounds.centerX,bounds.centerY);
+		canvas.save()
 		if (topBorderWidth > 0) {
 			paint.color = topBorderColor;
 			drawSegment(canvas,path, new RectF(bounds), topBorderWidth, topLeftRadiusH, topLeftRadiusV, leftBorderWidth, topRightRadiusH, topRightRadiusV, rightBorderWidth);
 		}
+		canvas.restore();
 		
+		canvas.save()
+		canvas.translate((bounds.width-bounds.height)/2.0f, -(bounds.height-bounds.width)/2.0f);
 		canvas.rotate(90,bounds.centerX,bounds.centerY);
 		if (rightBorderWidth > 0) {
 			paint.color = rightBorderColor;
-			drawSegment(canvas,path, new RectF(bounds), rightBorderWidth, topRightRadiusV, topRightRadiusH, topBorderWidth, bottomRightRadiusV, bottomRightRadiusH, bottomBorderWidth);
+			
+			var mb = new RectF(bounds);
+			mb.right = mb.left + (bounds.height);
+			
+			drawSegment(canvas,path, mb, rightBorderWidth, topRightRadiusV, topRightRadiusH, topBorderWidth, bottomRightRadiusV, bottomRightRadiusH, bottomBorderWidth);
 		}
+		canvas.restore();
 
-		canvas.rotate(90,bounds.centerX,bounds.centerY);
+		canvas.save()
+		canvas.rotate(90*2,bounds.centerX,bounds.centerY);
 		if (bottomBorderWidth > 0) {
 			paint.color = bottomBorderColor;
 			drawSegment(canvas,path, new RectF(bounds), bottomBorderWidth, bottomRightRadiusH, bottomRightRadiusV, rightBorderWidth, bottomLeftRadiusH,bottomLeftRadiusV, leftBorderWidth);
 		}
-
 		canvas.restore();
 	}
 	
