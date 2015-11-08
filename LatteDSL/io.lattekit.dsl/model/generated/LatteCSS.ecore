@@ -12,8 +12,15 @@
         eType="#//CSSProperty" containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Selector">
-    <eStructuralFeatures xsi:type="ecore:EReference" name="simpleSelector" upperBound="-1"
-        eType="#//SimpleSelector" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="firstSelector" eType="#//SimpleSelector"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="next" upperBound="-1" eType="#//NextSelector"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="NextSelector">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="relationSymbol" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="selector" eType="#//SimpleSelector"
+        containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="SimpleSelector">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="element" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>

@@ -46,11 +46,16 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	public var Animator currentAnimation;
 	public var List<Animator> pendingChildAnimations = newArrayList(); 
-	public var Style pendingStyle;
+//	public var Style pendingStyle;
 	
 	Style classStyle;
 	Style touchedClassStyle;
 	Style disabledClassStyle;
+	
+	List<Style> selectedStyles = newArrayList();
+	
+	
+	@Accessors public Style computedStyle = new Style();
 	@Accessors public Style normalStyle = new Style();
 	@Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
 	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];
@@ -67,10 +72,10 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	// Generic Attributes
 	public Map<String,Object> attributes = newHashMap();
 	
-	@Accessors public LatteView parentView;
+	@Accessors public LatteView<?> parentView;
 	// This contains current active children
-	@Accessors public List<LatteView> children = newArrayList;
-	@Accessors private List<LatteView> subviews = newArrayList;
+	@Accessors public List<LatteView<?>> children = newArrayList;
+	@Accessors private List<LatteView<?>> subviews = newArrayList;
 	private Map<String,Object> newProperties = newHashMap();
 	
 	public Context activity;
@@ -78,21 +83,12 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	public ShapeDrawable shapeDrawable;
 	public LayerDrawable backgroundDrawable;
-	protected (LatteView)=>void attributesProc;
-	protected (LatteView)=>void layoutProc;
+	protected (LatteView<?>)=>void attributesProc;
+	protected (LatteView<?>)=>void layoutProc;
 	private boolean isRendering = false;
 	private boolean isMounted = false;
-	@Accessors protected (LatteView)=>void onViewMounted;
-	
-	def setStyle(String style) {
-		setStyle(Style.parseStyle(style));
-	}
-	def setTouchedStyle(String style) {
-		setTouchedStyle(Style.parseStyle(style));
-	}
-	def setDisabledtyle(String style) {
-		setDisabledStyle(Style.parseStyle(style));
-	}
+	@Accessors protected (LatteView<?>)=>void onViewMounted;
+
 	def setStyle(Style style) {
 		normalStyle.cloneFrom(style);
 		if (_style == null) {
@@ -104,11 +100,34 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	def applySubviewStyles() {
 		subviews.forEach[ LatteView<?> it |
-			it.activeStyle.applyToView(it);
+			it.computedStyle.applyToView(it);
 		]
 	}
 	
-	def updateStyles() {
+	def void findDirectChildrenStyles(List<String> selectors, List<Style> outList) {
+		selectedStyles.forEach[  style | 
+			selectors.forEach[ selector |
+				if (style.directChildrenStyles.containsKey(selector)) {
+					outList += style.directChildrenStyles.get(selector);
+				}
+			]
+		]
+	}
+	
+	def void findDesecendantStyles(List<String> selectors, List<Style> outList) {
+		if (parentView != null) {
+			parentView.findDesecendantStyles(selectors,outList);
+		}
+		selectedStyles.forEach[  style | 
+			selectors.forEach[ selector |
+				if (style.descendantStyles.containsKey(selector)) {
+					outList += style.descendantStyles.get(selector);
+				}
+			]
+		]
+	}
+	
+	def void updateStyles() {
 		classStyle = new Style();
 		touchedClassStyle = new Style();
 		disabledClassStyle = new Style();
@@ -119,21 +138,65 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		normalStyle.parentStyle = classStyle;
 		touchedStyle.parentStyle = touchedClassStyle;
 		disabledStyle.parentStyle = disabledClassStyle;
+		val mySelectors = newArrayList("View");
 		if (cls != null) {
 			cls.split(" ").forEach[
-				var style = stylesheet.getClass(it) 
-				Log.d("Latte","Looking for "+it +" : "+style);
-				if (style != null) {
-					classStyle.overrideWithStyle(style);
-				}
-				var touchedStyle = stylesheet.getClass(it+":touched");
-				if (touchedStyle != null) touchedClassStyle.overrideWithStyle(touchedStyle); 
-				var disabledStyle = stylesheet.getClass(it+":disabled");
-				if (disabledStyle != null) disabledClassStyle.overrideWithStyle(disabledStyle); 
+				mySelectors += "."+it;
+				
+//				var style = stylesheet.getStyle("."+it) 
+//				Log.d("Latte","Looking for "+it +" : "+style);
+//				if (style != null) {
+//					selectedStyles += style;
+//					if (parentView != null) {
+//						parentView.findDesecendantStyles(mySelectors, selectedStyles)
+//					}
+//					classStyle.overrideWithStyle(style);
+//				}
+//				var touchedStyle = stylesheet.getClass(it+":touched");
+//				if (touchedStyle != null) touchedClassStyle.overrideWithStyle(touchedStyle); 
+//				var disabledStyle = stylesheet.getClass(it+":disabled");
+//				if (disabledStyle != null) disabledClassStyle.overrideWithStyle(disabledStyle); 
 			]
 		}
 		
+		selectedStyles.clear();
+		if (touched) {
+			mySelectors += mySelectors.map[it+":touched"];
+		}
+		selectedStyles += mySelectors.map[ stylesheet.getStyle(it)].filterNull
+		if (parentView != null) {
+			parentView.findDesecendantStyles(mySelectors, selectedStyles)
+			parentView.findDirectChildrenStyles(mySelectors, selectedStyles);
+		}
+		// TODO: find a way to reset to defaultonS
+		computedStyle = new Style();
+		selectedStyles.forEach[
+			computedStyle.overrideWithStyle(it);
+		]
+		computedStyle.overrideWithStyle(normalStyle);
+		if (touched) {
+			computedStyle.overrideWithStyle(touchedStyle);
+		}
+		
+		transitionStyle();
+		
+		// TODO: Only update lower levels if we really need to		
+		subviews.forEach[ updateStyles ] 
+		
+		
 	}
+	
+	def transitionStyle() {
+		if (androidView != null) {
+			var oldAnim = currentAnimation; 
+			currentAnimation = computedStyle.createAnimatorFrom(_style, this, false)
+			if (oldAnim != null) {
+				oldAnim.cancel();
+			}
+			currentAnimation.start;
+		}
+	}
+	
 	def getStyle() {
 		return normalStyle;
 	}
@@ -148,14 +211,14 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		onStateChanged("disabledStyle");	
 	}
 	
-	def getActiveStyle() {
-		if (androidView != null && !androidView.enabled && disabledStyle != null) {
-			return disabledStyle
-		} else if (touched && touchedStyle != null) {
-			return touchedStyle;
-		}
-		return if (normalStyle == null) new Style() else normalStyle;
-	}
+//	def getActiveStyle() {
+//		if (androidView != null && !androidView.enabled && disabledStyle != null) {
+//			return disabledStyle
+//		} else if (touched && touchedStyle != null) {
+//			return touchedStyle;
+//		}
+//		return if (normalStyle == null) new Style() else normalStyle;
+//	}
 	def addNewProperty(String propName, Object value) {
 		newProperties.put(propName,value);
 	}
@@ -177,7 +240,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def void initAndroidView() {
 		createBackgroundDrawable();
 		updateTextColorDrawable();
-		if (!(androidView instanceof AdapterView)) {
+		if (!(androidView instanceof AdapterView<?>)) {
 			androidView.onClickListener = this;
 		}
 		androidView.onTouchListener = this;
@@ -200,21 +263,21 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			onApplyAttributes?.run
 			updateStyles();
 			
-			if (pendingStyle == null ) {
-				pendingStyle = activeStyle;
-				// Shouldn't clone, apply should have the same effect of clone
-				_style.deriveFrom(activeStyle);
-				activeStyle.applyToView(this);
-			} else /*if (pendingStyle != activeStyle && pendingStyle != null)*/ {
+//			if (pendingStyle == null ) {
+//				pendingStyle = activeStyle;
+//				// Shouldn't clone, apply should have the same effect of clone
+//				_style.deriveFrom(activeStyle);
+//				activeStyle.applyToView(this);
+//			} else /*if (pendingStyle != activeStyle && pendingStyle != null)*/ {
 				// Commented out above because even activeStyle may change its values
-				pendingStyle = activeStyle;
-				var oldAnim = currentAnimation; 
-				currentAnimation = pendingStyle.createAnimatorFrom(_style, this, activeStyle == normalStyle)
-				if (oldAnim != null) {
-					oldAnim.cancel();
-				}
-				currentAnimation.start;
-			}
+//				var oldAnim = currentAnimation; 
+//				currentAnimation = computedStyle.createAnimatorFrom(_style, this, false)
+////				Log.d("LatteKit", )
+//				if (oldAnim != null) {
+//					oldAnim.cancel();
+//				}
+//				currentAnimation.start;
+//			}
 		}
 	}
 	
@@ -246,7 +309,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	
 	def Point getMeasuredSize() {
-		return getMeasuredSize(activeStyle);
+		return getMeasuredSize(computedStyle);
 	}
 	
 	def getWindowWidth() {
@@ -338,7 +401,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def void onChildrenAdded() {}
 		
 
-	def addChild(int index, LatteView newChild) {
+	def addChild(int index, LatteView<?> newChild) {
 		// Compare child with existing subview
 		// If accepted then just call render in existing subview after transferring properties
 		// If not, then add new subview
@@ -365,20 +428,20 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	
 	
-	def <T extends LatteView> void processNode(LatteView parent, (T)=>void attrs, (T)=>void children) {
+	def <T extends LatteView<?>> void processNode(LatteView<?> parent, (T)=>void attrs, (T)=>void children) {
 		isRendering = true;
-		parentView = parent as LatteView;
+		parentView = parent as LatteView<?>;
 		if (parent != null) {
 			parent.children.add(this);
 			this.stylesheet = parent.stylesheet;
 		}
 
 		if (attrs != null) {
-			attributesProc = attrs as (LatteView)=>void;
+			attributesProc = attrs as (LatteView<?>)=>void;
 			attrs.apply(this as T);
 		}
 		if (children != null) {
-			layoutProc = children as (LatteView)=>void;
+			layoutProc = children as (LatteView<?>)=>void;
 			children.apply(this as T);
 		}
 		isRendering = false;
@@ -394,6 +457,8 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		if (!isRendering) {
 			Log.d("Latte", this+" : State changed "+ states.join(","))
 			handleStateChanged
+		} else {
+			updateStyles
 		}
 	}
 	
@@ -402,7 +467,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		buildAndroidViewTree(activity,rootAndroidView.layoutParams);	
 	}
 		
-	def sameView(LatteView leftView, LatteView rightView) {
+	def sameView(LatteView<?> leftView, LatteView<?> rightView) {
 		if (leftView.class == rightView.class) {
 			return true;
 		}
@@ -425,7 +490,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		}	
 	}
 	
-	def LatteView getNonVirtualParent() {
+	def LatteView<?> getNonVirtualParent() {
 		if (parentView == null) {
 			return null;
 		}
@@ -476,7 +541,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		if (subviews.size > 0) {
 			var myContainer = myView as ViewGroup
 			var i = 0;
-			for (LatteView v : subviews) {
+			for (LatteView<?> v : subviews) {
 				var childLP = createLayoutParams(v.normalStyle.width.inPixelsInt(androidView.context), v.normalStyle.height.inPixelsInt(androidView.context));
 				var View childView = v.buildAndroidViewTree(a, childLP);
 				if (i >= myContainer.childCount) {
@@ -507,6 +572,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		if (onViewMounted != null) {
 			onViewMounted.apply(this);
 		}
+		transitionStyle();
 	}
 	
 	def void renderOn(Activity a) {

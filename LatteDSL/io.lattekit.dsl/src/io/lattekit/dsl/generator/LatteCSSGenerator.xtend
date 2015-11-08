@@ -9,6 +9,7 @@ import io.lattekit.dsl.latteCSS.BackgroundFilterTypeProperty
 import io.lattekit.dsl.latteCSS.BackgroundGravityProperty
 import io.lattekit.dsl.latteCSS.BackgroundRepeatProperty
 import io.lattekit.dsl.latteCSS.BorderProperty
+import io.lattekit.dsl.latteCSS.BorderRadiusProperty
 import io.lattekit.dsl.latteCSS.CSS
 import io.lattekit.dsl.latteCSS.ColorProperty
 import io.lattekit.dsl.latteCSS.ColorValue
@@ -18,6 +19,7 @@ import io.lattekit.dsl.latteCSS.FontFamilyProperty
 import io.lattekit.dsl.latteCSS.FontStyleProperty
 import io.lattekit.dsl.latteCSS.ShorthandColorProperty
 import io.lattekit.dsl.latteCSS.ShorthandSizeProperty
+import io.lattekit.dsl.latteCSS.SimpleSelector
 import io.lattekit.dsl.latteCSS.SizeProperty
 import io.lattekit.dsl.latteCSS.SizeValue
 import io.lattekit.dsl.latteCSS.TransitionProperty
@@ -27,7 +29,6 @@ import java.util.Map
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.generator.IGenerator
-import io.lattekit.dsl.latteCSS.BorderRadiusProperty
 
 /**
  * Generates code from your model files on save.
@@ -75,24 +76,42 @@ class LatteCSSGenerator implements IGenerator {
 		}
 	'''
 	
+	def compileSelector(SimpleSelector ss) {
+		var sel = ""
+		if (ss.class_ != null) {
+			sel = "."+ss.class_.class_
+		} else if (ss.id != null) {
+			sel = "#"+ss.id.id
+		} else if (ss.element != null) {
+			sel = ss.element;
+		}
+		
+		if (ss.pseudoClass != null) {
+			sel += ":"+ss.pseudoClass.value;
+		}
+		return sel;
+		
+	}
 	def compile(CSS css) '''
 		«FOR definition: css.definitions»
 			«FOR sel : definition.selector»
-				«FOR simpleSelector : sel.simpleSelector»
-					«IF simpleSelector.class_ != null»
-						«IF simpleSelector.pseudoClass != null»
-							«createStyle(definition, simpleSelector.class_.class_+":"+simpleSelector.pseudoClass.value)»
-						«ELSE»
-							«createStyle(definition, simpleSelector.class_.class_)»
-						«ENDIF»
-					«ENDIF»
-				«ENDFOR»	
+				
+				«createStyle(definition, (sel.firstSelector.compileSelector + " "+ sel.next.map[(if (relationSymbol != null) relationSymbol+" " else "")+ selector.compileSelector].join(" ")).trim)»
+«««				«FOR simpleSelector : sel.simpleSelector»
+«««					«IF simpleSelector.class_ != null»
+«««						«IF simpleSelector.pseudoClass != null»
+«««							«createStyle(definition, simpleSelector.class_.class_+":"+simpleSelector.pseudoClass.value)»
+«««						«ELSE»
+«««							«createStyle(definition, simpleSelector.class_.class_)»
+«««						«ENDIF»
+«««					«ENDIF»
+«««				«ENDFOR»	
 			«ENDFOR»
 		«ENDFOR»
 	'''
 	
 	def createStyle(Definition e,String className) {
-		var varName = CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, className.replaceAll(":","-"));
+		var varName = CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, className.replaceAll("\\.","").replaceAll(":|>|#| ","-"));
 		if (objecsCount.get(className) != null) {
 			varName += "_"+objecsCount.get(className)
 			objecsCount.put(className,objecsCount.get(className)+1);
@@ -100,12 +119,12 @@ class LatteCSSGenerator implements IGenerator {
 			objecsCount.put(className,1)
 		}
 		'''
-		  Style «varName» = stylesheet.getClass("«className»");
-		  if («varName» == null) {
-		  	«varName» = new Style();
-		  	stylesheet.registerClass("«className»",«varName»);	  	
-		  }
-		  
+«««		  Style «varName» = stylesheet.getClass("«className»");
+«««		  if («varName» == null) {
+«««		  	«varName» = new Style();
+«««		  	stylesheet.registerStyle("«className»",«varName»);	  	
+«««		  }
+		  Style «varName» = new Style();
 		  «FOR property : e.properties »
 		  	«IF property instanceof SizeProperty»
 		  		«compileProperty(varName,property)»
@@ -139,6 +158,8 @@ class LatteCSSGenerator implements IGenerator {
 		  		«compileProperty(varName,property as BorderRadiusProperty)»		  		
 		  	«ENDIF»
 		  «ENDFOR»
+		  
+		  stylesheet.registerStyle("«className»",«varName»);
 		'''
 	}
 	

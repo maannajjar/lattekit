@@ -78,14 +78,17 @@ class NumberValue {
 
 
 class Style {
+	@Accessors String definedSelector;
+	
+    @Accessors Map<String, Style> descendantStyles = newHashMap();
+    @Accessors Map<String, Style> directChildrenStyles = newHashMap();
+    @Accessors Map<String, Style> siblingStyles = newHashMap();
     
     @Accessors Style parentStyle;
     @StyleProperty public Object backgroundColor = Color.WHITE;
     @StyleProperty public Object rippleColor;
-    
     @StyleProperty public Object textColor = Color.BLACK;
     
-
     @StyleProperty public String backgroundDrawable = "";
     @StyleProperty public String backgroundRepeat = "no-repeat-x no-repeat-y";
     @StyleProperty public String backgroundGravity = "fill_vertical, fill_horizontal";
@@ -239,47 +242,7 @@ class Style {
         _fontFamily = overridingStyle._fontFamily ?: _fontFamily
         _fontSize = overridingStyle._fontSize ?: _fontSize
         
-        _transitions = overridingStyle._transitions ?: new ArrayList<List<Object>>() as List<List<Object>>
-    }
-
-    def static Style parseStyle(String styleStr) {
-        val style = new Style();
-        styleStr.split(";").forEach[
-            var splitted = split(":");
-            var key = splitted.get(0).trim()
-            var value = splitted.get(1).trim()
-            if (value.toUpperCase == "MATCH_PARENT") {
-                value = ""+LayoutParams.MATCH_PARENT    
-            } else if (value.toUpperCase == "WRAP_CONTENT") {
-                value = ""+LayoutParams.WRAP_CONTENT    
-            }
-            try {
-                var intVal = Integer.parseInt(value);
-                style.setProperty(key,intVal);
-                return
-            } catch(Exception ex) {}
-
-            try {
-                var intVal = new NumberValue(Integer.parseInt(value),0);
-                style.setProperty(key,intVal);
-                return
-            } catch(Exception ex) {}
-
-            try {
-                var floatVal = Float.parseFloat(value);
-                style.setProperty(key,floatVal);
-                return
-            } catch(Exception ex) {}    
-            
-            try {
-                var floatVal = new NumberValue(Float.parseFloat(value) as int, 0);
-                style.setProperty(key,floatVal);
-                return
-            } catch(Exception ex) {}            
-                    
-            style.setProperty(key,value);
-        ];
-        return style;
+        _transitions = overridingStyle._transitions ?: _transitions;
     }
 
     def void deriveFrom(Style form) {
@@ -392,9 +355,67 @@ class Style {
         return myStyle
     }
     
-    def createAnimatorFrom(Style startStyle,LatteView latteView, boolean revertToNormal) {
+    def createAnimatorFrom(Style startStyle,LatteView<?> latteView, boolean revertToNormal) {
         val animSet = new AnimatorSet();
-        val List<String> transitionProperties = if (transitions != null) transitions.map[it.get(0) as String] else #[];
+        val List<String> transitionProperties = newArrayList();
+        val List<List<Object>> expandedTransitions = newArrayList();
+         if (transitions != null) {
+         	 
+         	transitions.forEach[
+				val transitionName = it.get(0) as String;
+                val duration = (it.get(1) as Integer) ?: 0;
+                val delay = (it.get(3) as Integer) ?: 0;
+				
+	        	if (transitionName == "borderRadius") {
+	        		transitionProperties += "borderTopLeftRadiusH"
+	        		transitionProperties += "borderTopRightRadiusH"
+	        		transitionProperties += "borderBottomLeftRadiusH"
+	        		transitionProperties += "borderBottomRightRadiusH"
+	        		transitionProperties += "borderTopLeftRadiusV"
+	        		transitionProperties += "borderTopRightRadiusV"
+	        		transitionProperties += "borderBottomLeftRadiusV"
+	        		transitionProperties += "borderBottomRightRadiusV"
+	        		expandedTransitions += #["borderTopLeftRadiusH", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderTopRightRadiusH", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderBottomLeftRadiusH", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderBottomRightRadiusH", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderTopLeftRadiusV", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderTopRightRadiusV", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderBottomLeftRadiusV", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderBottomRightRadiusV", it.get(1), it.get(2),it.get(3)];
+	        		
+	        	} else if (transitionName == "borderWidth") {
+	        		transitionProperties += "borderLeftWidth"
+	        		transitionProperties += "borderRightWidth"
+	        		transitionProperties += "borderBottomWidth"
+	        		transitionProperties += "borderTopWidth"
+	        		
+	        		expandedTransitions += #["borderLeftWidth", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderRightWidth", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderBottomWidth", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #["borderTopWidth", it.get(1), it.get(2),it.get(3)];
+	        		
+	        	} else if (transitionName == "padding" || transitionName == "margin") { 
+	        		transitionProperties += transitionName+"Top";
+	        		transitionProperties += transitionName+"Left";
+	        		transitionProperties += transitionName+"Right";
+	        		transitionProperties += transitionName+"Bottom";
+	        		
+	        		expandedTransitions += #[transitionName+"Top", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #[transitionName+"Left", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #[transitionName+"Right", it.get(1), it.get(2),it.get(3)];
+	        		expandedTransitions += #[transitionName+"Bottom", it.get(1), it.get(2),it.get(3)];
+	        	} else {
+	        		transitionProperties += transitionName
+	        		expandedTransitions += #[it.get(0), it.get(1), it.get(2),it.get(3)];
+	        	}
+	        	
+	        ]
+	        
+	        
+        }
+        
+        
         
         val actualSize = latteView.getMeasuredSize(this);
         val startActualSize = latteView.getMeasuredSize(startStyle);
@@ -421,7 +442,7 @@ class Style {
         var List<Animator> allAnims = newArrayList();
         allAnims += immediateAnim;
         if (transitions != null) {
-            allAnims += transitions.map[
+            allAnims += expandedTransitions.map[
                 val propName = it.get(0) as String;
                 val duration = (it.get(1) as Integer) ?: 0;
                 val delay = (it.get(3) as Integer) ?: 0;
@@ -747,7 +768,7 @@ class Style {
     	].reduce[g,i|  g.bitwiseOr(i) ]
     }
     
-    def updateDrawables(LatteView view) {
+    def updateDrawables(LatteView<?> view) {
     	if (backgroundGradientDrawable == null) {
     		backgroundGradientDrawable = new GradientDrawable();
     	}
@@ -816,7 +837,7 @@ class Style {
     	borderDrawable.rightBorderColor =  borderRightColor.asColor;
     }
 
-    def applyDrawableStyle(LatteView view) {
+    def applyDrawableStyle(LatteView<?> view) {
 		updateDrawables(view);
 		
         var List<List<Integer>> colorStates = newArrayList
@@ -835,15 +856,17 @@ class Style {
         view.backgroundDrawable.setDrawableByLayerId(0, backgroundGradientDrawable);
         view.backgroundDrawable.setDrawableByLayerId(1, backgroundImageDrawable);
         view.backgroundDrawable.setDrawableByLayerId(2, borderDrawable);
-        //TODO: Should inset with border width ?
-		var topBorder = borderTopWidth.inPixelsInt(view.androidView.context)
-        var rightBorder = borderRightWidth.inPixelsInt(view.androidView.context)
-        var bottomBorder = borderBottomWidth.inPixelsInt(view.androidView.context)
-        var leftBorder = borderLeftWidth.inPixelsInt(view.androidView.context)
-        
-//        view.backgroundDrawable.setLayerInset(0,leftBorder/2,topBorder/2,rightBorder/2,bottomBorder);
+
+	
+//		var topBorder = borderTopWidth.inPixelsInt(view.androidView.context)
+//        var rightBorder = borderRightWidth.inPixelsInt(view.androidView.context)
+//        var bottomBorder = borderBottomWidth.inPixelsInt(view.androidView.context)
+//        var leftBorder = borderLeftWidth.inPixelsInt(view.androidView.context)
+//        view.backgroundDrawable.setLayerInset(0,leftBorder,topBorder,rightBorder,bottomBorder);
 //        view.backgroundDrawable.setLayerInset(1,leftBorder,topBorder,rightBorder,bottomBorder);
+
         view.backgroundDrawable.invalidateSelf
+
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             (view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
@@ -852,7 +875,7 @@ class Style {
         }
     }
     
-    def float[] getCornerRadii(LatteView latteView) {
+    def float[] getCornerRadii(LatteView<?> latteView) {
 		var topLeft = borderTopLeftRadiusH.inPixels(latteView.androidView.context)
         var topRight = borderTopRightRadiusH.inPixels(latteView.androidView.context)
         var bottomLeft = borderBottomLeftRadiusH.inPixels(latteView.androidView.context)
@@ -860,7 +883,7 @@ class Style {
     	return #[topLeft,topLeft,topRight,topRight,bottomRight,bottomRight,bottomLeft,bottomLeft];
     }
     
-    def applyDrawableShape(LatteView latteView) {
+    def applyDrawableShape(LatteView<?> latteView) {
         var shape = new RoundRectShape(getCornerRadii(latteView), null,null);
         latteView.shapeDrawable.shape = shape;
 //      Todo: investigate whether we need to call this
@@ -876,10 +899,10 @@ class Style {
             androidView.elevation = elevation.inPixels(androidView.context);
         }
         
-        if (applyAll || !properties.filter[#["borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
+        if (applyAll || !properties.filter[#["borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundFilter","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
         	applyDrawableStyle(latteView);
         }
-        if (applyAll || !properties.filter[#["borderRadius","borderTopLeftRadius","borderTopRightRadius","borderBottomLeftRadius","borderBottomRightRadius","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
+        if (applyAll || !properties.filter[#["borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
         	applyDrawableShape(latteView);
         }
         
