@@ -9,13 +9,13 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.PorterDuff.Mode
 import android.graphics.Shader.TileMode
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
 import android.os.Handler
@@ -26,15 +26,14 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
 import android.widget.TextView
+import codetail.graphics.drawables.RippleDrawable
 import io.lattekit.StyleProperty
-import java.util.ArrayList
+import io.lattekit.ui.drawable.BorderDrawable
 import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
-import io.lattekit.ui.drawable.BorderDrawable
-import android.graphics.PorterDuff.Mode
 
 class NumberValue {
     @Accessors var int value;
@@ -86,13 +85,13 @@ class Style {
     
     @Accessors Style parentStyle;
     @StyleProperty public Object backgroundColor = Color.WHITE;
-    @StyleProperty public Object rippleColor;
+    @StyleProperty public Object rippleColor = Color.TRANSPARENT;
     @StyleProperty public Object textColor = Color.BLACK;
     
     @StyleProperty public String backgroundDrawable = "";
     @StyleProperty public String backgroundRepeat = "no-repeat-x no-repeat-y";
     @StyleProperty public String backgroundGravity = "fill_vertical, fill_horizontal";
-    @StyleProperty public Object backgroundFilterColor;
+    @StyleProperty public Object backgroundFilterColor = Color.TRANSPARENT;
     @StyleProperty public String backgroundFilterType = "SRC_ATOP";
     
     
@@ -363,9 +362,7 @@ class Style {
          	 
          	transitions.forEach[
 				val transitionName = it.get(0) as String;
-                val duration = (it.get(1) as Integer) ?: 0;
-                val delay = (it.get(3) as Integer) ?: 0;
-				
+
 	        	if (transitionName == "borderRadius") {
 	        		transitionProperties += "borderTopLeftRadiusH"
 	        		transitionProperties += "borderTopRightRadiusH"
@@ -395,6 +392,10 @@ class Style {
 	        		expandedTransitions += #["borderBottomWidth", it.get(1), it.get(2),it.get(3)];
 	        		expandedTransitions += #["borderTopWidth", it.get(1), it.get(2),it.get(3)];
 	        		
+	        	} else if (transitionName == "background-filter") {  
+	        		transitionProperties +="backgroundFilterColor"
+	        		expandedTransitions += #["background-filter-color", it.get(1), it.get(2),it.get(3)];
+	        		
 	        	} else if (transitionName == "padding" || transitionName == "margin") { 
 	        		transitionProperties += transitionName+"Top";
 	        		transitionProperties += transitionName+"Left";
@@ -411,33 +412,22 @@ class Style {
 	        	}
 	        	
 	        ]
-	        
-	        
         }
-        
-        
         
         val actualSize = latteView.getMeasuredSize(this);
         val startActualSize = latteView.getMeasuredSize(startStyle);
         
         var immediateAnim =  ValueAnimator.ofInt(0,1);
-        immediateAnim.addUpdateListener([
-            if (animatedValue == 0) {
-                _properties.filter[!transitionProperties.contains(it)].forEach[
-                    if (it == "x" && _computedX != null && revertToNormal && startStyle.x != null) {
-                        startStyle.setProperty(it, new NumberValue(_computedX, TypedValue.COMPLEX_UNIT_PX));
-                    } else if (it == "y" && _computedY != null && revertToNormal  && startStyle.y != null) {
-                        startStyle.setProperty(it, new NumberValue(_computedY, TypedValue.COMPLEX_UNIT_PX));
-                    }  else if ( this.getProperty(it) != null) {
-                        startStyle.setProperty(it, this.getProperty(it));
-                    }
-                    startStyle.applyToView(latteView,it)
-                ]
-                
-                
+        _properties.filter[!transitionProperties.contains(it)].forEach[
+            if (it == "x" && _computedX != null && revertToNormal && startStyle.x != null) {
+                startStyle.setProperty(it, new NumberValue(_computedX, TypedValue.COMPLEX_UNIT_PX));
+            } else if (it == "y" && _computedY != null && revertToNormal  && startStyle.y != null) {
+                startStyle.setProperty(it, new NumberValue(_computedY, TypedValue.COMPLEX_UNIT_PX));
+            }  else if ( this.getProperty(it) != null) {
+                startStyle.setProperty(it, this.getProperty(it));
             }
-        ])
-        immediateAnim.setDuration(1);
+            startStyle.applyToView(latteView,it)
+        ]
 
         var List<Animator> allAnims = newArrayList();
         allAnims += immediateAnim;
@@ -504,7 +494,7 @@ class Style {
                 return anim;
             ].filterNull
         }
-		animSet.playTogether(allAnims)
+		animSet.playTogether(allAnims);
         val nativeParent = latteView.nonVirtualParent;
         if (nativeParent != null) {
         	nativeParent.pendingChildAnimations += animSet;
@@ -781,8 +771,10 @@ class Style {
     		backgroundImageDrawable = view.androidView.context.resources.getDrawable(drawableResourceId).mutate;
     		if (backgroundImageDrawable instanceof BitmapDrawable) {
 	    		val bg = (backgroundImageDrawable as BitmapDrawable);
-	    		if (backgroundFilterColor != null) {
+	    		if (backgroundFilterColor != null && backgroundFilterColor.asColor != Color.TRANSPARENT) {
 	    			bg.setColorFilter(backgroundFilterColor.asColor, Mode.valueOf(backgroundFilterType.toUpperCase));	
+	    		} else {
+	    			bg.setColorFilter(null)
 	    		}
 	    		
 	    		if (backgroundGravity != null) { 
@@ -865,13 +857,13 @@ class Style {
 //        view.backgroundDrawable.setLayerInset(0,leftBorder,topBorder,rightBorder,bottomBorder);
 //        view.backgroundDrawable.setLayerInset(1,leftBorder,topBorder,rightBorder,bottomBorder);
 
-        view.backgroundDrawable.invalidateSelf
+//        view.backgroundDrawable.invalidateSelf
 
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            (view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
+//            (view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
         } else {        
-            (view.androidView.background as codetail.graphics.drawables.RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
+            (view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
         }
     }
     
@@ -912,10 +904,10 @@ class Style {
         if ((applyAll || properties.contains("x")) && x != null) androidView.x = x.inPixels(androidView.context)
         if ((applyAll || properties.contains("y")) && y != null) androidView.y = y.inPixels(androidView.context)
         if (applyAll || !properties.filter[it.indexOf("padding") != -1].empty) {
-	        var pLeft = paddingLeft.inPixelsInt(androidView.context)
-	        var pRight = paddingRight.inPixelsInt(androidView.context)
-	        var pTop = paddingTop.inPixelsInt(androidView.context)
-	        var pBottom = paddingBottom.inPixelsInt(androidView.context)
+	        var pLeft = paddingLeft.inPixelsInt(androidView.context) + borderLeftWidth.inPixelsInt(androidView.context)
+	        var pRight = paddingRight.inPixelsInt(androidView.context) + borderRightWidth.inPixelsInt(androidView.context)
+	        var pTop = paddingTop.inPixelsInt(androidView.context) + borderTopWidth.inPixelsInt(androidView.context)
+	        var pBottom = paddingBottom.inPixelsInt(androidView.context) + borderBottomWidth.inPixelsInt(androidView.context)
 	        
 	        androidView.setPadding(pLeft,pTop,pRight,pBottom);
         }
