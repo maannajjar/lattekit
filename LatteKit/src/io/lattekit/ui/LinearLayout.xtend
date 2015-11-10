@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.LinearLayout.LayoutParams
 import io.lattekit.State
 
-public class LinearLayout extends LatteView {
+public class LinearLayout extends LatteView<android.widget.LinearLayout> {
 	
 	@State String orientation;
 	def void init() {

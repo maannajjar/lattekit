@@ -5,17 +5,12 @@ import android.util.Log
 import android.view.View
 import java.util.HashMap
 
-public class RelativeLayout extends LatteView {
+public class RelativeLayout extends LatteView<android.widget.RelativeLayout> {
 	
 	
 	def void init() {
 	}
-	
-	override applyAttributes() {
-		super.applyAttributes()
-		var view = androidView as android.widget.RelativeLayout;
-	}
-	
+		
 	override View createAndroidView(Context a) {
 		return new android.widget.RelativeLayout(a);
 	}
