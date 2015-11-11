@@ -39,11 +39,16 @@ class BorderDrawable extends Drawable {
 		path = new Path();		
 	}
 	
+	
+	def void arcTo(Path path, float left ,float top,float right, float bottom, float startAngle, float sweepAngle, boolean forceMoveTo) {
+		path.arcTo(new RectF(left,top,right,bottom), startAngle,sweepAngle,forceMoveTo);
+	}
+	
 	def drawSegment(Canvas canvas,Path path, RectF bounds,float segementWidth, float firstCornerRadiusH,float firstCornerRadiusV,float firstAdjacentWidth, float secondCornerRadiusH, float secondCornerRadiusV,float secondAdjacentWidth) {
 		path.reset()
 		// Outer line
 		if (firstCornerRadiusH > 0 || firstCornerRadiusV > 0) {
-			path.arcTo(bounds.left,bounds.top,bounds.left+firstCornerRadiusH*2,bounds.top+firstCornerRadiusV*2,-135,45, true);
+			arcTo(path,bounds.left,bounds.top,bounds.left+firstCornerRadiusH*2,bounds.top+firstCornerRadiusV*2,-135,45, true);
 		} else {
 			path.moveTo(bounds.left,bounds.top);
 		}
@@ -60,7 +65,7 @@ class BorderDrawable extends Drawable {
 		
 		if (innerRadiusLeft > 0 && innerRadiusTop > 0) {
 			path.lineTo(bounds.left+firstAdjacentWidth+innerRadiusLeft,bounds.top+segementWidth);
-			path.arcTo(bounds.left+firstAdjacentWidth,bounds.top+segementWidth,
+			arcTo(path,bounds.left+firstAdjacentWidth,bounds.top+segementWidth,
 					bounds.left+firstAdjacentWidth+innerRadiusLeft,bounds.top+segementWidth+innerRadiusTop,-90,-45, false);
 		} else {
 			path.lineTo(bounds.left+firstAdjacentWidth,bounds.top+segementWidth);
@@ -70,7 +75,7 @@ class BorderDrawable extends Drawable {
 		path.reset()
 		// Outer line
 		if (secondCornerRadiusH > 0) {
-			path.arcTo(bounds.right-secondCornerRadiusH*2,bounds.top,bounds.right,bounds.top+secondCornerRadiusV*2,-45,-45, true);
+			arcTo(path,bounds.right-secondCornerRadiusH*2,bounds.top,bounds.right,bounds.top+secondCornerRadiusV*2,-45,-45, true);
 		} else {
 			path.moveTo(bounds.right,bounds.top);
 		}
@@ -85,7 +90,7 @@ class BorderDrawable extends Drawable {
 					
 		if (innerRadiusRight > 0 && innerRadiusTop2 > 0) {
 			path.lineTo(bounds.right-secondAdjacentWidth-innerRadiusRight,bounds.top+segementWidth);
-			path.arcTo(bounds.right-secondAdjacentWidth-innerRadiusRight,bounds.top+segementWidth,
+			arcTo(path,bounds.right-secondAdjacentWidth-innerRadiusRight,bounds.top+segementWidth,
 					bounds.right-secondAdjacentWidth,bounds.top+segementWidth+innerRadiusTop2,-90,45, false);
 		} else {
 			path.lineTo(bounds.right-secondAdjacentWidth,bounds.top+segementWidth);
@@ -166,7 +171,7 @@ class BorderDrawable extends Drawable {
 		var innerRadiusHeight = (topLeftRadiusV-topBorderWidth);
 		
         if (innerRadiusHeight > 0 || innerRadiusWidth >0) {
-            innerPath.arcTo(bounds.left,bounds.top,bounds.left+innerRadiusWidth*2,bounds.top+innerRadiusHeight*2,-180,90,true);
+            arcTo(innerPath,bounds.left,bounds.top,bounds.left+innerRadiusWidth*2,bounds.top+innerRadiusHeight*2,-180,90,true);
         } else {
             innerPath.moveTo(bounds.left,bounds.top);
         }
@@ -175,7 +180,7 @@ class BorderDrawable extends Drawable {
 		        
         innerPath.lineTo(bounds.right-innerRadiusWidth,bounds.top);
         if ( innerRadiusHeight >0) {
-            innerPath.arcTo(bounds.right-innerRadiusWidth*2,bounds.top,bounds.right,bounds.top+innerRadiusHeight*2,-90,90,false);
+            arcTo(innerPath,bounds.right-innerRadiusWidth*2,bounds.top,bounds.right,bounds.top+innerRadiusHeight*2,-90,90,false);
         }
         
 		innerRadiusWidth = (bottomRightRadiusH-rightBorderWidth);
@@ -183,7 +188,7 @@ class BorderDrawable extends Drawable {
         
         innerPath.lineTo(bounds.right,bounds.bottom-innerRadiusHeight);
         if (innerRadiusWidth > 0 || innerRadiusHeight > 0) {
-            innerPath.arcTo(bounds.right-innerRadiusWidth*2,bounds.bottom-innerRadiusHeight*2,bounds.right,bounds.bottom,0,90,false);
+            arcTo(innerPath,bounds.right-innerRadiusWidth*2,bounds.bottom-innerRadiusHeight*2,bounds.right,bounds.bottom,0,90,false);
         }
         
 		innerRadiusWidth = (bottomLeftRadiusH-leftBorderWidth);
@@ -191,7 +196,7 @@ class BorderDrawable extends Drawable {
         innerPath.lineTo(bounds.left+innerRadiusWidth,bounds.bottom);
         
         if (innerRadiusWidth > 0 || innerRadiusHeight > 0) {
-            innerPath.arcTo(bounds.left,bounds.bottom-innerRadiusHeight*2,bounds.left+innerRadiusWidth*2,bounds.bottom,90,90,false);
+            arcTo(innerPath,bounds.left,bounds.bottom-innerRadiusHeight*2,bounds.left+innerRadiusWidth*2,bounds.bottom,90,90,false);
         }
         
 		innerRadiusHeight = (topLeftRadiusH-topBorderWidth);        
@@ -204,22 +209,22 @@ class BorderDrawable extends Drawable {
 	def getOuterPath() {
         var outerPath = new Path();
         if (topLeftRadiusH > 0 || topLeftRadiusV > 0) {
-            outerPath.arcTo(bounds.left,bounds.top,bounds.left+topLeftRadiusH*2,bounds.top+topLeftRadiusV*2,-180,90,true);
+            arcTo(outerPath,bounds.left,bounds.top,bounds.left+topLeftRadiusH*2,bounds.top+topLeftRadiusV*2,-180,90,true);
         } else {
             outerPath.moveTo(bounds.left,bounds.top);
         }
         outerPath.lineTo(bounds.right-topRightRadiusH,bounds.top);
         if (topRightRadiusH > 0 || topRightRadiusV > 0) {
-            outerPath.arcTo(bounds.right-topRightRadiusH*2,bounds.top,bounds.right,bounds.top+topRightRadiusV*2,-90,90,false);
+            arcTo(outerPath,bounds.right-topRightRadiusH*2,bounds.top,bounds.right,bounds.top+topRightRadiusV*2,-90,90,false);
         }
         outerPath.lineTo(bounds.right,bounds.bottom-bottomRightRadiusV);
         if (bottomRightRadiusH > 0 || bottomRightRadiusV > 0) {
-            outerPath.arcTo(bounds.right-bottomRightRadiusH*2,bounds.bottom-bottomRightRadiusV*2,bounds.right,bounds.bottom,0,90,false);
+            arcTo(outerPath,bounds.right-bottomRightRadiusH*2,bounds.bottom-bottomRightRadiusV*2,bounds.right,bounds.bottom,0,90,false);
         }
         outerPath.lineTo(bounds.left+bottomLeftRadiusH,bounds.bottom);
         
         if (bottomLeftRadiusH > 0) {
-            outerPath.arcTo(bounds.left,bounds.bottom-bottomLeftRadiusV*2,bounds.left+bottomLeftRadiusH*2,bounds.bottom,90,90,false);
+            arcTo(outerPath,bounds.left,bounds.bottom-bottomLeftRadiusV*2,bounds.left+bottomLeftRadiusH*2,bounds.bottom,90,90,false);
         }
         outerPath.lineTo(bounds.left,bounds.top+topLeftRadiusV);
 		return outerPath;	
