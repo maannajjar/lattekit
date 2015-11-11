@@ -50,16 +50,16 @@ class LatteCSSGenerator implements IGenerator {
 	override void doGenerate(Resource resource, IFileSystemAccess fsa) {
 		var className = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL,resource.URI.lastSegment.replace(".css",""))
 		className += "Stylesheet";
-		var packageName = "io.lattekit.stylesheet"
+		var packageName = "io.lattekit.ui.style"
 		definitions.clear		
 		objecsCount.clear
-		fsa.generateFile("io/lattekit/stylesheet/"+className+".java", resource.compile(packageName,className))
+		fsa.generateFile("io/lattekit/ui/style/"+className+".java", resource.compile(packageName,className))
 	}
 	
 	def compile(Resource resource,String packageName, String className) '''
 		package «packageName»;
-		import io.lattekit.ui.NumberValue;
-		import io.lattekit.ui.Style;
+		import io.lattekit.ui.style.NumberValue;
+		import io.lattekit.ui.style.Style;
 		import android.graphics.Color;
 		import java.util.ArrayList;
 		import java.util.List;
@@ -315,9 +315,9 @@ class LatteCSSGenerator implements IGenerator {
 
 	def compileProperty(String object, ViewSizeProperty sizeProperty) '''
 		«IF sizeProperty.value.dynamic == "match_parent"»
-			«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+sizeProperty.property)»(new NumberValue(io.lattekit.ui.LatteView.MATCH_PARENT,0));
+			«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+sizeProperty.property)»(new NumberValue(io.lattekit.ui.view.LatteView.MATCH_PARENT,0));
 		«ELSEIF sizeProperty.value.dynamic == "wrap_content"»
-			«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+sizeProperty.property)»(new NumberValue(io.lattekit.ui.LatteView.WRAP_CONTENT,0));
+			«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+sizeProperty.property)»(new NumberValue(io.lattekit.ui.view.LatteView.WRAP_CONTENT,0));
 		«ELSE»
 			«object».«CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL,"set-"+sizeProperty.property)»(new NumberValue(«sizeProperty.value.value.value»,«unitToInt(sizeProperty.value.value.dimension)»));
 		«ENDIF»

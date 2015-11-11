@@ -1,4 +1,4 @@
-package io.lattekit.ui
+package io.lattekit.ui.style;
 
 import android.R
 import android.animation.Animator
@@ -29,8 +29,10 @@ import android.widget.TextView
 import codetail.graphics.drawables.RippleDrawable
 import io.lattekit.StyleProperty
 import io.lattekit.ui.drawable.BorderDrawable
+import io.lattekit.ui.view.LatteView
 import java.util.List
 import java.util.Map
+import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
@@ -142,6 +144,10 @@ class Style {
     
     @StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
+    
+    
+    static Set<String> DRAWABLE_PROPS = newHashSet("borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundFilter","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth")
+    static Set<String> SHAPE_PROPS = newHashSet("borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundFilter","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth");
     
     static Map<String,Typeface> allFonts;
     
@@ -882,6 +888,14 @@ class Style {
 //      latteView.shapeDrawable.invalidateSelf
     }
     
+    def isShapeProperty(String propertyName) {
+    	return SHAPE_PROPS.contains(propertyName);
+    }
+    
+    def isDrawableProperty(String propertyName) {
+    	return DRAWABLE_PROPS.contains(propertyName);
+    }
+
     def applyToView(LatteView<?> latteView, String... properties) {
     	initFonts(latteView.androidView.context)
     	var applyAll = properties.isEmpty
@@ -891,10 +905,10 @@ class Style {
             androidView.elevation = elevation.inPixels(androidView.context);
         }
         
-        if (applyAll || !properties.filter[#["borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundFilter","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
+        if (applyAll || properties.findFirst[ isDrawableProperty ] != null) {
         	applyDrawableStyle(latteView);
         }
-        if (applyAll || !properties.filter[#["borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth"].contains(it)].empty) {
+        if (applyAll || properties.findFirst[ isShapeProperty ]  != null) {
         	applyDrawableShape(latteView);
         }
         

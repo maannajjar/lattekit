@@ -1,4 +1,4 @@
-package io.lattekit.ui
+package io.lattekit.ui.view
 
 import android.R
 import android.animation.Animator
@@ -25,7 +25,8 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import codetail.graphics.drawables.RippleDrawable
 import io.lattekit.State
-import io.lattekit.stylesheet.Stylesheet
+import io.lattekit.ui.style.Style
+import io.lattekit.ui.style.Stylesheet
 import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors

@@ -1,6 +1,6 @@
-package io.lattekit.stylesheet;
+package io.lattekit.ui.style;
 
-import io.lattekit.ui.Style;
+import io.lattekit.ui.style.Style;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -40,8 +40,8 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 				
 				properties.forEach[
 					val name = if (it.simpleName.startsWith("_")) it.simpleName.substring(1) else it.simpleName;
-					if (it.type.name == "io.lattekit.ui.NumberValue") {
-						allSetters.append('''if (propertyName.equals("«name»") && value instanceof io.lattekit.ui.NumberValue) { set«name.substring(0,1).toUpperCase+name.substring(1)»((io.lattekit.ui.NumberValue)value); }
+					if (it.type.name == "io.lattekit.ui.style.NumberValue") {
+						allSetters.append('''if (propertyName.equals("«name»") && value instanceof io.lattekit.ui.style.NumberValue) { set«name.substring(0,1).toUpperCase+name.substring(1)»((io.lattekit.ui.style.NumberValue)value); }
 						''');				
 						allSetters.append('''if (propertyName.equals("«name»") && value instanceof String) { set«name.substring(0,1).toUpperCase+name.substring(1)»((String)value); }
 						''');														
@@ -115,9 +115,9 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 				addParameter("value", String.newTypeReference())
 				body = '''
 					if (value.toLowerCase().equals("match_parent") || value.toLowerCase().equals("fill_parent")) {
-						_«rawName» = new NumberValue(io.lattekit.ui.LatteView.MATCH_PARENT,0);
+						_«rawName» = new NumberValue(io.lattekit.ui.view.LatteView.MATCH_PARENT,0);
 					} else if (value.toLowerCase().equals("wrap_content")) {
-						_«rawName» = new NumberValue(io.lattekit.ui.LatteView.WRAP_CONTENT,0);
+						_«rawName» = new NumberValue(io.lattekit.ui.view.LatteView.WRAP_CONTENT,0);
 					} else {
 						int unitType = android.util.TypedValue.COMPLEX_UNIT_PX;
 						if (value.indexOf("dp")  != -1) {

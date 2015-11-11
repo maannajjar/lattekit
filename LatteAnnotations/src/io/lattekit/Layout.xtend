@@ -43,9 +43,9 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		val layoutStr = annotatedMethod.body.toString
 		annotatedMethod.markAsRead
 		
-		val latteViewTR = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference();
+		val latteViewTR = findTypeGlobally("io.lattekit.ui.view.LatteView").newTypeReference();
 		
-		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
+		var importList = newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
 		var importListParam = annotatedMethod.annotations.findFirst[ a|
 			a.annotationTypeDeclaration == Layout.newTypeReference().type
 		].getStringArrayValue("imports")
@@ -106,9 +106,9 @@ class LayoutFieldProcessor extends AbstractFieldProcessor {
 		val layoutStr = annotatedField.initializer.toString
 		annotatedField.markAsRead
 		
-		val latteViewTR = findTypeGlobally("io.lattekit.ui.LatteView").newTypeReference();
+		val latteViewTR = findTypeGlobally("io.lattekit.ui.view.LatteView").newTypeReference();
 		
-		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
+		var importList = newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
 		var importListParam = annotatedField.annotations.findFirst[ a|
 			a.annotationTypeDeclaration == Latte.newTypeReference().type
 		].getStringArrayValue("imports")
@@ -125,7 +125,7 @@ class LayoutFieldProcessor extends AbstractFieldProcessor {
 		annotatedField.initializer = ''' 
 		
 			
-			new io.lattekit.ui.LatteView() {
+			new io.lattekit.ui.view.LatteView() {
 				public void render() {
 					«layoutCode»
 					«IF annotatedField.declaringType.findDeclaredField("latteCss") != null»
@@ -252,14 +252,14 @@ class LayoutParserOld extends DefaultHandler {
 			if (androidView.isAssignableFrom(findViewType)) {
 				isAndroidView = true;
 				androidViewType = findViewType;
-				findViewType = context.findTypeGlobally("io.lattekit.ui.LatteView");
+				findViewType = context.findTypeGlobally("io.lattekit.ui.view.LatteView");
 				androidCreator = '''
 				it.setOnCreateAndroidView(new org.eclipse.xtext.xbase.lib.Functions.Function1<android.content.Context,android.view.View>() {
 					public «androidViewType.qualifiedName» apply(android.content.Context context) {
 							return new «elName»(context);
 					}
 				});'''
-				elName = "io.lattekit.ui.LatteView"
+				elName = "io.lattekit.ui.view.LatteView"
 			}
 		}
 		val viewType = findViewType;
@@ -425,7 +425,7 @@ class LayoutParserOld extends DefaultHandler {
 			elStack.push(currentEl);
 	   }		       
 	   currentEl = newHashMap( 
-		"name" -> if (isAndroidView)  "io.lattekit.ui.LatteView" else elName,
+		"name" -> if (isAndroidView)  "io.lattekit.ui.view.LatteView" else elName,
 		"simpleName" -> if (isAndroidView)  "LatteView" else tagSimpleName,
 		"tagSimpleName" -> tagSimpleName,
 		"childrenProcBody"-> currentProc,

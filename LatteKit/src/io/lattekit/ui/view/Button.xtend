@@ -1,4 +1,4 @@
-package io.lattekit.ui
+package io.lattekit.ui.view
 
 import android.content.Context
 import android.view.View
