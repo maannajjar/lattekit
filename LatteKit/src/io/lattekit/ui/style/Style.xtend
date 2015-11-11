@@ -87,8 +87,6 @@ class Style {
     @StyleProperty public NumberValue translationX = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue x;
     @StyleProperty public NumberValue y;
-    public Float _computedX;
-    public Float _computedY;
     
     @StyleProperty public NumberValue paddingTop = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue paddingBottom = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
@@ -103,6 +101,9 @@ class Style {
     
     @StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
+    
+	public Float _computedX;
+    public Float _computedY;
     
     
     static Set<String> DRAWABLE_PROPS = newHashSet("borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundFilter","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth")
@@ -209,57 +210,7 @@ class Style {
         _transitions = overridingStyle._transitions ?: _transitions;
     }
 
-    def void deriveFrom(Style form) {
-        this.backgroundColor = form.backgroundColor
-        this.rippleColor = form.rippleColor
-        this.borderTopColor = form.borderTopColor
-        this.borderLeftColor = form.borderLeftColor
-        this.borderRightColor = form.borderRightColor
-        this.borderBottomColor = form.borderBottomColor
-        
-        this.textColor = form.textColor
-        this.backgroundDrawable = form.backgroundDrawable
-        this.backgroundFilterColor = form.backgroundFilterColor
-        this.backgroundFilterType = form.backgroundFilterType
-        
-        this.backgroundRepeat = form.backgroundRepeat;
-        this.backgroundGravity = form.backgroundGravity;
 
-        this.borderTopLeftRadiusH = form.borderTopLeftRadiusH
-        this.borderTopRightRadiusH = form.borderTopRightRadiusH
-        this.borderBottomLeftRadiusH = form.borderBottomLeftRadiusH
-        this.borderBottomRightRadiusH = form.borderBottomRightRadiusH
-        
-        this.borderTopLeftRadiusV = form.borderTopLeftRadiusV
-        this.borderTopRightRadiusV = form.borderTopRightRadiusV
-        this.borderBottomLeftRadiusV = form.borderBottomLeftRadiusV
-        this.borderBottomRightRadiusV = form.borderBottomRightRadiusV
-
-        this.borderLeftWidth = form.borderLeftWidth
-        this.borderTopWidth = form.borderTopWidth
-        this.borderRightWidth = form.borderRightWidth
-        this.borderBottomWidth = form.borderBottomWidth
-        
-        this.marginTop = form.marginTop
-        this.marginBottom = form.marginBottom
-        this.marginLeft = form.marginLeft
-        this.marginRight = form.marginRight
-        this.elevation = form.elevation
-        this.translationX = form.translationX
-        this.translationY = form.translationY
-        this.paddingTop = form.paddingTop
-        this.paddingBottom = form.paddingBottom
-        this.paddingLeft = form.paddingLeft
-        this.paddingRight = form.paddingRight
-        this.width = form.width
-        this.height = form.height
-        this.fontSize = form.fontSize
-        this.fontStyle = form.fontStyle
-        this.fontFamily = form.fontFamily
-        this.transitions = form.transitions
-        this.x = form.x
-        this.y = form.y
-    }
     def void cloneFrom(Style form) {
         this.backgroundColor = form._backgroundColor
         this.rippleColor = form._rippleColor
