@@ -1,63 +1,110 @@
-.mainButton {
+.hellZo sup  {
+	width: match_parent;
+	elevation: 5dp;
+	background-color:#aaaaaa;
+}
+.hello:touched {
+	elevation: 10dp;
+	ripple-color: #000000;
+}
 
-	border-color: #aaaaaa;
+.container {
+	width:match_parent;
+	height:match_parent;
+}
+
+.topBar {
+	height: 50dp;
+	border-radius:0 0 0 0;
+	transition: height 300ms 0ms, border-radius 300ms 0ms;
+	
+}
+.light > .topBar {
+	background-color: #ffffff;
+	background-drawable: "instapaper_logo";
+	background-gravity: center;
+	elevation: 2dp;
+	border-bottom: 1dp solid #cccccc;
+	margin-bottom:40dp;
+
+}
+.dark > .topBar {
+	background-color: #000000;
+	background-drawable: "instapaper_logo";
+	background-gravity: center;
+	background-filter-color: #ffffff;
+	elevation: 2dp;
+	border-bottom-width: 1dp;
+	border-color:#222222;
+	margin-bottom:40dp;	
+	height: 90dp;
+	
+	border-radius: 50dp 50dp 50dp 50dp;
+		
+}
+
+.mainButton {
+	margin:10dp 50dp;
+    width: 130dp;
+    height: 100dp;
+    background-color:#0288D1;
 	border-width: 5dp;
+	border-bottom-width: 30dp;
+	border-left-width: 10dp;
+	border-right-width: 20dp;
+	border-top-left-radius: 10dp;
+   	transition: border-radius 300ms 0ms, border-width 300ms 0ms;
+   
+    elevation: 5dp;
+}
+
+.mainButton:touched {
+	
+    border-radius: 0dp;
+    background-color:#eeeeee;
+    ripple-color:#ff0000;
+	
+}
+.XmainButton {
+	border-color: #aaaaaa;
+	width: 120dp;
+	height: 70dp;
+	
 	background-color: #0288D1;
-	border-color: #0277BD;		
+	border-top-color: #000000;
+	border-top-left-radius: 35dp;
+	border-bottom-color: #000000;
+	border-left-color: #ff0000;
+	border-right-color: #00ff00;		
+	
 	ripple-color: #ff0000;
-	border-width: 5;
 	margin-top: 30;
 	margin-left: 100;
 	margin-right: 30;
-	corner-radius: 100;
+	border-width: 10dp;
+
 	padding-left: 30;
 	padding-right: 30;
-	width: wrap_content;
-	height: wrap_content;
-	font-size: 5sp;
+	font-size: 10sp;
 	padding-bottom: 0dp;
 	elevation: 3dp;
 	text-align: center;
 	text-color: #ffffff;
-	transition: width 300ms 200ms,
-				height 200ms 0ms,
-				margin-top 300ms 500ms,
-				y 300ms 500ms,
-				margin-left 300ms 800ms,
-				margin-right 300ms 800ms,           
-				corner-radius 300ms 800ms,
-				border-width 300ms 0ms,
-				font-size 300ms 0ms,
-				elevation 600ms 0ms;
+	font-family: "roboto-light";
+	transition: border-width 300ms 0ms;
 }
 
 .mainButton:disabled {
 	text-color: #333333;
 }
-
-.mainButton:touched {
-	font-size: 40sp;
-
-	border-width: 20dp;
-	corner-radius: 0;
-	width: match_parent;
-	height: match_parent;
-	elevation: 10;
-	border-color: #0277BD;
-	margin-top: 0;
-	margin-left: 0;
-	margin-right: 0;
-	y: 0;
-	padding-bottom:50dp;
-	text-color: #000000;
-	transition: width 200ms 0ms,
-				height 300ms 300ms,
-				corner-radius 300ms 0ms,
-				border-width 300ms 0ms,
-				margin-top 300ms 0ms,
-				margin-left 300ms 0ms,
-				margin-right 300ms 0ms,
-				font-size 300ms 300ms,
-				padding-bottom 300ms 300ms,
-				elevation 300ms 0ms;
+.XmainButton:touched {
+	background-drawable: "ic_launcher";
+	background-repeat: repeat-x no-repeat-y;	
+	font-family: "LyonText-Bold";
+//	border-radius: 0dp;
+	border-width: 8dp;
+	border-radius: 15dp;
+	transition: border-radius 300ms 0ms, border-width 300ms 0ms;
+	
 }
+
