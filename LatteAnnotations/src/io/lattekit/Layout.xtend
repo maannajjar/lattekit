@@ -1,34 +1,13 @@
 package io.lattekit
 
 import io.lattekit.compiler.LayoutCompiler
-import java.io.ByteArrayInputStream
-import java.io.InputStream
-import java.nio.charset.StandardCharsets
-import java.util.List
-import java.util.Map
-import java.util.Stack
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.regex.Pattern
-import javax.xml.parsers.SAXParser
-import javax.xml.parsers.SAXParserFactory
-import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend.lib.macro.AbstractFieldProcessor
 import org.eclipse.xtend.lib.macro.AbstractMethodProcessor
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
-import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
-import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
-import org.eclipse.xtend.lib.macro.declaration.MutableTypeDeclaration
-import org.eclipse.xtend.lib.macro.declaration.Type
-import org.eclipse.xtend.lib.macro.declaration.TypeReference
-import org.xml.sax.Attributes
-import org.xml.sax.SAXException
-import org.xml.sax.helpers.DefaultHandler
-
-import static org.reflections.ReflectionUtils.*
 
 @Active(typeof(LayoutProcessor))
 annotation Layout {
@@ -55,20 +34,10 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		}
 
 		val isAdHoc = !(annotatedMethod.simpleName == "render" && latteViewTR.isAssignableFrom(annotatedMethod.declaringType.newTypeReference()));
-		
-		
-		
-
-		
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
-		val StringBuffer output = new StringBuffer();
-
-//		layoutParser.parseLayout(context, annotatedMethod.declaringType,  importList, layoutSource);
 		if (isAdHoc) {
 			annotatedMethod.returnType = latteViewTR;
 		}
-		
-		val myClass = annotatedMethod.declaringType.newTypeReference();
 		val layoutCode = if (isAdHoc) { 
 			LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"null");
 		} else {
@@ -88,8 +57,6 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		''';
 
 	}
-	
-	
 }
 
 
@@ -116,15 +83,11 @@ class LayoutFieldProcessor extends AbstractFieldProcessor {
 		if (importListParam.size > 0) {
 			importList += importListParam 
 		}
-		val isAdHoc = true;
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
-//		layoutParser.parseLayout(context, annotatedField.declaringType,  importList, layoutSource);
 		val layoutCode = LayoutCompiler.compileLayout(context,layoutSource,annotatedField.declaringType as MutableClassDeclaration,"this");
 
 		annotatedField.type = latteViewTR;
 		annotatedField.initializer = ''' 
-		
-			
 			new io.lattekit.ui.view.LatteView() {
 				public void render() {
 					«layoutCode»
