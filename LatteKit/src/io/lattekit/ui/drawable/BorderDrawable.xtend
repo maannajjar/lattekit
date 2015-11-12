@@ -105,8 +105,29 @@ class BorderDrawable extends Drawable {
 		paint.style = Paint.Style.FILL_AND_STROKE;
 		paint.strokeWidth = 0.5f
 		
-		var myBounds = new RectF(bounds);
+		var topLeftRadiusV = Math.min(this.topLeftRadiusV, bounds.height/2.0f);
+		var topRightRadiusV = Math.min(this.topRightRadiusV, bounds.height/2.0f);
+		var bottomLeftRadiusV = Math.min(this.bottomLeftRadiusV, bounds.height/2.0f);
+		var bottomRightRadiusV = Math.min(this.bottomRightRadiusV, bounds.height/2.0f);
 		
+		var topLeftRadiusH = Math.min(this.topLeftRadiusH, bounds.width/2.0f);
+		var topRightRadiusH = Math.min(this.topRightRadiusH, bounds.width/2.0f);
+		var bottomLeftRadiusH = Math.min(this.bottomLeftRadiusH, bounds.width/2.0f);
+		var bottomRightRadiusH = Math.min(this.bottomRightRadiusH, bounds.width/2.0f);
+				
+		// Keep  radius symmetric if they were intended to be  
+		if (this.topLeftRadiusV == this.topLeftRadiusH && topLeftRadiusV != topLeftRadiusH) {
+			topLeftRadiusV = topLeftRadiusH = Math.min(topLeftRadiusV,topLeftRadiusH);
+		}
+		if (this.topRightRadiusV == this.topRightRadiusH && topRightRadiusV != topRightRadiusH) {
+			topRightRadiusV = topRightRadiusH = Math.min(topRightRadiusV,topRightRadiusH);
+		}
+        if (this.bottomLeftRadiusV == this.bottomLeftRadiusH && bottomLeftRadiusV != bottomLeftRadiusH) {
+            bottomLeftRadiusV = bottomLeftRadiusH = Math.min(bottomLeftRadiusV,bottomLeftRadiusH);
+        }
+        if (this.bottomRightRadiusV == this.bottomRightRadiusH && bottomRightRadiusV != bottomRightRadiusH) {
+            bottomRightRadiusV = bottomRightRadiusH = Math.min(bottomRightRadiusV,bottomRightRadiusH);
+        }
 		
 		canvas.save()
 		canvas.translate(-(bounds.width-bounds.height)/2.0f, (bounds.height-bounds.width)/2.0f);
