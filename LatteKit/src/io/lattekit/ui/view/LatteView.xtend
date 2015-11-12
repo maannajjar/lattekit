@@ -302,7 +302,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		forStyle.applyToView(this);
 	    var widthMeasureSpec = if (forStyle.width.inPixelsInt(androidView.context) == LayoutParams.MATCH_PARENT) {
 	    	var parentWidth = if (nonVirtualParent != null) {
-	    		nonVirtualParent.measuredSize.x;
+	    		nonVirtualParent.measuredSize.x-forStyle.marginLeft.inPixelsInt(androidView.context)-forStyle.marginRight.inPixelsInt(androidView.context);
 	    	} else windowWidth;
 	    	MeasureSpec.makeMeasureSpec(parentWidth, MeasureSpec.EXACTLY);
 	    } else if (forStyle.width.inPixelsInt(androidView.context) == LayoutParams.WRAP_CONTENT) {
@@ -313,7 +313,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	    
 		var heightMeasureSpec = if (forStyle.height.inPixelsInt(androidView.context) == LayoutParams.MATCH_PARENT) {
 	    	var parentHeight = if (nonVirtualParent != null) {
-	    		nonVirtualParent.measuredSize.y;
+	    		nonVirtualParent.measuredSize.y-forStyle.marginTop.inPixelsInt(androidView.context)-forStyle.marginBottom.inPixelsInt(androidView.context);
 	    	} else windowHeight;
 	    	MeasureSpec.makeMeasureSpec(parentHeight, MeasureSpec.EXACTLY);
 	    } else if (forStyle.height.inPixelsInt(androidView.context) == LayoutParams.WRAP_CONTENT) {
