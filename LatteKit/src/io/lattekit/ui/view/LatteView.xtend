@@ -245,7 +245,12 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			if (backgroundDrawable == null) {
 				initAndroidView();
 			}
-			transitionStyle
+			if (!isMounted) {
+				_style.cloneFrom(activeStyle);
+				_style.applyToView(this);
+			} else {
+				transitionStyle
+			}
 			onApplyAttributes?.run
 		}
 	}

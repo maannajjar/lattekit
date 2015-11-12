@@ -36,6 +36,7 @@ import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
+import android.animation.PropertyValuesHolder
 
 class Style {
 	@Accessors String definedSelector;
@@ -49,38 +50,79 @@ class Style {
     @StyleProperty public Object rippleColor = Color.TRANSPARENT;
     @StyleProperty public Object textColor = Color.BLACK;
     
-    @StyleProperty public String backgroundDrawable = "";
-    @StyleProperty public String backgroundRepeat = "no-repeat-x no-repeat-y";
-    @StyleProperty public String backgroundGravity = "fill_vertical, fill_horizontal";
-    @StyleProperty public Object backgroundFilterColor = Color.TRANSPARENT;
-    @StyleProperty public String backgroundFilterType = "SRC_ATOP";
+    @StyleProperty(animatable=false) public String backgroundDrawable = "";
+    @StyleProperty(animatable=false) public String backgroundRepeat = "no-repeat-x no-repeat-y";
+    @StyleProperty(animatable=false) public String backgroundGravity = "fill_vertical, fill_horizontal";
+    
+    @StyleProperty(shorthands=#["background-filter"])
+    public Object backgroundFilterColor = Color.TRANSPARENT;
+    
+    @StyleProperty(shorthands=#["background-filter"],animatable=false)
+    public String backgroundFilterType = "SRC_ATOP";
     
     
-    @StyleProperty public Object borderLeftColor = Color.BLACK;
-    @StyleProperty public Object borderTopColor = Color.BLACK;
-    @StyleProperty public Object borderRightColor = Color.BLACK;
-    @StyleProperty public Object borderBottomColor = Color.BLACK;
+    @StyleProperty(shorthands=#["border","border-left"])
+    public Object borderLeftColor = Color.BLACK;
+    
+    @StyleProperty(shorthands=#["border","border-top"])
+    public Object borderTopColor = Color.BLACK;
+    
+    @StyleProperty(shorthands=#["border","border-right"])
+    public Object borderRightColor = Color.BLACK;
+    
+    @StyleProperty(shorthands=#["border","border-bottom"])
+    public Object borderBottomColor = Color.BLACK;
     
         
-    @StyleProperty public NumberValue borderTopLeftRadiusH  = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderTopRightRadiusH  = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderBottomLeftRadiusH = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderBottomRightRadiusH = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty(shorthands=#["border-radius","border-top-left-radius"]) 
+    public NumberValue borderTopLeftRadiusH  = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     
-    @StyleProperty public NumberValue borderTopLeftRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderTopRightRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderBottomLeftRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderBottomRightRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty(shorthands=#["border-radius","border-top-right-radius"]) 
+    public NumberValue borderTopRightRadiusH  = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     
-    @StyleProperty public NumberValue borderLeftWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderTopWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderRightWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue borderBottomWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    @StyleProperty(shorthands=#["border-radius","border-bottom-left-radius"])
+    public NumberValue borderBottomLeftRadiusH = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+     
+    @StyleProperty(shorthands=#["border-radius","border-bottom-right-radius"])
+    public NumberValue borderBottomRightRadiusH = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["border-radius","border-top-left-radius"]) 
+    public NumberValue borderTopLeftRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["border-radius","border-top-right-radius"])
+    public NumberValue borderTopRightRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["border-radius","border-bottom-left-radius"])
+    public NumberValue borderBottomLeftRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["border-radius","border-bottom-right-radius"])
+    public NumberValue borderBottomRightRadiusV = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    
+    @StyleProperty(shorthands=#["border","border-width","border-left"])
+    public NumberValue borderLeftWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["border","border-width","border-top"])
+    public NumberValue borderTopWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["border","border-width","border-right"])
+    public NumberValue borderRightWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["border","border-width","border-bottom"])
+    public NumberValue borderBottomWidth = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
         
-    @StyleProperty public NumberValue marginTop = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue marginBottom = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue marginLeft = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue marginRight = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+       
+    @StyleProperty(shorthands=#["margin"])
+    public NumberValue marginTop = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["margin"])
+    public NumberValue marginBottom = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["margin"])
+    public NumberValue marginLeft = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["margin"])
+    public NumberValue marginRight = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     
     @StyleProperty public NumberValue elevation = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue translationY = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
@@ -88,16 +130,24 @@ class Style {
     @StyleProperty public NumberValue x;
     @StyleProperty public NumberValue y;
     
-    @StyleProperty public NumberValue paddingTop = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue paddingBottom = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue paddingLeft = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
-    @StyleProperty public NumberValue paddingRight = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     
-    @StyleProperty public String fontFamily = "default";
-    @StyleProperty public String fontStyle = "bold";
+    @StyleProperty(shorthands=#["padding"])
+    public NumberValue paddingTop = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["padding"])
+    public NumberValue paddingBottom = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["padding"])
+    public NumberValue paddingLeft = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(shorthands=#["padding"])
+    public NumberValue paddingRight = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
+    
+    @StyleProperty(animatable=false) public String fontFamily = "default";
+    @StyleProperty(animatable=false) public String fontStyle = "bold";
     @StyleProperty public NumberValue fontSize;
     
-    @StyleProperty public List<List<Object>> transitions;
+    @StyleProperty(animatable=false) public List<List<Object>> transitions;
     
     @StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
@@ -150,191 +200,38 @@ class Style {
     	]
     	return style;
     }
-    
-    def overrideWithStyle(Style overridingStyle) {
-        _backgroundColor = overridingStyle._backgroundColor ?: _backgroundColor
-        _rippleColor = overridingStyle._rippleColor ?: _rippleColor
-        _borderLeftColor = overridingStyle._borderLeftColor ?: _borderLeftColor
-        _borderTopColor = overridingStyle._borderTopColor ?: _borderTopColor
-        _borderRightColor = overridingStyle._borderRightColor ?: _borderRightColor
-        _borderBottomColor = overridingStyle._borderBottomColor ?: _borderBottomColor
         
-        _textColor = overridingStyle._textColor ?: _textColor
-        _backgroundDrawable = overridingStyle._backgroundDrawable ?: _backgroundDrawable
-        _backgroundFilterColor = overridingStyle._backgroundFilterColor ?: _backgroundFilterColor
-        _backgroundFilterType = overridingStyle._backgroundFilterType ?: _backgroundFilterType
-        
-        _backgroundRepeat = overridingStyle._backgroundRepeat ?: _backgroundRepeat
-        _backgroundGravity = overridingStyle._backgroundGravity ?: _backgroundGravity
-
-        _borderTopLeftRadiusH = overridingStyle._borderTopLeftRadiusH ?: _borderTopLeftRadiusH
-        _borderTopRightRadiusH = overridingStyle._borderTopRightRadiusH ?: _borderTopRightRadiusH
-        _borderBottomLeftRadiusH = overridingStyle._borderBottomLeftRadiusH ?: _borderBottomLeftRadiusH
-        _borderBottomRightRadiusH = overridingStyle._borderBottomRightRadiusH ?: _borderBottomRightRadiusH
-        
-        _borderTopLeftRadiusV = overridingStyle._borderTopLeftRadiusV ?: _borderTopLeftRadiusV
-        _borderTopRightRadiusV = overridingStyle._borderTopRightRadiusV ?: _borderTopRightRadiusV
-        _borderBottomLeftRadiusV = overridingStyle._borderBottomLeftRadiusV ?: _borderBottomLeftRadiusV
-        _borderBottomRightRadiusV = overridingStyle._borderBottomRightRadiusV ?: _borderBottomRightRadiusV
-
-        
-        _borderLeftWidth = overridingStyle._borderLeftWidth ?: _borderLeftWidth
-        _borderTopWidth = overridingStyle._borderTopWidth ?: _borderTopWidth
-        _borderRightWidth = overridingStyle._borderRightWidth ?: _borderRightWidth
-        _borderBottomWidth = overridingStyle._borderBottomWidth ?: _borderBottomWidth
-        
-        
-        _marginTop = overridingStyle._marginTop ?: _marginTop
-        _marginBottom = overridingStyle._marginBottom ?: _marginBottom
-        _marginLeft = overridingStyle._marginLeft ?: _marginLeft
-        _marginRight = overridingStyle._marginRight ?: _marginRight
-        _elevation = overridingStyle._elevation ?: _elevation
-        _translationX = overridingStyle._translationX ?: _translationX
-        _translationY = overridingStyle._translationY ?: _translationY
-        
-        _x = overridingStyle.x ?: _x
-        _y = overridingStyle.y ?: _y
-        
-        _paddingTop = overridingStyle._paddingTop ?: _paddingTop
-        _paddingBottom = overridingStyle._paddingBottom ?: _paddingBottom
-        _paddingLeft = overridingStyle._paddingLeft ?: _paddingLeft
-        _paddingRight = overridingStyle._paddingRight ?: _paddingRight
-        
-        _width = overridingStyle._width ?: _width
-        _height = overridingStyle._height ?: _height
-        
-        _fontStyle = overridingStyle._fontStyle ?: _fontStyle
-        _fontFamily = overridingStyle._fontFamily ?: _fontFamily
-        _fontSize = overridingStyle._fontSize ?: _fontSize
-        
-        _transitions = overridingStyle._transitions ?: _transitions;
-    }
-
-
-    def void cloneFrom(Style form) {
-        this.backgroundColor = form._backgroundColor
-        this.rippleColor = form._rippleColor
-        this.borderTopColor = form._borderTopColor
-        this.borderLeftColor = form._borderLeftColor
-        this.borderRightColor = form._borderRightColor
-        this.borderBottomColor = form._borderBottomColor
-        
-        this.textColor = form._textColor
-        this.backgroundDrawable = form._backgroundDrawable
-        this.backgroundFilterColor = form._backgroundFilterColor
-        this.backgroundFilterType = form._backgroundFilterType
-        
-        this.backgroundRepeat = form._backgroundRepeat
-        this.backgroundGravity = form._backgroundGravity
-
-        this.borderTopLeftRadiusH = form._borderTopLeftRadiusH
-        this.borderTopRightRadiusH = form._borderTopRightRadiusH
-        this.borderBottomLeftRadiusH = form._borderBottomLeftRadiusH
-        this.borderBottomRightRadiusH = form._borderBottomRightRadiusH
-        
-        this.borderTopLeftRadiusV = form._borderTopLeftRadiusV
-        this.borderTopRightRadiusV = form._borderTopRightRadiusV
-        this.borderBottomLeftRadiusV = form._borderBottomLeftRadiusV
-        this.borderBottomRightRadiusV = form._borderBottomRightRadiusV
-        
-
-        this.borderTopWidth = form._borderTopWidth
-        this.borderLeftWidth = form._borderLeftWidth
-        this.borderRightWidth = form._borderRightWidth
-        this.borderBottomWidth = form._borderBottomWidth
-        
-        this.marginTop = form._marginTop
-        this.marginBottom = form._marginBottom
-        this.marginLeft = form._marginLeft
-        this.marginRight = form._marginRight
-        this.elevation = form._elevation
-        this.translationX = form._translationX
-        this.translationY = form._translationY
-        this.paddingTop = form._paddingTop
-        this.paddingBottom = form._paddingBottom
-        this.paddingLeft = form._paddingLeft
-        this.paddingRight = form._paddingRight
-        this.width = form._width
-        this.height = form._height
-        this.fontSize = form._fontSize
-        this.fontStyle = form._fontStyle
-        this.fontFamily = form._fontFamily
-        this.transitions = form._transitions
-        this.x = form._x
-        this.y = form._y
-    }
-    
-    override Style clone() {
-        var myStyle = new Style()   
-        myStyle.cloneFrom(this);
-        return myStyle
-    }
-    
     def createAnimatorFrom(Style startStyle,LatteView<?> latteView, boolean revertToNormal) {
         val animSet = new AnimatorSet();
-        val List<String> transitionProperties = newArrayList();
-        val List<List<Object>> expandedTransitions = newArrayList();
+        val Set<String> transitionProperties = newHashSet();
+        
+        val Map<String,Set<String>> animationGroups = newHashMap(); // Group of transition by duration, delay & timing function
+        val Map<String,List<Object>> animationParams = newHashMap(); // Contains duration, delay & timing function values
+        
          if (transitions != null) {
-         	 
          	transitions.forEach[
 				val transitionName = it.get(0) as String;
-
-	        	if (transitionName == "borderRadius") {
-	        		transitionProperties += "borderTopLeftRadiusH"
-	        		transitionProperties += "borderTopRightRadiusH"
-	        		transitionProperties += "borderBottomLeftRadiusH"
-	        		transitionProperties += "borderBottomRightRadiusH"
-	        		transitionProperties += "borderTopLeftRadiusV"
-	        		transitionProperties += "borderTopRightRadiusV"
-	        		transitionProperties += "borderBottomLeftRadiusV"
-	        		transitionProperties += "borderBottomRightRadiusV"
-	        		expandedTransitions += #["borderTopLeftRadiusH", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderTopRightRadiusH", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderBottomLeftRadiusH", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderBottomRightRadiusH", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderTopLeftRadiusV", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderTopRightRadiusV", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderBottomLeftRadiusV", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderBottomRightRadiusV", it.get(1), it.get(2),it.get(3)];
-	        		
-	        	} else if (transitionName == "borderWidth") {
-	        		transitionProperties += "borderLeftWidth"
-	        		transitionProperties += "borderRightWidth"
-	        		transitionProperties += "borderBottomWidth"
-	        		transitionProperties += "borderTopWidth"
-	        		
-	        		expandedTransitions += #["borderLeftWidth", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderRightWidth", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderBottomWidth", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #["borderTopWidth", it.get(1), it.get(2),it.get(3)];
-	        		
-	        	} else if (transitionName == "background-filter") {  
-	        		transitionProperties +="backgroundFilterColor"
-	        		expandedTransitions += #["background-filter-color", it.get(1), it.get(2),it.get(3)];
-	        		
-	        	} else if (transitionName == "padding" || transitionName == "margin") { 
-	        		transitionProperties += transitionName+"Top";
-	        		transitionProperties += transitionName+"Left";
-	        		transitionProperties += transitionName+"Right";
-	        		transitionProperties += transitionName+"Bottom";
-	        		
-	        		expandedTransitions += #[transitionName+"Top", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #[transitionName+"Left", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #[transitionName+"Right", it.get(1), it.get(2),it.get(3)];
-	        		expandedTransitions += #[transitionName+"Bottom", it.get(1), it.get(2),it.get(3)];
-	        	} else {
-	        		transitionProperties += transitionName
-	        		expandedTransitions += #[it.get(0), it.get(1), it.get(2),it.get(3)];
-	        	}
-	        	
+                val duration = (it.get(1) as Integer) ?: 0;
+                val fn = (it.get(2) as String) ?: "";                
+                val delay = (it.get(3) as Integer) ?: 0;
+				
+				val groupName = it.get(1)+","+it.get(2)+","+it.get(3);
+				var group = animationGroups.get(groupName);
+				if (group == null) {
+					group = newHashSet();
+					animationGroups.put(groupName,group);
+					animationParams.put(groupName, #[duration, fn, delay]);
+				}
+				transitionProperties.add(transitionName);
+				group.add(transitionName);
 	        ]
         }
         
         val actualSize = latteView.getMeasuredSize(this);
         val startActualSize = latteView.getMeasuredSize(startStyle);
         
-        var immediateAnim =  ValueAnimator.ofInt(0,1);
-        _properties.filter[!transitionProperties.contains(it)].forEach[
+        val expandedTransitions = transitionProperties.expandShorthands
+        PROPERTIES.filter[UNANIMATED_PROPERTIES.contains(it) || !expandedTransitions.contains(it)].forEach[
             if (it == "x" && _computedX != null && revertToNormal && startStyle.x != null) {
                 startStyle.setProperty(it, new NumberValue(_computedX, TypedValue.COMPLEX_UNIT_PX));
             } else if (it == "y" && _computedY != null && revertToNormal  && startStyle.y != null) {
@@ -345,72 +242,78 @@ class Style {
             startStyle.applyToView(latteView,it)
         ]
 
-        var List<Animator> allAnims = newArrayList();
-        allAnims += immediateAnim;
-        if (transitions != null) {
-            allAnims += expandedTransitions.map[
-                val propName = it.get(0) as String;
-                val duration = (it.get(1) as Integer) ?: 0;
-                val delay = (it.get(3) as Integer) ?: 0;
-
-                var startValue = if (propName == "x") {
-                    latteView.androidView.x
-                } else if (propName == "y") {
-                     latteView.androidView.y
-                } else {
-                    startStyle.getProperty(propName);
+        var allAnims = animationGroups.keySet.map[
+        	val propertyList = animationGroups.get(it).expandShorthands;
+        	var animationParam = animationParams.get(it);
+            val duration  = animationParam.get(0) as Integer
+            val delay = animationParam.get(2) as Integer        	
+            val Map<String,String> propertyTypes = newHashMap();
+        	val List<PropertyValuesHolder> propertyValues = propertyList.map[ propName |
+ 				var startValue = if (propName == "x") {
+	                latteView.androidView.x
+	            } else if (propName == "y") {
+	                 latteView.androidView.y
+	            } else {
+	                startStyle.getProperty(propName);
+	            }
+	            var myValue = if (propName == "x" && _computedX != null && revertToNormal) {
+	                _computedX;
+	            } else if (propName == "y" && _computedY != null && revertToNormal) {
+	                 _computedY;
+	            } else {
+	                this.getProperty(propName);
+	            }
+	            if (propName == "width") {
+	                myValue = new NumberValue(actualSize.x,0);
+	                startValue = new NumberValue(startActualSize.x,0);
+	            }
+	            if (propName == "height") {
+	                myValue = new NumberValue(actualSize.y,0)
+	                startValue = new NumberValue(startActualSize.y,0)
+	            }
+	            if (myValue == null || startValue == null) {
+	                Log.d("Latte", latteView +": No start or end value for "+propName)
+	                return null;
+	            }
+            
+	            if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Integer") {
+	                var start = if (startValue instanceof NumberValue) { startValue.inPixelsInt(latteView.androidView.context); } else { startValue as Integer}
+	                var end = if (myValue instanceof NumberValue) { myValue.inPixelsInt(latteView.androidView.context); } else { myValue as Integer}
+	                propertyTypes.put(propName, "Integer")
+	                return PropertyValuesHolder.ofInt(propName, start,end);
+	            } else if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Float") {
+	                var start = if (startValue instanceof NumberValue) { startValue.inPixels(latteView.androidView.context); } else { startValue as Float;}
+	                var end = if (myValue instanceof NumberValue) { myValue.inPixels(latteView.androidView.context); } else { myValue as Float;}
+	                propertyTypes.put(propName, "Float")
+	                return PropertyValuesHolder.ofFloat(propName,start, end);
+	            }           
+	           return null;    
+        	].filterNull.toList
+        	
+        	var animator =  ValueAnimator.ofPropertyValuesHolder(propertyValues);
+        	animator.setDuration(duration);
+        	animator.setStartDelay(delay);
+            animator.addUpdateListener([ anim |
+                if (latteView.currentAnimation == animSet) { 
+                	anim.values.forEach[
+                		var value = anim.getAnimatedValue(propertyName)
+                		if (propertyTypes.get(propertyName) == "Integer") {
+	                    	startStyle.setProperty(propertyName, new NumberValue(value as Integer, 0));
+	                    } else if (propertyTypes.get(propertyName) == "Float") {
+	                    	startStyle.setProperty(propertyName, new NumberValue(value as Float, 0));
+	                    }
+                	]
+					startStyle.applyToView(latteView,propertyList)
                 }
-                var myValue = if (propName == "x" && _computedX != null && revertToNormal) {
-                    _computedX;
-                } else if (propName == "y" && _computedY != null && revertToNormal) {
-                     _computedY;
-                } else {
-                    this.getProperty(propName);
-                }
-                var ValueAnimator anim = null;
-                if (propName == "width") {
-                    myValue = new NumberValue(actualSize.x,0);
-                    startValue = new NumberValue(startActualSize.x,0);
-                }
-                if (propName == "height") {
-                    myValue = new NumberValue(actualSize.y,0)
-                    startValue = new NumberValue(startActualSize.y,0)
-                }
-                if (myValue == null || startValue == null) {
-                    Log.d("Latte", latteView +": No start or end value for "+propName)
-                    return null;
-                }
-                
-                if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Integer") {
-                    var start = if (startValue instanceof NumberValue) { startValue.inPixelsInt(latteView.androidView.context); } else { startValue as Integer}
-                    var end = if (myValue instanceof NumberValue) { myValue.inPixelsInt(latteView.androidView.context); } else { myValue as Integer}
-                    anim = ValueAnimator.ofInt(start,end);
-                    anim.addUpdateListener([ 
-                        if (latteView.currentAnimation == animSet) { 
-                            startStyle.setProperty(propName, new NumberValue(animatedValue as Integer, 0));
-                            startStyle.applyToView(latteView,propName)
-                        }
-                    ]);
-                } else if (startValue instanceof NumberValue && (startValue as NumberValue).valueType == "Float") {
-                    var start = if (startValue instanceof NumberValue) { startValue.inPixels(latteView.androidView.context); } else { startValue as Float;}
-                    var end = if (myValue instanceof NumberValue) { myValue.inPixels(latteView.androidView.context); } else { myValue as Float;}
-                    anim = ValueAnimator.ofFloat(start, end);
-                    anim.addUpdateListener([
-                        if (latteView.currentAnimation == animSet) { 
-                            startStyle.setProperty(propName, new NumberValue(animatedValue as Float, 0));
-                            startStyle.applyToView(latteView,propName)
-                        }
-                    ]);
-                }
-                if (anim != null) {
-                    anim.setDuration(duration)
-                    anim.startDelay = delay
-                }
-                
-                return anim;
-            ].filterNull
-        }
-		animSet.playTogether(allAnims);
+            ]);
+        	
+        	return animator;
+        ].toList
+        
+    	if (!allAnims.empty) {
+			animSet.playTogether(allAnims);
+		}
+		
         val nativeParent = latteView.nonVirtualParent;
         if (nativeParent != null) {
         	nativeParent.pendingChildAnimations += animSet;
@@ -907,8 +810,6 @@ class Style {
             return Color.parseColor(color as String);
         }
     }
-    
-    
     
     static def asColorDrawable(Object color) {
         return new ColorDrawable(color.asColor)
