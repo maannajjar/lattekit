@@ -651,39 +651,10 @@ class Style {
     def applyDrawableStyle(LatteView<?> view) {
 		updateDrawables(view);
 		
-        var List<List<Integer>> colorStates = newArrayList
-        val List<Integer> colorList = newArrayList
-
-        colorStates += #[ R.attr.state_enabled, R.attr.state_pressed ]
-        if (rippleColor != null) {
-            colorList += Style::asColor(rippleColor)    
-        } else {
-            colorList += Style::asColor(backgroundColor)
-        }
-        colorStates += #[R.attr.state_enabled,-R.attr.state_pressed]
-        colorList += backgroundColor.asColor;
-        
-        
-        view.backgroundDrawable.setDrawableByLayerId(0, backgroundGradientDrawable);
+		view.backgroundDrawable.setDrawableByLayerId(0, backgroundGradientDrawable);
         view.backgroundDrawable.setDrawableByLayerId(1, backgroundImageDrawable);
         view.backgroundDrawable.setDrawableByLayerId(2, borderDrawable);
-
-	
-//		var topBorder = borderTopWidth.inPixelsInt(view.androidView.context)
-//        var rightBorder = borderRightWidth.inPixelsInt(view.androidView.context)
-//        var bottomBorder = borderBottomWidth.inPixelsInt(view.androidView.context)
-//        var leftBorder = borderLeftWidth.inPixelsInt(view.androidView.context)
-//        view.backgroundDrawable.setLayerInset(0,leftBorder,topBorder,rightBorder,bottomBorder);
-//        view.backgroundDrawable.setLayerInset(1,leftBorder,topBorder,rightBorder,bottomBorder);
-
-//        view.backgroundDrawable.invalidateSelf
-
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            (view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
-        } else {        
-            (view.androidView.background as RippleDrawable).setColor(new ColorStateList(colorStates.unwrap, colorList));
-        }
     }
     
     def float[] getCornerRadii(LatteView<?> latteView) {
