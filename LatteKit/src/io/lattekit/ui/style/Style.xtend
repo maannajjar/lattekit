@@ -4,6 +4,7 @@ import android.R
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
+import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.AssetManager
@@ -16,6 +17,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
 import android.os.Handler
@@ -36,7 +38,6 @@ import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static extension io.lattekit.xtend.ArrayLiterals2.*
-import android.animation.PropertyValuesHolder
 
 class Style {
 	@Accessors String definedSelector;
@@ -157,7 +158,6 @@ class Style {
     
     
     static Set<String> DRAWABLE_PROPS = newHashSet("borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundFilter","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth")
-    static Set<String> SHAPE_PROPS = newHashSet("borderColor","borderTopColor","borderLeftColor","borderRightColor","borderBottomColor","borderRadius","borderTopLeftRadiusV","borderTopRightRadiusV","borderBottomLeftRadiusV","borderBottomRightRadiusV","borderTopLeftRadiusH","borderTopRightRadiusH","borderBottomLeftRadiusH","borderBottomRightRadiusH","backgroundDrawable","backgroundFilterColor","backgroundFilterType","backgroundFilter","backgroundRepeat","backgroundGravity","backgroundColor","rippleColor","borderWidth","borderLeftWidth","borderRightWidth","borderTopWidth","borderBottomWidth");
     
     static Map<String,Typeface> allFonts;
     
@@ -308,7 +308,7 @@ class Style {
             ]);
         	
         	return animator;
-        ].toList
+        ].sortBy[ startDelay ]
         
     	if (!allAnims.empty) {
 			animSet.playTogether(allAnims);
@@ -694,17 +694,11 @@ class Style {
     	return #[topLeft,topLeft,topRight,topRight,bottomRight,bottomRight,bottomLeft,bottomLeft];
     }
     
-    def applyDrawableShape(LatteView<?> latteView) {
-        var shape = new RoundRectShape(getCornerRadii(latteView), null,null);
-        latteView.shapeDrawable.shape = shape;
-//      Todo: investigate whether we need to call this
-//      latteView.shapeDrawable.invalidateSelf
+    def getShape(LatteView<?> latteView) {
+        return new RoundRectShape(getCornerRadii(latteView), null,null);
     }
     
-    def isShapeProperty(String propertyName) {
-    	return SHAPE_PROPS.contains(propertyName);
-    }
-    
+
     def isDrawableProperty(String propertyName) {
     	return DRAWABLE_PROPS.contains(propertyName);
     }
@@ -721,10 +715,6 @@ class Style {
         if (applyAll || properties.findFirst[ isDrawableProperty ] != null) {
         	applyDrawableStyle(latteView);
         }
-        if (applyAll || properties.findFirst[ isShapeProperty ]  != null) {
-        	applyDrawableShape(latteView);
-        }
-        
         if (applyAll || properties.contains("translationY")) androidView.translationY = translationY.inPixels(androidView.context)
         if (applyAll || properties.contains("translationX")) androidView.translationX = translationX.inPixels(androidView.context);
         

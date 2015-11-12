@@ -333,7 +333,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			backgroundDrawable.setId(0,0)
 			backgroundDrawable.setId(1,1)
 			backgroundDrawable.setId(2,2)
-			shapeDrawable = new ShapeDrawable();
+			shapeDrawable = new ShapeDrawable(computedStyleTouched.getShape(this));
 			var rippleColor = new ColorStateList( #[ #[] ], #[ Style.asColor(computedStyleTouched.rippleColor) ]);
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 				androidView.background = new android.graphics.drawable.RippleDrawable(rippleColor,backgroundDrawable, shapeDrawable);
