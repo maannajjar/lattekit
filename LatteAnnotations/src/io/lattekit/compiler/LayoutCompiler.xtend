@@ -647,6 +647,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		var childCode = ctx.blockStatement.map[
 			visit.generatedCode
 		]
+		
+
+		val isLatteSubclass = jvmContext.myTypeReference.isAssignableFrom(transformationContext.newTypeReference(transformationContext.findTypeGlobally(latteViewType)));
 		var childrenProc = '''
 		final org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»> «variableName»_childrenProc = new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»>() {
 			public void apply(final «latteViewType» it) {
@@ -662,7 +665,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		«childrenProc»
 		«IF rootView»
 			«variableName».processNode(«attachToObject», «variableName»_attrsProc, «variableName»_childrenProc); 
-			«IF attachToObject != null»this.addChild(0,«variableName»);«ENDIF»
+			«IF attachToObject != null && isLatteSubclass»this.addChild(0,«variableName»);«ENDIF»
 		«ELSE»
 			«variableName».processNode(it, «variableName»_attrsProc, «variableName»_childrenProc);
 		«ENDIF»
