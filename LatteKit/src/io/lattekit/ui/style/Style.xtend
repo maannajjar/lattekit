@@ -1,6 +1,5 @@
 package io.lattekit.ui.style;
 
-import android.R
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
@@ -8,7 +7,6 @@ import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.AssetManager
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PorterDuff.Mode
 import android.graphics.Shader.TileMode
@@ -17,7 +15,6 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
 import android.os.Handler
@@ -28,7 +25,6 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
 import android.widget.TextView
-import codetail.graphics.drawables.RippleDrawable
 import io.lattekit.StyleProperty
 import io.lattekit.ui.drawable.BorderDrawable
 import io.lattekit.ui.view.LatteView
@@ -36,8 +32,6 @@ import java.util.List
 import java.util.Map
 import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
-
-import static extension io.lattekit.xtend.ArrayLiterals2.*
 
 class Style {
 	@Accessors String definedSelector;
