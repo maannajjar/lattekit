@@ -17,14 +17,15 @@ class LatteActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		latteView = new LatteView() {
 			override render() {
-				this.addChild(0, LatteActivity.this.render());
 				this.loadStylesheets(LatteActivity.this.cssFiles);
+				this.addChild(0, LatteActivity.this.render());
 			}
 		}
+		latteView.loadStylesheets(cssFiles);
 		androidView = latteView.buildView(this);
 		setContentView(androidView);
 	}
-
+	
 	def onStateChanged() {
 		latteView.onStateChanged();		
 	}
@@ -35,7 +36,7 @@ class LatteActivity extends Activity {
 	
 	@Layout
 	def LatteView<?> render() '''
-		<FrameLayout style={{width:"match_parent", height:"match_parent"}}>
+		<FrameLayout style={{backgroundColor:"#ffffff"; width:"match_parent", height:"match_parent"}}>
 		</FrameLayout>
 	'''
 }

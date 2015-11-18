@@ -36,7 +36,6 @@ import org.eclipse.xtext.generator.IGenerator
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class LatteCSSGenerator implements IGenerator {
-	
 
 	public static final int COMPLEX_UNIT_PX = 0;
     public static final int COMPLEX_UNIT_DIP = 1;
@@ -48,12 +47,14 @@ class LatteCSSGenerator implements IGenerator {
     val Map<String,Definition> definitions = newHashMap();
     val Map<String,Integer>objecsCount = newHashMap();
 	override void doGenerate(Resource resource, IFileSystemAccess fsa) {
+		
 		var className = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL,resource.URI.lastSegment.replace(".css",""))
 		className += "Stylesheet";
-		var packageName = "io.lattekit.ui.style"
+		var packageName = resource.URI.segments.subList(3,resource.URI.segments.length-1).join(".");
+		var packagePath = resource.URI.segments.subList(3,resource.URI.segments.length-1).join("/");
 		definitions.clear		
 		objecsCount.clear
-		fsa.generateFile("io/lattekit/ui/style/"+className+".java", resource.compile(packageName,className))
+		fsa.generateFile(packagePath+"/"+className+".java", resource.compile(packageName,className))
 	}
 	
 	def compile(Resource resource,String packageName, String className) '''
@@ -63,10 +64,15 @@ class LatteCSSGenerator implements IGenerator {
 		import android.graphics.Color;
 		import java.util.ArrayList;
 		import java.util.List;
+		import io.lattekit.ui.style.Stylesheet;
 		
 		public class «className» extends Stylesheet {
+			
+			static {
+				new «className»();
+			}
 			public «className»() {
-				Stylesheet.registerStylesheet("«resource.URI.path»",this);
+				Stylesheet.registerStylesheet("«resource.URI.lastSegment»",this);
 			}
 			
 			@Override
