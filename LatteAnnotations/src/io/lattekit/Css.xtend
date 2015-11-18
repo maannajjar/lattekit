@@ -23,12 +23,6 @@ class CssProcessor extends AbstractClassProcessor {
 		val filesList = annotatedClass.annotations.findFirst[ a|
 			a.annotationTypeDeclaration == Css.newTypeReference().type
 		].getStringArrayValue("files")
-		annotatedClass.addMethod("initStatic") [
-			body = '''
-			'''
-		]
-		var ref = new Reflections();
-		val classes = ref.getTypesAnnotatedWith(CssFile);
 		
 		annotatedClass.addMethod("getCssFiles") [
 			returnType = List.newTypeReference(findTypeGlobally("io.lattekit.ui.style.Stylesheet").newTypeReference());
