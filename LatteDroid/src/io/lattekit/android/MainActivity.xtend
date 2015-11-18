@@ -1,5 +1,6 @@
 package io.lattekit.android
 
+import android.util.Log
 import android.view.View
 import android.view.View.OnClickListener
 import android.widget.ImageView
@@ -12,7 +13,6 @@ import java.util.List
 
 class MainActivity extends LatteActivity implements OnClickListener {
 
-	var latteCss = #[new MainStylesheet()];
 	
 	String myTitle = "Hello";
 	String currentTheme = "mainTheme"
@@ -31,21 +31,25 @@ class MainActivity extends LatteActivity implements OnClickListener {
 	@Layout(imports=#["io.lattekit.android", "android.support.v4.view"])
 	override render() '''
 		<LinearLayout cls={"container "+theme} orientation="vertical">
+			
 			<LinearLayout orientation="horizontal"  cls="topBar" style={{width:"match_parent"}}>
 			</LinearLayout>
 			for (i: 1 ..3) {
-				<Button cls="mainButton" text="Hi There" style={{fontStyle: "bold-italic"}}  style={{marginLeft: "50dp"}} onClickListener={MainActivity.this} alignParentEnd={true}/>
+				<Button cls="mainButton" text={"Hi "+theme} style={{fontStyle: "bold-italic"}}  style={{marginLeft: "50dp"}} onClickListener={MainActivity.this} alignParentEnd={true}/>
 			}
 		
 		</LinearLayout>
 	'''
 
-
+	override getCssFiles() {
+		return #[new MainStylesheet()]
+	}
 	override onClick(View v) {
 		myTitle ="WHAT IS UP";
 		myBg = "#000000";
 		theme = if (theme == "light") "dark" else "light";
 		myBgImage = "ic_launcher";
+		onStateChanged();
 	}
 
 }
