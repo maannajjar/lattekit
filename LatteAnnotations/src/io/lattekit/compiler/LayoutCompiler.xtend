@@ -465,17 +465,17 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	
 	override visitStyleMapLiteralBody(StyleMapLiteralBodyContext ctx) {
 		var compiled = new CompiledExpression();
-		var styleType = transformationContext.findTypeGlobally("io.lattekit.ui.Style")
+		var styleType = transformationContext.findTypeGlobally("io.lattekit.ui.style.Style")
 		compiled.type = Type.fromTypeReference(transformationContext.newTypeReference(styleType), styleType as ClassDeclaration);
 		
-		compiled.generatedCode = "io.lattekit.ui.Style.newStyle("+ctx.styleMapLiteralElement.map[
+		compiled.generatedCode = "io.lattekit.ui.style.Style.newStyle("+ctx.styleMapLiteralElement.map[
 			var valueCode = if (value != null) {
 				value.visit.generatedCode
 			} else if (sizeLiteral != null) {
 				switch (sizeLiteral.text) {
-					case "fill_parent": "new io.lattekit.ui.NumberValue(io.lattekit.ui.LatteView.MATCH_PARENT,0)"
-					case "match_parent": "new io.lattekit.ui.NumberValue(io.lattekit.ui.LatteView.MATCH_PARENT,0)"
-					case "wrap_content": "new io.lattekit.ui.NumberValue(io.lattekit.ui.LatteView.WRAP_CONTENT,0)"
+					case "fill_parent": "new io.lattekit.ui.style.NumberValue(io.lattekit.ui.view.LatteView.MATCH_PARENT,0)"
+					case "match_parent": "new io.lattekit.ui.style.NumberValue(io.lattekit.ui.view.LatteView.MATCH_PARENT,0)"
+					case "wrap_content": "new io.lattekit.ui.style.NumberValue(io.lattekit.ui.view.LatteView.WRAP_CONTENT,0)"
 				}
 				
 			}
@@ -497,9 +497,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		compiled.generatedVariableName = variableName;
 		viewStack += variableName 
 		var rootView = viewStack.length == 1
-		var latteViewType = "io.lattekit.ui.LatteView";
+		var latteViewType = "io.lattekit.ui.view.LatteView";
 		
-		var importList = newArrayList("io.lattekit.ui", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget", "android.view");
+		var importList = newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget", "android.view");
 		
 				
 		var isNativeView = false;
@@ -647,6 +647,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		var childCode = ctx.blockStatement.map[
 			visit.generatedCode
 		]
+		
+
+		val isLatteSubclass = jvmContext.myTypeReference.isAssignableFrom(transformationContext.newTypeReference(transformationContext.findTypeGlobally(latteViewType)));
 		var childrenProc = '''
 		final org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»> «variableName»_childrenProc = new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»>() {
 			public void apply(final «latteViewType» it) {
@@ -662,7 +665,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		«childrenProc»
 		«IF rootView»
 			«variableName».processNode(«attachToObject», «variableName»_attrsProc, «variableName»_childrenProc); 
-			«IF attachToObject != null»this.addChild(0,«variableName»);«ENDIF»
+			«IF attachToObject != null && isLatteSubclass»this.addChild(0,«variableName»);«ENDIF»
 		«ELSE»
 			«variableName».processNode(it, «variableName»_attrsProc, «variableName»_childrenProc);
 		«ENDIF»

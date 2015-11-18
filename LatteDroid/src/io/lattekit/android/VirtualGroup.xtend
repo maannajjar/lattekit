@@ -1,12 +1,10 @@
 package io.lattekit.android
 
 import android.graphics.Color
-import io.lattekit.Latte
 import io.lattekit.Layout
 import io.lattekit.State
-import io.lattekit.ui.LatteView
-import io.lattekit.ui.Style
-
+import io.lattekit.ui.style.Style
+import io.lattekit.ui.view.LatteView
 
 class VirtualGroup extends LatteView {
 	
@@ -24,9 +22,6 @@ class VirtualGroup extends LatteView {
 	@Layout
 	override render() '''
 		<LinearLayout orientation="vertical" style={myStyle}>
-		for (int i =0; i< @totalRows; i++) {
-			final int j = i;
-		} 
 		</LinearLayout>
 	'''
 //	

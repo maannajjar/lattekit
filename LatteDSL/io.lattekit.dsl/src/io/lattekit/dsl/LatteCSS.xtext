@@ -15,8 +15,10 @@ Definition:
 ;
 
 Selector:
-	simpleSelector+=SimpleSelector+	
+	firstSelector=SimpleSelector next+=(NextSelector)*
 ;
+
+NextSelector: relationSymbol='>'? selector=SimpleSelector;
 
 SimpleSelector:
 	(element=ID ) |

@@ -19,7 +19,12 @@
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//Definition/properties"/>
     </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//Selector">
-      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//Selector/simpleSelector"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//Selector/firstSelector"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//Selector/next"/>
+    </genClasses>
+    <genClasses ecoreClass="LatteCSS.ecore#//NextSelector">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//NextSelector/relationSymbol"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference LatteCSS.ecore#//NextSelector/selector"/>
     </genClasses>
     <genClasses ecoreClass="LatteCSS.ecore#//SimpleSelector">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute LatteCSS.ecore#//SimpleSelector/element"/>

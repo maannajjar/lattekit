@@ -1,14 +1,13 @@
 package io.lattekit.android
 
-import android.content.Context
 import android.graphics.Color
 import android.view.MotionEvent
-import android.view.View
 import io.lattekit.Layout
 import io.lattekit.State
-import io.lattekit.stylesheet.MainStylesheet
-import io.lattekit.ui.LatteView
-import io.lattekit.ui.Style
+import io.lattekit.android.R.style
+import io.lattekit.ui.style.MainStylesheet
+import io.lattekit.ui.style.Style
+import io.lattekit.ui.view.LatteView
 
 class TestViewController extends LatteView {
 
@@ -26,15 +25,16 @@ class TestViewController extends LatteView {
 	@State Style currentStyle = style;
 	@State var int myColor = Color.GREEN;
 
+
 	@Layout(imports=#["io.lattekit.android", "android.support.v4.view"])
 	override render() '''
-		<RelativeLayout style="width: match_parent;height: match_parent">
-			<CheckBox id="Button1" alignParentStart={true}  class="mainButton" label="Button 1" />
-			<Button cls="mainButton" onClick={System.out.println("CLICKED ON "+$0); } style="font-size: 10" id="Button2" alignParentEnd={true} text="Button 2" />
-		
-		</RelativeLayout>
+		<LinearLayout orientation="vertical">
+			for (var i = 0;i<totalRows;i++) {
+				<Button cls="mainButton" alignParentEnd={true} text="Button 2" />
+			}
+		</LinearLayout>
 	'''
-
+	
 	def void addRow(VirtualGroup virtualGroup) {
 		virtualGroup.totalRows = virtualGroup.totalRows + 1;
 	}
@@ -43,10 +43,5 @@ class TestViewController extends LatteView {
 		this.anchor = a;
 	}
 
-	@Layout
-	def View getView(Context context) '''
-		<RelativeLayout>
-		</RelativeLayout>
-	'''
 
 }
