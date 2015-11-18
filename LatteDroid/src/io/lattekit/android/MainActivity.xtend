@@ -1,17 +1,16 @@
 package io.lattekit.android
 
-import android.app.Activity
-import android.os.Bundle
 import android.view.View
 import android.view.View.OnClickListener
 import android.widget.ImageView
-import io.lattekit.Latte
+import io.lattekit.Layout
+import io.lattekit.ui.LatteActivity
 import io.lattekit.ui.style.MainStylesheet
 import io.lattekit.ui.style.Style
 import io.lattekit.ui.view.LatteView
 import java.util.List
 
-class MainActivity extends Activity implements OnClickListener {
+class MainActivity extends LatteActivity implements OnClickListener {
 
 	var latteCss = #[new MainStylesheet()];
 	
@@ -29,8 +28,8 @@ class MainActivity extends Activity implements OnClickListener {
 	var String theme = "light";
 	var i = 0;
 
-	@Latte
-	var mainView = '''
+	@Layout(imports=#["io.lattekit.android", "android.support.v4.view"])
+	override render() '''
 		<LinearLayout cls={"container "+theme} orientation="vertical">
 			<LinearLayout orientation="horizontal"  cls="topBar" style={{width:"match_parent"}}>
 			</LinearLayout>
@@ -40,33 +39,13 @@ class MainActivity extends Activity implements OnClickListener {
 		
 		</LinearLayout>
 	'''
-	
-	@Override 
-	override protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState)
-		contentView = mainView.buildView(this);
-//		setContentView(R.layout.activity_main);
-//		var button = findViewById(R.id.test) as Button;
-//		
-//		var ripple = new RippleDrawable(new ColorStateList(#[#[
-//		]],#[ Color.BLACK ]), new ColorDrawable(Color.WHITE),null );
-//		button.background = resources.getDrawable(R.drawable.latte_view_background);
-//		findViewById(R.id.test2).background = ripple;
 
-	}
 
 	override onClick(View v) {
 		myTitle ="WHAT IS UP";
 		myBg = "#000000";
 		theme = if (theme == "light") "dark" else "light";
 		myBgImage = "ic_launcher";
-		mainView.onStateChanged("Clicked");
-		mainView.onStateChanged("Clicked");
-		mainView.onStateChanged("Clicked");
-		mainView.onStateChanged("Clicked");
-		mainView.onStateChanged("Clicked");
 	}
-
-
 
 }
