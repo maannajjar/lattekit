@@ -3,6 +3,7 @@
 	elevation: 5dp;
 	background-color:#aaaaaa;
 }
+
 .hello:touched {
 	elevation: 10dp;
 	ripple-color: #000000;
@@ -16,17 +17,16 @@
 .topBar {
 	height: 50dp;
 	border-radius:0 0 0 0;
-	transition: height 300ms 0ms, border-radius 300ms 0ms;
-	
+	transition: height 500ms 0ms, border-radius 200ms 1000ms;
 }
+
 .light > .topBar {
 	background-color: #ffffff;
 	background-drawable: "instapaper_logo";
 	background-gravity: center;
 	elevation: 2dp;
-	border-bottom: 1dp solid #cccccc;
+	border: 1dp solid #cccccc;
 	margin-bottom:40dp;
-
 }
 .dark > .topBar {
 	background-color: #000000;
@@ -40,6 +40,7 @@
 	height: 90dp;
 	
 	border-radius: 50dp 50dp 50dp 50dp;
+	
 		
 }
 
@@ -53,18 +54,18 @@
 	border-left-width: 10dp;
 	border-right-width: 20dp;
 	border-top-left-radius: 10dp;
-   	transition: border-radius 300ms 0ms, border-width 300ms 0ms;
-   
+   	transition: border-radius 300ms 300ms, width 300ms 0ms, height 300ms 0ms;
     elevation: 5dp;
 }
 
 .mainButton:touched {
-	
+	width: match_parent;
+	height: match_parent;
     border-radius: 0dp;
     background-color:#eeeeee;
     ripple-color:#ff0000;
-	
 }
+
 .XmainButton {
 	border-color: #aaaaaa;
 	width: 120dp;

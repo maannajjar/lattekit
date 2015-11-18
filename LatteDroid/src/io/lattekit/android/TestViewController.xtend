@@ -4,8 +4,6 @@ import android.graphics.Color
 import android.view.MotionEvent
 import io.lattekit.Layout
 import io.lattekit.State
-import io.lattekit.android.R.style
-import io.lattekit.ui.style.MainStylesheet
 import io.lattekit.ui.style.Style
 import io.lattekit.ui.view.LatteView
 
