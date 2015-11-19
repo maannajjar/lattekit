@@ -2,19 +2,17 @@ package io.lattekit.android
 
 import android.view.View
 import android.view.View.OnClickListener
-import io.lattekit.Css
+import io.lattekit.CSS
 import io.lattekit.Layout
 import io.lattekit.ui.LatteActivity
 
-@Css(files=#["io/lattekit/android/main.css"])
+@CSS(files=#["io.lattekit.android/main.css"])
 class MainActivity extends LatteActivity implements OnClickListener {
 
 	String myTitle = "Hello";
-	
 	var String myBg = "#ffffff";
 	var String myBgImage = null;
 	var String theme = "light";
-
 
 	@Layout
 	override render() '''
