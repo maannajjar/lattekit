@@ -17,7 +17,7 @@ class Stylesheet {
 	def static Stylesheet getStylesheet(String fileName) {
 		var parts = fileName.split("/");
 		var clsName = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL,parts.last.replace(".css",""))+"Stylesheet";
-		var packageName = parts.subList(0,parts.length-1).join(".");
+		var packageName = parts.get(0);
 		return Class.forName(packageName+"."+clsName).constructors.get(0).newInstance() as Stylesheet; 
 	}
 	

@@ -6,11 +6,8 @@ import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 
-annotation CssFile {
-	String fileName;
-}
 @Active(typeof(CssProcessor))
-annotation Css {
+annotation CSS {
 	String[] files = #[];
 }
 
@@ -20,7 +17,7 @@ class CssProcessor extends AbstractClassProcessor {
 		super.doTransform(annotatedClass, context)
 		
 		val filesList = annotatedClass.annotations.findFirst[ a|
-			a.annotationTypeDeclaration == Css.newTypeReference().type
+			a.annotationTypeDeclaration == CSS.newTypeReference().type
 		].getStringArrayValue("files")
 		
 		annotatedClass.addMethod("getCssFiles") [
