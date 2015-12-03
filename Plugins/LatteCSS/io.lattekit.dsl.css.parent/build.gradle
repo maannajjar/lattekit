@@ -1,0 +1,33 @@
+buildscript {
+	repositories {
+		jcenter()
+	}
+	dependencies {
+		classpath 'org.xtend:xtend-gradle-plugin:0.4.12'
+		classpath 'org.xtext:xtext-idea-gradle-plugin:0.3.25'
+	}
+}
+
+subprojects {
+	ext.xtextVersion = '2.9.0'
+	repositories {
+		jcenter()
+	}
+	
+	apply plugin: 'java'
+	apply plugin: 'org.xtend.xtend'
+	apply from: "${rootDir}/gradle/source-layout.gradle"
+	apply from: "${rootDir}/gradle/maven-deployment.gradle"
+	apply plugin: 'eclipse'
+	apply plugin: 'idea'
+	
+	group = 'io.lattekit.dsl.css'
+	version = '1.0.0-SNAPSHOT'
+	
+	sourceCompatibility = '1.7'
+	targetCompatibility = '1.7'
+	
+	configurations.all {
+		exclude group: 'asm'
+	}
+}

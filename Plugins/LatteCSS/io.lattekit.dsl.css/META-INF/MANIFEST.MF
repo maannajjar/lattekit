@@ -1,0 +1,29 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: io.lattekit.dsl.css
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: io.lattekit.dsl.css; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.5.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib,
+ org.antlr.runtime,
+ org.eclipse.xtext.util,
+ org.eclipse.xtend.lib,
+ org.eclipse.emf.common
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Export-Package: io.lattekit.dsl.css.latteCss.impl,
+ io.lattekit.dsl.css.latteCss.util,
+ io.lattekit.dsl.css.services,
+ io.lattekit.dsl.css.latteCss,
+ io.lattekit.dsl.css.scoping,
+ io.lattekit.dsl.css.generator,
+ io.lattekit.dsl.css.parser.antlr,
+ io.lattekit.dsl.css.validation,
+ io.lattekit.dsl.css.serializer,
+ io.lattekit.dsl.css.parser.antlr.internal,
+ io.lattekit.dsl.css
+Import-Package: org.apache.log4j

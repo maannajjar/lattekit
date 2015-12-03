@@ -1,0 +1,3 @@
+includeFlat 'io.lattekit.dsl.css'
+includeFlat 'io.lattekit.dsl.css.ide'
+includeFlat 'io.lattekit.dsl.css.idea'

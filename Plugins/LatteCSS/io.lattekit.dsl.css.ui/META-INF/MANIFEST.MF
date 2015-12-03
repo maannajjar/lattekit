@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: io.lattekit.dsl.css.ui
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: io.lattekit.dsl.css.ui; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: io.lattekit.dsl.css,
+ io.lattekit.dsl.css.ide,
+ org.eclipse.xtext.ui,
+ org.eclipse.xtext.ui.shared,
+ org.eclipse.xtext.ui.codetemplates.ui,
+ org.eclipse.ui.editors;bundle-version="3.5.0",
+ org.eclipse.ui.ide;bundle-version="3.5.0",
+ org.eclipse.ui,
+ org.eclipse.compare,
+ org.eclipse.xtext.builder,
+ org.eclipse.xtend.lib;resolution:=optional,
+ org.eclipse.xtext.xbase.lib
+Import-Package: org.apache.log4j
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Export-Package: io.lattekit.dsl.css.ui.quickfix,
+ io.lattekit.dsl.css.ui.internal,
+ io.lattekit.dsl.css.ui.contentassist
+Bundle-Activator: io.lattekit.dsl.css.ui.internal.CssActivator

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugins>
+	<plugin
+		id="io.lattekit.dsl.css.idea"
+		url="/Users/maan/Development/IdeaPluginsRepo//io.lattekit.dsl.css.idea-1.0.0-SNAPSHOT.zip"
+		version="1.0.0-SNAPSHOT"
+	/>
+</plugins>

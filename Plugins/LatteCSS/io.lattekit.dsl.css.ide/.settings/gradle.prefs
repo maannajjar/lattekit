@@ -1,0 +1,8 @@
+{
+	"1.0": {
+		"project_path": ":io.lattekit.dsl.css.ide",
+		"project_dir": "/Users/maan/git/lattekit-android/Plugins/LatteCSS/io.lattekit.dsl.css.ide",
+		"connection_project_dir": "/Users/maan/git/lattekit-android/Plugins/LatteCSS/io.lattekit.dsl.css.parent",
+		"connection_gradle_distribution": "GRADLE_DISTRIBUTION(WRAPPER)"
+	}
+}
