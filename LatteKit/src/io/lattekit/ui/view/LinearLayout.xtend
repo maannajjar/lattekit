@@ -3,11 +3,11 @@ package io.lattekit.ui.view
 import android.content.Context
 import android.view.View
 import android.widget.LinearLayout.LayoutParams
-import io.lattekit.State
+import org.eclipse.xtend.lib.annotations.Accessors
 
 public class LinearLayout extends LatteView<android.widget.LinearLayout> {
 	
-	@State String orientation;
+	@Accessors String orientation;
 	def void init() {
 	}
 	

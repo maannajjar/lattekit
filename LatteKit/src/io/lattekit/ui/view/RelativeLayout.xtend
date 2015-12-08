@@ -1,10 +1,8 @@
 package io.lattekit.ui.view
 
-import android.R.id
 import android.content.Context
 import android.util.Log
 import android.view.View
-import io.lattekit.ui.view.LatteView
 import java.util.HashMap
 
 public class RelativeLayout extends LatteView<android.widget.RelativeLayout> {
@@ -40,7 +38,7 @@ public class RelativeLayout extends LatteView<android.widget.RelativeLayout> {
 		]		
 	}
 	
-	def addLayoutRules(LatteView virtualView, HashMap<String,Integer> viewIds) {
+	def addLayoutRules(LatteView<?> virtualView, HashMap<String,Integer> viewIds) {
 		var rootAndroidView = virtualView.rootAndroidView
 		var oldParams = rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams;
 		val newParams = new android.widget.RelativeLayout.LayoutParams(oldParams); 
