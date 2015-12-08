@@ -261,6 +261,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 
 	ContextAdapter jvmContext = new ContextAdapter() {
 		override findClass(String typeName) {
+			
 			var imports = #["", "java.lang"];
 			var results = imports.map[
 				try { 
@@ -860,10 +861,14 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					if (pkg != null) {
 						compiled.type = Type.packageRef(pkg);
 					} else {
-						// Name under package not found
+						// Name under package not found. Assume it's package for now
+						compiled.type = new Type();
+						compiled.type.isPackageRef = true;
+						compiled.type.typeName = ctx.Identifier.text;
+						
 					}
 				}
-				compiled.generatedCode = left.generatedCode +"."+ctx.member;
+				compiled.generatedCode = left.generatedCode +"."+ctx.member.text;
 				
 			} else if (left.type.isClassRef) {
 				// Look for either static member or inner class
@@ -1126,6 +1131,10 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 							var pkg = jvmContext.findPackage(ctx.Identifier.text)
 							if (pkg != null) {
 								compiled.type = Type.packageRef(pkg);
+							} else {
+								compiled.type = new Type();
+								compiled.type.isPackageRef = true;
+								compiled.type.typeName = ctx.Identifier.text;
 							}
 						}
 					} 
