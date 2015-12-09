@@ -702,7 +702,7 @@ class Style {
 	            androidView.setTextColor(textColor.asColor);
 	        }
 	        if ((applyAll || properties.contains("fontSize")) && fontSize != null) {
-                androidView.textSize = fontSize.inPixelsInt(androidView.context);
+                androidView.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize.inPixelsInt(androidView.context));
             }
             
 	        if ((applyAll || properties.contains("fontFamily")) && fontFamily != null) {
