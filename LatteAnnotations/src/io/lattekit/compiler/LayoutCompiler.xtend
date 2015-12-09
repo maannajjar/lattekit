@@ -946,9 +946,11 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		} else if (ctx.method_call_expr != null) {
 			var left = visit(ctx.method_call_expr)
 			val List<CompiledExpression> paramsList = newArrayList();// ctx.invocation_parameters.expression.map[ visit ].toList
-			ctx.invocation_parameters.expression.forEach[
-				paramsList += it.visit
-			]
+			if (ctx.invocation_parameters != null) {
+				ctx.invocation_parameters.expression.forEach[
+					paramsList += it.visit
+				]
+			}
 			
 			
 			var targetMethod = left.mutableAllMethods.filter[
