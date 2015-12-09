@@ -669,6 +669,10 @@ class Style {
     }
 
     def applyToView(LatteView<?> latteView, String... properties) {
+    	if (latteView.androidView == null) {
+    		return;
+    	}
+    	
     	initFonts(latteView.androidView.context)
     	var applyAll = properties.isEmpty
     	

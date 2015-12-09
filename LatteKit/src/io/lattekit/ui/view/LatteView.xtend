@@ -231,11 +231,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		}
 	}
 	
-	def void loadStylesheet(Stylesheet stylesheet) {
-		stylesheet.apply(this.stylesheet);
-	}
-
-	def void loadStylesheets(List<? extends Stylesheet> stylesheets) {
+	def void loadStylesheet(Stylesheet... stylesheets) {
 		stylesheets.forEach[ it.apply(this.stylesheet) ];
 	}
 		
@@ -418,6 +414,11 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			layoutProc = children as (LatteView<?>)=>void;
 			children.apply(this as T);
 		}
+
+		for (var i =0 ; i < this.children.size; i++) {
+			var newChild = this.children.get(i);
+			this.addChild(i,newChild);
+		}
 		isRendering = false;
 	}
 
@@ -556,7 +557,6 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 
 	def View buildView(Context context) {
 		activity = context;
-		this.processNode(null,null, null);
 		this.render();
 		var layoutParam = new FrameLayout.LayoutParams(this.normalStyle.width.inPixelsInt(context), this.normalStyle.height.inPixelsInt(context));
 		this.buildAndroidViewTree(context, layoutParam)

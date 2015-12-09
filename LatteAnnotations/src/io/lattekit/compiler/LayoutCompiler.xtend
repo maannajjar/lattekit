@@ -36,7 +36,7 @@ import io.lattekit.compiler.LatteXtendParser.StyleMapLiteralBodyContext
 
 class LayoutCompiler {
 
-	def static compileLayout( extension TransformationContext context, String input, MutableClassDeclaration myClass, String attachToObjectName) {
+	def static compileLayout( extension TransformationContext context, String input, MutableClassDeclaration myClass, String attachToObjectName,List<String> importList) {
 		var lexer = new LatteXtendLexer(new ANTLRInputStream(new StringReader(input)));
     	var parser = new LatteXtendParser(new CommonTokenStream(lexer));
 		var walker = new LatteLayoutCompiler;
@@ -44,6 +44,7 @@ class LayoutCompiler {
 		walker.transformationContext = context;
 		walker.myTypeReference = myClass.newTypeReference()
 		walker.attachToObject = attachToObjectName
+		walker.importList = importList;
 		var node = walker.visit(parser.blockBody);
 		return node.generatedCode
 	}
@@ -254,6 +255,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	@Accessors TransformationContext transformationContext;
 	List<Map<String,Type>> scope = newArrayList();
 	List<String> viewStack = newArrayList();
+	@Accessors List<String> importList;
 	
 	int viewCounter = 0;
 	
@@ -500,14 +502,14 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		var rootView = viewStack.length == 1
 		var latteViewType = "io.lattekit.ui.view.LatteView";
 		
-		var importList = newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget", "android.view");
+		var imports = importList + newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget", "android.view");
 		
 				
 		var isNativeView = false;
 		var androidViewType = "";
 		var androidCreator = "";
 		val List<String> androidAttrsProc = newArrayList();
-		var findViewType = transformationContext.findViewType(ctx.el.text,importList);
+		var findViewType = transformationContext.findViewType(ctx.el.text,imports.toList);
 		if (findViewType == null) {
 			// TODO :Error
 		}  else {
@@ -666,7 +668,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		«childrenProc»
 		«IF rootView»
 			«variableName».processNode(«attachToObject», «variableName»_attrsProc, «variableName»_childrenProc); 
-			«IF attachToObject != null && isLatteSubclass»this.addChild(0,«variableName»);«ENDIF»
+			«IF attachToObject != "null"»this.addChild(0,«variableName»);«ENDIF»
 		«ELSE»
 			«variableName».processNode(it, «variableName»_attrsProc, «variableName»_childrenProc);
 		«ENDIF»

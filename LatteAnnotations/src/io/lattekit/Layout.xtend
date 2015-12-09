@@ -33,15 +33,15 @@ class LayoutProcessor extends AbstractMethodProcessor {
 			importList += importListParam 
 		}
 
-		val isAdHoc = !(annotatedMethod.simpleName == "render" && latteViewTR.isAssignableFrom(annotatedMethod.declaringType.newTypeReference()));
+		val isAdHoc = annotatedMethod.simpleName != "render" || !latteViewTR.isAssignableFrom(annotatedMethod.declaringType.newTypeReference());
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
 		if (isAdHoc) {
 			annotatedMethod.returnType = latteViewTR;
 		}
 		val layoutCode = if (isAdHoc) { 
-			LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"null");
+			LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"null",importList);
 		} else {
-			LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"this");
+			LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"this",importList);
 		}
 		
 		annotatedMethod.body = '''
@@ -84,7 +84,7 @@ class LayoutFieldProcessor extends AbstractFieldProcessor {
 			importList += importListParam 
 		}
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
-		val layoutCode = LayoutCompiler.compileLayout(context,layoutSource,annotatedField.declaringType as MutableClassDeclaration,"this");
+		val layoutCode = LayoutCompiler.compileLayout(context,layoutSource,annotatedField.declaringType as MutableClassDeclaration,"this",importList);
 
 		annotatedField.type = latteViewTR;
 		annotatedField.initializer = ''' 

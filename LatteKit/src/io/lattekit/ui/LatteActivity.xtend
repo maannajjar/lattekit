@@ -15,13 +15,8 @@ class LatteActivity extends Activity {
 	
 	override protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		latteView = new LatteView() {
-			override render() {
-				this.loadStylesheets(LatteActivity.this.cssFiles);
-				this.addChild(0, LatteActivity.this.render());
-			}
-		}
-		latteView.loadStylesheets(cssFiles);
+		latteView =  LatteActivity.this.render();
+		latteView.loadStylesheet(cssFiles);
 		androidView = latteView.buildView(this);
 		setContentView(androidView);
 	}
@@ -33,7 +28,7 @@ class LatteActivity extends Activity {
 	def List<Stylesheet> getCssFiles() {
 		return #[]		
 	}
-	
+
 	@Layout
 	def LatteView<?> render() '''
 		<FrameLayout style={{backgroundColor:"#ffffff"; width:"match_parent", height:"match_parent"}}>
