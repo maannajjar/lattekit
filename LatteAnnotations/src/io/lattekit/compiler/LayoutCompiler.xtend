@@ -576,7 +576,21 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				if (isAndroidView) {
 					if (attr.expression !=null) {
 						// JavaCode
-						value = visit(attr.expression).generatedCode
+						var valueExpr = visit(attr.expression);
+						if (valueExpr.generatedCode == null) {
+							if (valueExpr.preferredAccess == "this") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
+							} else if (valueExpr.preferredAccess == "getterMethod") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.getterMethod.name+"()";
+							} else if (valueExpr.preferredAccess == "mutableGetterMethod") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
+							} else if (valueExpr.preferredAccess == "mutableField") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
+							}  else {
+								valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
+							}
+						}
+						value = valueExpr.generatedCode 
 						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
 					} else {
 						value = attr.StringLiteral.text
@@ -598,7 +612,22 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				} else {
 					if (attr.expression !=null) {
 						// JavaCode
-						value = visit(attr.expression).generatedCode
+						var valueExpr = visit(attr.expression);
+						if (valueExpr.generatedCode == null) {
+							if (valueExpr.preferredAccess == "this") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
+							} else if (valueExpr.preferredAccess == "getterMethod") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.getterMethod.name+"()";
+							} else if (valueExpr.preferredAccess == "mutableGetterMethod") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
+							} else if (valueExpr.preferredAccess == "mutableField") {
+								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
+							}  else {
+								valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
+							}
+						}
+						
+						value = valueExpr.generatedCode;
 						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
 					} else {
 						value = attr.StringLiteral.text
@@ -904,7 +933,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				} else if (left.preferredAccess == "mutableGetterMethod") {
 					left.generatedCode = (if (left.prefix!=null) left.prefix+ "." else"")+left.mutableGetterMethod.simpleName+"()";
 				} else if (left.preferredAccess == "mutableField") {
-					left.generatedCode = (if (left.prefix!=null) left.prefix+ "." else"")+left.mutableField.simpleName+"()";
+					left.generatedCode = (if (left.prefix!=null) left.prefix+ "." else"")+left.mutableField.simpleName+"";
 				}  else {
 					left.generatedCode =(if (left.prefix!=null) left.prefix+"." else"")+left.field.name
 				}
@@ -937,7 +966,24 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			if (targetMethod != null) {
 				compiled.type = Type.fromClass(targetMethod.returnType)
 
-				compiled.generatedCode = (if (left.prefix != null) left.prefix+"." else "") +targetMethod.name+"(" + paramsList.map[generatedCode].join(",")+")";
+				compiled.generatedCode = (if (left.prefix != null) left.prefix+"." else "") +targetMethod.name+"(" + paramsList.map[ valueExpr |
+					if (valueExpr.generatedCode == null) {
+						if (valueExpr.preferredAccess == "this") {
+							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
+						} else if (valueExpr.preferredAccess == "getterMethod") {
+							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.getterMethod.name+"()";
+						} else if (valueExpr.preferredAccess == "mutableGetterMethod") {
+							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
+						} else if (valueExpr.preferredAccess == "mutableField") {
+							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
+						}  else {
+							valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
+						}
+					}
+					valueExpr.generatedCode
+
+
+				].join(",")+")";
 			}
 			return compiled;
 		} 
@@ -1007,10 +1053,26 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		if (compiled.mutableGetterMethod != null) {
 			compiled.preferredAccess = "mutableGetterMethod"
 			myType = Type.fromTypeReference(compiled.mutableGetterMethod.returnType, null)
+			myType.xtendClazz = transformationContext.findClass(compiled.mutableGetterMethod.returnType.name)
+			
+			if (myType.xtendClazz == null) {
+				var type = transformationContext.findTypeGlobally(compiled.mutableGetterMethod.returnType.name)
+				if (type instanceof ClassDeclaration) {
+					myType.xtendClazz = type;
+				}
+			}
+			
 		}	
 		if (compiled.mutableField != null && (myType == null || left.xtendClazz == jvmContext.myClass)) {
 			compiled.preferredAccess = "mutableField"
 			myType = Type.fromFieldTypeReference(compiled.mutableField.type,compiled.mutableField)
+			myType.xtendClazz = transformationContext.findClass(compiled.mutableField.type.name)
+			if (myType.xtendClazz == null) {
+				var type = transformationContext.findTypeGlobally(compiled.mutableField.type.name)
+				if (type instanceof ClassDeclaration) {
+					myType.xtendClazz = type;
+				}
+			}
 		}
 		compiled.type = myType;
 	}
