@@ -385,8 +385,8 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			var compiledExpr = visit(ctx.enhancedForControl.expression)
 			var xType = Type.NULL;  
 			if (ctx.enhancedForControl.type != null) {
-				compiled.generatedCode = compiled.generatedCode + ctx.enhancedForControl.type
 				xType = lookupType(ctx.enhancedForControl.type);
+				compiled.generatedCode = compiled.generatedCode + ctx.enhancedForControl.type.text
 			} else {
 				// TODO: infer type from ctx.expression
 				if (compiledExpr.type.isArrayLiteral) {
@@ -721,8 +721,15 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		if (typeContext.classOrInterfaceType != null) {
 			var String className = typeContext.classOrInterfaceType.Identifier.map[text].reduce[p1, p2| p1+"."+p2];
 			var myType = new Type();
-			myType.clazz = jvmContext.findClass(className)
-			myType.typeName = myType.clazz.simpleName
+			myType.xtendClazz = transformationContext.findClass(className)
+			
+			if (myType.xtendClazz == null) {
+				var type = transformationContext.findTypeGlobally(className)
+				if (type instanceof ClassDeclaration) {
+					myType.xtendClazz = type;
+				}
+			}
+			myType.typeName = myType.xtendClazz.qualifiedName
 			if (typeContext.arrayType != null) {
 				myType.isArray = typeContext.arrayType.length > 0
 				myType.arrayDimensions = typeContext.arrayType.length;
@@ -934,7 +941,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					left.generatedCode = (if (left.prefix!=null) left.prefix+ "." else"")+left.mutableGetterMethod.simpleName+"()";
 				} else if (left.preferredAccess == "mutableField") {
 					left.generatedCode = (if (left.prefix!=null) left.prefix+ "." else"")+left.mutableField.simpleName+"";
-				}  else {
+				}  else if (left.field != null) {
 					left.generatedCode =(if (left.prefix!=null) left.prefix+"." else"")+left.field.name
 				}
 				// Since we don't know if this dot reference is for get or set access, we set a prefix
@@ -988,7 +995,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
 						} else if (valueExpr.preferredAccess == "mutableField") {
 							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
-						}  else {
+						} else if (valueExpr.field != null) {
 							valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
 						}
 					}
@@ -1224,11 +1231,12 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 						compiled.generatedCode = prefix +compiled.mutableGetterMethod.simpleName+"()";
 					} else if (compiled.preferredAccess == "mutableField") {
 						compiled.generatedCode = prefix +compiled.mutableField.simpleName;
-					}  else {
+					}  else if (compiled.field != null) {
 						compiled.generatedCode = prefix +compiled.field.name
 					}
 				}
 			} else {
+				
 				compiled.generatedCode = ctx.Identifier.text
 			}
 			
