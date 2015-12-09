@@ -950,12 +950,13 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				paramsList += it.visit
 			]
 			
-			var targetMethod = left.allMethods.filter[
-				if (parameterCount != paramsList.length) return false;
-				for (var i =0;i<parameterCount;i++) {
+			
+			var targetMethod = left.mutableAllMethods.filter[
+				if (it.parameters.size != paramsList.length) return false;
+				for (var i =0;i<it.parameters.size;i++) {
 					if (it.parameters.get(i).type.isPrimitive && paramsList.get(i).type.isPrimitive 
 						&& it.parameters.get(i).type.name == paramsList.get(i).type.typeName) {
-					} else if (paramsList.get(i).type.clazz != null && it.parameters.get(i).type.isAssignableFrom(paramsList.get(i).type.clazz))  {
+					} else if (paramsList.get(i).type.xtendClazz != null && it.parameters.get(i).type.isAssignableFrom(transformationContext.newTypeReference(paramsList.get(i).type.xtendClazz)))  {
 					} else {
 						return false;
 					}
@@ -964,9 +965,18 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			].last //TODO: Better determine most specific Class (find first common ancestor)
 			
 			if (targetMethod != null) {
-				compiled.type = Type.fromClass(targetMethod.returnType)
+				compiled.type = Type.fromTypeReference(targetMethod.returnType,null);
+				compiled.type.xtendClazz = transformationContext.findClass(targetMethod.returnType.name)
+				
+				if (compiled.type.xtendClazz == null) {
+					var type = transformationContext.findTypeGlobally(targetMethod.returnType.name)
+					if (type instanceof ClassDeclaration) {
+						compiled.type.xtendClazz = type;
+					}
+				}
+					
 
-				compiled.generatedCode = (if (left.prefix != null) left.prefix+"." else "") +targetMethod.name+"(" + paramsList.map[ valueExpr |
+				compiled.generatedCode = (if (left.prefix != null) left.prefix+"." else "") +targetMethod.simpleName+"(" + paramsList.map[ valueExpr |
 					if (valueExpr.generatedCode == null) {
 						if (valueExpr.preferredAccess == "this") {
 							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
