@@ -323,7 +323,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		} else  if (ctx.xif != null) {
 			var stmt = visit(ctx.stmt)
 			compiled.type = stmt.type
-			compiled.generatedCode = '''if «visit(ctx.parExpression).generatedCode» «stmt.generatedCode»'''
+			compiled.generatedCode = '''if («visit(ctx.parExpression.expression).generatedCode») «stmt.generatedCode»'''
 			if (ctx.xelse != null) {
 				var e_stmt = visit(ctx.e_stmt)
 				// TODO: handle primitives
