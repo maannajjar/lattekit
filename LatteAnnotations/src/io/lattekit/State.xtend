@@ -36,9 +36,9 @@ class StateProcessor extends AbstractFieldProcessor {
 				'''			
 			]
 			
-			annotatedField.declaringType.addMethod("copyStateProps") [
+			annotatedField.declaringType.addMethod("copyState") [
 				returnType = Boolean.newTypeReference().primitiveIfWrapper
-				addParameter("other", findTypeGlobally("io.lattekit.ui.view.LatteView").newTypeReference())
+				addParameter("fromView", findTypeGlobally("io.lattekit.ui.view.LatteView").newTypeReference())
 				val allSetters = new StringBuffer();
 				
 				properties.forEach[
@@ -52,8 +52,8 @@ class StateProcessor extends AbstractFieldProcessor {
 				];
 				body = '''
 					boolean didCopy = false;
-					«annotatedField.declaringType.newTypeReference().simpleName» otherView = («annotatedField.declaringType.newTypeReference().simpleName»)other;
-					«if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.view.LatteView") "didCopy = super.copyStateProps(otherView)"»;
+					«annotatedField.declaringType.newTypeReference().simpleName» otherView = («annotatedField.declaringType.newTypeReference().simpleName»)fromView;
+					«if (annotatedField.declaringType.newTypeReference.name!="io.lattekit.ui.view.LatteView") "didCopy = super.copyState(otherView)"»;
 					this.attributes = otherView.attributes;
 					
 					«allSetters.toString»

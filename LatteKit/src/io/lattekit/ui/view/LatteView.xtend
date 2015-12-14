@@ -24,7 +24,6 @@ import android.widget.AdapterView
 import android.widget.FrameLayout
 import android.widget.TextView
 import codetail.graphics.drawables.RippleDrawable
-import io.lattekit.State
 import io.lattekit.ui.style.Style
 import io.lattekit.ui.style.Stylesheet
 import java.util.List
@@ -63,10 +62,13 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	Style _style = new Style();	
 	public boolean touched = false;
-	@State String cls; 
+	@Accessors String cls; 
 	Stylesheet stylesheet = new Stylesheet();
 	
 	private var boolean dirtyState = false;
+	private var boolean attributesChanged = true;
+	private var boolean styleClassChanged = true;
+	private var boolean localStyleChanged = true;
 	
 		
 	// Generic Attributes
@@ -237,7 +239,9 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		
 	def void applyAttributes() {
 		if (androidView != null) {
-			updateStyles(false, false);
+			if (localStyleChanged || styleClassChanged || (parentView != null && parentView.styleClassChanged)) {
+				updateStyles(false, false);
+			}
 			if (backgroundDrawable == null) {
 				initAndroidView();
 			}
@@ -245,7 +249,9 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 				_style.cloneFrom(activeStyle);
 				_style.applyToView(this);
 			} else {
-				transitionStyle
+				if (localStyleChanged || styleClassChanged || (parentView != null && parentView.styleClassChanged)) {
+					transitionStyle
+				}
 			}
 			onApplyAttributes?.run
 		}
@@ -371,7 +377,29 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		null;
 	}
 	def void onChildrenAdded() {}
-		
+	def List<String> getStateFields() {}
+	def boolean copyState(LatteView<?> fromView) {true}
+	def copyAttributes(LatteView<?> fromView) {
+
+		fromView.attributes.keySet().forEach[ key |
+			var newValue = fromView.attributes.get(key); 
+			var myValue = attributes.get(key);
+			if (newValue != myValue) {
+				if (key == "cls") {
+					// TODO: Split cls into array then compare instead of string comparison 
+					styleClassChanged = true;
+				} else if (key == "style" || key == "touchedStyle" || key == "disabledStyle") {
+					// TODO: uncomment after equals() has been implemented in Style
+					// localStyleChanged = true; 
+				} else {
+					attributesChanged = true;
+				}
+				attributes.put(key,newValue);
+			}
+		]
+		// TODO: Since we're copying attributes to replicate fromView,
+		// We should be removing our old attributes  that don't exist in fromView		
+	}
 
 	def addChild(int index, LatteView<?> newChild) {
 		// Compare child with existing subview
@@ -384,7 +412,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 				subviews.get(index).touchedStyle.cloneFrom(newChild.touchedStyle);
 				subviews.get(index).disabledStyle.cloneFrom(newChild.disabledStyle);
 				
-				subviews.get(index).copyStateProps(newChild)
+				subviews.get(index).copyAttributes(newChild)
 				subviews.get(index).render();
 			} else {
 				subviews.set(index,newChild)
@@ -425,7 +453,6 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 
 	def setAttribute(String key, Object value) {
 		attributes.put(key, value);
-		onStateChanged(key);
 	}
 
 	def onStateChanged(String... states) {
@@ -537,6 +564,10 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			isMounted = true;
 			onViewMounted();
 		}
+		attributesChanged = false;
+		localStyleChanged = false;
+		styleClassChanged = false;
+		
 		return androidView;
 	}
 	
