@@ -784,9 +784,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				«ENDFOR»
 				«IF isNativeView»					
 					«androidCreator»
-					it.setOnApplyAttributes(new Runnable() {
-						public void run() {
-							«androidViewType» myView = («androidViewType»)it.getAndroidView();
+					it.setOnApplyAttributes(new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»>() {
+						public void apply(«latteViewType» applyTo) {
+							«androidViewType» myView = («androidViewType»)applyTo.getAndroidView();
 							«FOR c : androidAttrsProc»
 								«c»
 							«ENDFOR»
@@ -1109,7 +1109,15 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			val List<CompiledExpression> paramsList = newArrayList();// ctx.invocation_parameters.expression.map[ visit ].toList
 			if (ctx.invocation_parameters != null) {
 				ctx.invocation_parameters.expression.forEach[
-					paramsList += it.visit
+					var comp = it.visit;
+					paramsList += comp
+					if (comp.type.xtendClazz == null) {
+						var xtendType = transformationContext.findTypeGlobally(comp.type.typeName);
+						if (xtendType instanceof TypeDeclaration) {
+							comp.type.xtendClazz = xtendType as TypeDeclaration
+							comp.type.typeRef = transformationContext.newTypeReference(comp.type.xtendClazz)
+						}
+					}
 				]
 			}
 			
@@ -1126,7 +1134,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				true
 			]?.last //TODO: Better determine most specific Class (find first common ancestor)
 			if (targetMethod == null) {
-				throw new Exception("No methods found")
+				throw new Exception("No methods found: "+left.mutableAllMethods?.size)
 			}
 			
 			if (targetMethod != null) {

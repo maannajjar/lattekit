@@ -70,7 +70,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	@Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];
 	
 	@Accessors public (Context)=>View onCreateAndroidView;
-	@Accessors public Runnable onApplyAttributes
+	@Accessors public (LatteView)=>void onApplyAttributes
 	
 	Style _style = new Style();	
 	@Accessors String cls; 
@@ -105,8 +105,8 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		if (_style == null) {
 			_style = new Style();
 			_style.cloneFrom(normalStyle);
-		}		
-		onStateChanged("style");	
+		}
+		updateStyles(true,false)		
 	}
 	
 	def applySubviewStyles() {
@@ -218,13 +218,13 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	}
 	
 	def void setTouchedStyle(Style style) {
-		this.touchedStyle.cloneFrom(style);
-		onStateChanged("touchedStyle");	
+		this.touchedStyle.cloneFrom(style);	
+		updateStyles(true,false)
 	}
 	
 	def void setDisabledStyle(Style style) {
 		this.disabledStyle.cloneFrom(style);
-		onStateChanged("disabledStyle");	
+		updateStyles(true,false)
 	}
 	
 	def getActiveStyle() {
@@ -289,7 +289,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 					transitionStyle
 				}
 			}
-			onApplyAttributes?.run
+			onApplyAttributes?.apply(this);
 		}
 	}
 	
@@ -432,14 +432,19 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 				} else {
 					modifiedAttributes.put(key, myValue -> newValue);
 				}
-				attributes.put(key,newValue);
 			}
+			Log.d("Latte", "Setting "+key +" to "+newValue)
+			attributes.put(key,newValue);
 		]
 		// TODO: Since we're copying attributes to replicate fromView,
 		// We should be removing our old attributes  that don't exist in fromView		
 	}
-
+	
 	def addChild(int index, LatteView<?> newChild) {
+		addChild(index,newChild,false);
+	}
+	
+	def addChild(int index, LatteView<?> newChild, boolean doNotRender) {
 		// Compare child with existing subview
 		// If accepted then just call render in existing subview after transferring properties
 		// If not, then add new subview
@@ -451,16 +456,16 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 				subviews.get(index).disabledStyle.cloneFrom(newChild.disabledStyle);
 				
 				subviews.get(index).copyAttributes(newChild)
-				subviews.get(index).render();
+				if (!doNotRender) subviews.get(index).render();
 			} else {
 				subviews.set(index,newChild)
 				newChild.stylesheet = stylesheet;
-				newChild.render();
+				if (!doNotRender) newChild.render();
 			}
 		} else {
 			subviews.add(index,newChild);
 			newChild.stylesheet = stylesheet;
-			newChild.render();
+			if (!doNotRender) newChild.render();
 		}
 	}
 	
@@ -480,12 +485,12 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			layoutProc = children as (LatteView<?>)=>void;
 			children.apply(this as T);
 		}
-
-		for (var i =0 ; i < this.children.size; i++) {
-			var newChild = this.children.get(i);
-			this.addChild(i,newChild);
-		}
+		renderChildren();
 		isRendering = false;
+	}
+
+	def getAttribute(String key) {
+		attributes.get(key);
 	}
 
 
@@ -495,14 +500,15 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 
 	def onStateChanged(String... states) {
 		if (!isRendering) {
-			if (!dirtyState) {
-				// No need to post another task if dirtyState is already true
-				dirtyState = true;
-			    new Handler(Looper.getMainLooper()).postAtFrontOfQueue([
-			 		handleStateChanged
-			 		dirtyState = false;   	
-			    ])
-			}
+			handleStateChanged
+//			if (!dirtyState) {
+//				// No need to post another task if dirtyState is already true
+//				dirtyState = true;
+//			    new Handler(Looper.getMainLooper()).postAtFrontOfQueue([
+//			 		handleStateChanged
+//			 		dirtyState = false;   	
+//			    ])
+//			}
 		}
 	}
 	
@@ -521,17 +527,18 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		return null;
 	}
 	
-	def void render() {
-		this.children = newArrayList();
-		if (layoutProc != null) {
-			layoutProc.apply(this);
-		}		
-	 	// This view doesn't have a render. All children are considered subviews
-	 	Log.d("Latte", "in "+this+" children are "+ this.children.size)
+	def renderChildren() {
 		for (var i =0 ; i < this.children.size; i++) {
 			var newChild = this.children.get(i);
 			this.addChild(i,newChild);
-		}	
+		}		
+	}
+	def void render() {
+	 	this.children = newArrayList();	 	
+		if (layoutProc != null) {
+			layoutProc.apply(this);
+		}
+		renderChildren();
 	}
 	
 	def LatteView<?> getNonVirtualParent() {
@@ -582,13 +589,16 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			var i = 0;
 			for (LatteView<?> v : subviews) {
 				var childLP = createLayoutParams(v.normalStyle.width.inPixelsInt(androidView.context), v.normalStyle.height.inPixelsInt(androidView.context));
-				var View childView = v.buildAndroidViewTree(a, childLP);
-				if (i >= myContainer.childCount) {
-					myContainer.addView(childView, i, childLP)	
-				} else if (myContainer.getChildAt(i) == childView) {
-				} else {
-					childView.layoutParams = childLP;
-					myContainer.addView(childView,i, childLP);
+				if (childLP != null) {
+					// In case we get null LayoutParams, this means that view adapter doesn't want ass to build & add the child
+					var View childView = v.buildAndroidViewTree(a, childLP);
+					if (i >= myContainer.childCount) {
+						myContainer.addView(childView, i, childLP)	
+					} else if (myContainer.getChildAt(i) == childView) {
+					} else {
+						childView.layoutParams = childLP;
+						myContainer.addView(childView,i, childLP);
+					}
 				}
 				i++;
 			}
@@ -602,14 +612,33 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			isMounted = true;
 			onViewMounted();
 		}
+		onViewRendered();
 		modifiedAttributes.clear();
 		return androidView;
 	}
+	
+	def boolean isMounted() {
+		return this.isMounted
+	}
+
+	def void onViewRendered() {
+	}
+	
 	
 	def void onViewMounted() {
 		if (onViewMounted != null) {
 			onViewMounted.apply(this);
 		}
+	}
+	
+	def LatteView<?> copy() {
+		val copy = this.class.newInstance
+		copy.layoutProc = layoutProc;
+		copy.attributesProc = attributesProc;
+		copy.stylesheet = stylesheet;
+		copy.onCreateAndroidView = onCreateAndroidView;	
+		copy.onApplyAttributes = onApplyAttributes
+		return copy;
 	}
 	
 	def void renderOn(Activity a) {
