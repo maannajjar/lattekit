@@ -30,52 +30,46 @@ public class RelativeLayout extends LatteView<android.widget.RelativeLayout> {
 			if (id != null) {
 				viewMap.put(id, rootAndroidView.id);
 			}
-			Log.d("Latte", '''My Id = «rootAndroidView.id»''')
 		]
-		
-		subviews.forEach[
-			addLayoutRules(viewMap)			
-		]		
+		subviews.forEach[ clearRules ]
+		subviews.forEach[ applyLayoutRules(viewMap) ]
 	}
 	
-	def addLayoutRules(LatteView<?> virtualView, HashMap<String,Integer> viewIds) {
+	def clearRules(LatteView<?> virtualView) {
+		for (i:0..21) (virtualView.rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams).removeRule(i);
+	}
+	
+	def applyLayoutRules(LatteView<?> virtualView, HashMap<String,Integer> viewIds) {
 		var rootAndroidView = virtualView.rootAndroidView
-		var oldParams = rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams;
-		val newParams = new android.widget.RelativeLayout.LayoutParams(oldParams); 
-				
+		val params = rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams; 
 		virtualView.attributes.forEach[key, value|
 			if (key == "below") {
-				newParams.addRule(android.widget.RelativeLayout.BELOW, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.BELOW, viewIds.get(value));
 			} else if (key == "above") {
-				newParams.addRule(android.widget.RelativeLayout.ABOVE, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ABOVE, viewIds.get(value));
 			} else if (key == "toStartOf") {
-				newParams.addRule(android.widget.RelativeLayout.START_OF, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.START_OF, viewIds.get(value));
 			} else if (key == "toEndOf") {
-				newParams.addRule(android.widget.RelativeLayout.END_OF, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.END_OF, viewIds.get(value));
 			} else if (key == "alignStart") {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_START, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ALIGN_START, viewIds.get(value));
 			} else if (key == "alignEnd") {
-				 newParams.addRule(android.widget.RelativeLayout.ALIGN_END, viewIds.get(value));
+				 params.addRule(android.widget.RelativeLayout.ALIGN_END, viewIds.get(value));
 			} else if (key == "alignTop") {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_TOP, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ALIGN_TOP, viewIds.get(value));
 			} else if (key == "alignBottom") {
-				newParams.addRule(android.widget.RelativeLayout.ALIGN_BOTTOM, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ALIGN_BOTTOM, viewIds.get(value));
 			} else if (key == "alignParentStart" ) {
-				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_START);}
-				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_START);
+				if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_START);
 			} else if (key == "alignParentEnd") {
-				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_END); }
-				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_END);
+				if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_END);
 			} else if (key == "alignParentTop") {
-				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);}
-				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);
+				if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);
 			} else if (key == "alignParentBottom") {
-				if (value == true)   { newParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM); }
-				else newParams.removeRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM);
+				if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM);
 			}
-
 		]
-		rootAndroidView.layoutParams =  newParams;		
+		rootAndroidView.layoutParams =  params;		
 	}
 	
 }
