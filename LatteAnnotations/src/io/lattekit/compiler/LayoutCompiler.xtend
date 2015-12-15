@@ -395,7 +395,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			var xType = Type.NULL;  
 			if (ctx.enhancedForControl.type != null) {
 				xType = lookupType(ctx.enhancedForControl.type);
-				compiled.generatedCode = compiled.generatedCode + ctx.enhancedForControl.type.text
+				compiled.generatedCode = compiled.generatedCode + xType.typeName
 			} else {
 				// TODO: infer type from ctx.expression
 				if (compiledExpr.type.isArrayLiteral) {
