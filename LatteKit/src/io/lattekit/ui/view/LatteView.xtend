@@ -28,6 +28,7 @@ import io.lattekit.ui.style.Style
 import io.lattekit.ui.style.Stylesheet
 import java.util.List
 import java.util.Map
+import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.xtend.ArrayLiterals2.*
@@ -47,11 +48,22 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	public var Animator currentAnimation;
 	public var List<Animator> pendingChildAnimations = newArrayList(); 
 
-	List<Style> selectedStyles = newArrayList();
+	// 	Contains all applicable styles for each pseudo ( key for map is pseudo )
+	// For example, for "touched" pseudo, the list will be all in normal + touched
+	Map<String,List<Style>> allStyles = newHashMap(); 
+	
+	// Contains styles defined exclusively for a pseudo. 
+	// For example, for "touched" pseudo, it will only returns styles that has :touched (that doesn't include normal) 
+	Map<String,List<Style>> pseudoStyles = newHashMap(); // Contains styles that are only
+	
+	// Contains computed style for each pseudo. That's the final style object for each pseudo
+	Map<String,Style> computedStyles = newHashMap(); 
+	
+	var Set<String> currentSelectedPseudos = newHashSet("normal"); 
 	
 	
-	@Accessors public Style computedStyle = new Style();
-	@Accessors public Style computedStyleTouched = new Style();
+//	@Accessors public Style computedStyle = new Style();
+//	@Accessors public Style computedStyleTouched = new Style();
 	
 	@Accessors public Style normalStyle = new Style();
 	@Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
@@ -61,7 +73,6 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	@Accessors public Runnable onApplyAttributes
 	
 	Style _style = new Style();	
-	public boolean touched = false;
 	@Accessors String cls; 
 	Stylesheet stylesheet = new Stylesheet();
 	
@@ -104,6 +115,10 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		]
 	}
 	
+	def List<Style> getSelectedStyles() {
+		allStyles.keySet.filter[currentSelectedPseudos.contains(it)].map[ allStyles.get(it) ].flatten.toList 
+	}
+	
 	def void findDirectChildrenStyles(List<String> selectors, List<Style> outList) {
 		selectedStyles.forEach[  style | 
 			selectors.forEach[ selector |
@@ -127,16 +142,17 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		]
 	}
 	
-	def void computeStyle(Style targetStyle,String pseudo) {
+	def List<Style> computeStyle(String pseudo) {
+		// TODO: re-use previous computed style and just reset it 
+		val targetStyle = new Style(); 
 		val mySelectors = newArrayList("View");
 		if (cls != null) {
 			cls.split(" ").forEach[
 				mySelectors += "."+it;
 			]
 		}
-		
-		selectedStyles.clear();
-		if (pseudo != null) {
+		var List<Style> selectedStyles = newArrayList();
+		if (pseudo != "normal") {
 			mySelectors += mySelectors.map[it+":"+pseudo];
 		}
 		selectedStyles += mySelectors.map[ stylesheet.getStyle(it)].filterNull
@@ -148,25 +164,41 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			targetStyle.overrideWithStyle(it);
 		]
 		targetStyle.overrideWithStyle(normalStyle);
-		if (pseudo != null && pseudo == "touched") {
+		if ( pseudo == "touched") {
 			targetStyle.overrideWithStyle(touchedStyle);
 		}
 		
+		if (pseudo == "normal") {
+			allStyles.put("normal", selectedStyles);
+			pseudoStyles.put("normal", selectedStyles);
+		} else {
+			allStyles.put(pseudo, selectedStyles);
+			// In order for this to work properly, computeStyle for normal should be called always before
+			pseudoStyles.put(pseudo, selectedStyles.filter[!allStyles.get("normal").contains(it)].toList);						
+		}
+		computedStyles.put(pseudo, targetStyle);
+		
+		return selectedStyles
+		
+	}
+	
+	def computeAllStyles() {
+		computeStyle("normal");
+		computeStyle("touched");
+	}
+	
+	def computeActiveStyles() {
+		currentSelectedPseudos.forEach[pseudo | computeStyle(pseudo) ]
 	}
 
 	def void updateStyles(boolean shouldTransition, boolean shouldUpdateChildren) {
-		// TODO: do a better way to reset styles than creating new object
-		computedStyle = new Style();
-		computedStyleTouched = new Style();
-		computeStyle(computedStyle,null);
-		computeStyle(computedStyleTouched,"touched");
 		
 		if (shouldTransition) {
 			transitionStyle();
 		}
 		// TODO: Only update lower levels if we really need to		
 		if (shouldUpdateChildren) {
-			subviews.forEach[ updateStyles(shouldTransition, shouldUpdateChildren) ]
+			subviews.forEach[ computeActiveStyles(); updateStyles(shouldTransition, shouldUpdateChildren) ]
 		} 
 	}
 	
@@ -198,10 +230,10 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def getActiveStyle() {
 		if (androidView != null && !androidView.enabled && disabledStyle != null) {
 			return disabledStyle
-		} else if (touched && touchedStyle != null) {
-			return computedStyleTouched;
+		} else if (currentSelectedPseudos.contains("touched") && touchedStyle != null) {
+			return computedStyles.get("touched");
 		}
-		return computedStyle;
+		return computedStyles.get("normal");
 	}
 	def addNewProperty(String propName, Object value) {
 		newProperties.put(propName,value);
@@ -236,15 +268,15 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	}
 	
 	
-	def isStyleModified() {
+	def boolean isStyleModified() {
 		var modifiedKeys = modifiedAttributes.keySet()
-		return !isMounted || modifiedKeys.contains("cls") || modifiedKeys.contains("style") || (parentView != null && parentView.modifiedAttributes.keySet().contains("cls"));
+		return !isMounted || modifiedKeys.contains("cls") || modifiedKeys.contains("style") || (parentView != null && parentView.isStyleModified);
 	}
 		
 	def void applyAttributes() {
 		if (androidView != null) {
 			if (isStyleModified) {
-				updateStyles(false, false);
+				computeAllStyles();
 			}
 			if (backgroundDrawable == null) {
 				initAndroidView();
@@ -267,19 +299,24 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		}				
 	}
 	
-	override onTouch(View v, MotionEvent e) {	
+	override onTouch(View v, MotionEvent e) {
+		if (pseudoStyles.get("touched").empty && onTouch == null) {
+			// No need to handle touch here
+			return false;
+		}	
+		
 		var handled = false;		
 		if (onTouch != null && e.action == MotionEvent.ACTION_DOWN) {
 			handled = onTouch.apply(this,e);
 		}
 		if (v.enabled) { 
 			if (e.action == MotionEvent.ACTION_DOWN) {
-				touched = true;
+				currentSelectedPseudos += "touched";
 				updateStyles(true,true); 				
 			} else if (e.action == MotionEvent.ACTION_UP) {
 				//TODO: THIS IS DONE TO TEMPORARILY WORK AROUND ONCLICK EXECUTING AFTER THIS
 				// PLEASE FIND BETTER WAY
-				touched = false; 
+				currentSelectedPseudos -= "touched";
 				updateStyles(true,true)
 			}
 		}
@@ -291,7 +328,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
 	
 	def Point getMeasuredSize() {
-		return getMeasuredSize(computedStyle);
+		return getMeasuredSize(computedStyles.get("normal"));
 	}
 	
 	def getWindowWidth() {
@@ -339,8 +376,8 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			backgroundDrawable.setId(0,0)
 			backgroundDrawable.setId(1,1)
 			backgroundDrawable.setId(2,2)
-			shapeDrawable = new ShapeDrawable(computedStyleTouched.getShape(this));
-			var rippleColor = new ColorStateList( #[ #[] ], #[ Style.asColor(computedStyleTouched.rippleColor) ]);
+			shapeDrawable = new ShapeDrawable(computedStyles.get("touched").getShape(this));
+			var rippleColor = new ColorStateList( #[ #[] ], #[ Style.asColor(computedStyles.get("touched").rippleColor) ]);
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 				androidView.background = new android.graphics.drawable.RippleDrawable(rippleColor,backgroundDrawable, shapeDrawable);
 			} else {			
