@@ -225,16 +225,23 @@ class Style {
         val startActualSize = latteView.getMeasuredSize(startStyle);
         
         val expandedTransitions = transitionProperties.expandShorthands
+        val modifiedAttributes = newHashSet()
         PROPERTIES.filter[UNANIMATED_PROPERTIES.contains(it) || !expandedTransitions.contains(it)].forEach[
             if (it == "x" && _computedX != null && revertToNormal && startStyle.x != null) {
                 startStyle.setProperty(it, new NumberValue(_computedX, TypedValue.COMPLEX_UNIT_PX));
             } else if (it == "y" && _computedY != null && revertToNormal  && startStyle.y != null) {
                 startStyle.setProperty(it, new NumberValue(_computedY, TypedValue.COMPLEX_UNIT_PX));
             }  else if ( this.getProperty(it) != null) {
+            	if (this.getProperty(it) != startStyle.getProperty(it)) {
+            		modifiedAttributes += it;            		
+            	}
                 startStyle.setProperty(it, this.getProperty(it));
             }
-            startStyle.applyToView(latteView,it)
         ]
+        if (!modifiedAttributes.empty) {
+        	startStyle.applyToView(latteView,modifiedAttributes)
+        }
+        
 
         var allAnims = animationGroups.keySet.map[
         	val propertyList = animationGroups.get(it).expandShorthands;
@@ -759,6 +766,10 @@ class Style {
         }
     }
     
+    // TODO: Implement attributes comparison
+    override equals(Object other) {
+    	super.equals(other);
+    }
     
     static def int asColor(Object color) {
         if (color == null) {

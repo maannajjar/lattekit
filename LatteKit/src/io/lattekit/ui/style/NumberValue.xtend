@@ -42,4 +42,11 @@ class NumberValue {
     def int inPixelsInt(Context context) {
         return Math.round(inPixels(context))
     }
+    
+    override equals(Object other) {
+    	if (other instanceof NumberValue) {
+    		return other.type == type && other.value == value;
+    	}
+    	return super.equals(other);
+    }
 } 

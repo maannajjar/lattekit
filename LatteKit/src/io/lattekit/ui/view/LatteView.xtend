@@ -66,9 +66,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	Stylesheet stylesheet = new Stylesheet();
 	
 	private var boolean dirtyState = false;
-	private var boolean attributesChanged = true;
-	private var boolean styleClassChanged = true;
-	private var boolean localStyleChanged = true;
+	private var Map<String,Pair<Object,Object>> modifiedAttributes = newHashMap();
 	
 		
 	// Generic Attributes
@@ -236,10 +234,16 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def void loadStylesheet(Stylesheet... stylesheets) {
 		stylesheets.forEach[ it.apply(this.stylesheet) ];
 	}
+	
+	
+	def isStyleModified() {
+		var modifiedKeys = modifiedAttributes.keySet()
+		return !isMounted || modifiedKeys.contains("cls") || modifiedKeys.contains("style") || (parentView != null && parentView.modifiedAttributes.keySet().contains("cls"));
+	}
 		
 	def void applyAttributes() {
 		if (androidView != null) {
-			if (localStyleChanged || styleClassChanged || (parentView != null && parentView.styleClassChanged)) {
+			if (isStyleModified) {
 				updateStyles(false, false);
 			}
 			if (backgroundDrawable == null) {
@@ -249,7 +253,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 				_style.cloneFrom(activeStyle);
 				_style.applyToView(this);
 			} else {
-				if (localStyleChanged || styleClassChanged || (parentView != null && parentView.styleClassChanged)) {
+				if (isStyleModified) {
 					transitionStyle
 				}
 			}
@@ -387,12 +391,9 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			if (newValue != myValue) {
 				if (key == "cls") {
 					// TODO: Split cls into array then compare instead of string comparison 
-					styleClassChanged = true;
-				} else if (key == "style" || key == "touchedStyle" || key == "disabledStyle") {
-					// TODO: uncomment after equals() has been implemented in Style
-					// localStyleChanged = true; 
+					modifiedAttributes.put(key, myValue -> newValue);
 				} else {
-					attributesChanged = true;
+					modifiedAttributes.put(key, myValue -> newValue);
 				}
 				attributes.put(key,newValue);
 			}
@@ -564,10 +565,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			isMounted = true;
 			onViewMounted();
 		}
-		attributesChanged = false;
-		localStyleChanged = false;
-		styleClassChanged = false;
-		
+		modifiedAttributes.clear();
 		return androidView;
 	}
 	
