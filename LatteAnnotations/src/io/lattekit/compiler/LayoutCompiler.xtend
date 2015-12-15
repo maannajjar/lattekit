@@ -116,6 +116,7 @@ class Type {
 	public int arrayDimensions;
 	public Type arrayChildType;
 	public var TypeReference typeRef;
+	public boolean isMethodName;
 	
 	new() {}
 	new(boolean isNull) { this.isNull = isNull;}
@@ -156,7 +157,7 @@ class Type {
 		return type;
 	}
 	
-	def static Type classRef(TypeReference tr,MutableClassDeclaration clazz) {
+	def static Type classRef(TypeReference tr,ClassDeclaration clazz) {
 		var type = new Type();
 		type.xtendClazz = clazz;
 		type.isClassRef = true;
@@ -388,9 +389,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			compiled.type = stmt.type
 			compiled.generatedCode = '''while «visit(ctx.parExpression).generatedCode» «stmt.generatedCode»'''
 		} else if (ctx.xexpr != null) {
-			var expr = visit(ctx.xexpr)
-			compiled.type = expr.type
-			compiled.generatedCode = expr.generatedCode
+			return visit(ctx.xexpr.expression)
 		}  else if (ctx.xreturn != null) {
 			if (ctx.xpr != null) {
 				var compiledXpr = visit(ctx.xpr)
@@ -769,7 +768,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					value = attr.StringLiteral.text
 					code += value+");";
 				}
+				
 			}
+			
 			code += '''it.addNewProperty("«attr.Identifier.text»",it.getAttribute("«attr.Identifier.text»"));'''
 			attrCode += code;
 			
@@ -930,6 +931,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	
 	
 	override visitExpression(ExpressionContext ctx) {
+		
 		val compiled = new CompiledExpression();
 		compiled.context = ctx;
 		if (ctx.xmlElement != null) {
@@ -1035,12 +1037,14 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			var left = visit(ctx.left)
 			var Class<?> staticInner;
 
+
 			if (left.type.isPackageRef) {
 				// Look for either a package or class under me
-				var qualifiedName = left.type.typeName+"."+ctx.member;		
-				var cls = jvmContext.findClass(qualifiedName)
+				var qualifiedName = left.generatedCode+"."+ctx.member.text;		
+//				var cls = jvmContext.findClass(qualifiedName)
+				var cls = transformationContext.findTypeGlobally(qualifiedName) as TypeDeclaration;
 				if (cls != null) {
-					compiled.type = Type.classRef(cls);
+					compiled.type = Type.fromTypeReference(transformationContext.newTypeReference(cls),cls);
 				} else {
 					var pkg = jvmContext.findPackage(qualifiedName)
 					if (pkg != null) {
@@ -1050,11 +1054,11 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 						compiled.type = new Type();
 						compiled.type.isPackageRef = true;
 						compiled.type.typeName = ctx.Identifier.text;
-						
 					}
 				}
 				compiled.generatedCode = left.generatedCode +"."+ctx.member.text;
 				
+				return compiled;
 			} else if (left.type.isClassRef) {
 				// Look for either static member or inner class
 				// Or "this"
@@ -1076,6 +1080,8 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					// When we evaluate the whole expression we can only then generate the code
 					compiled.prefix = left.generatedCode;
 				}
+								
+				
 				
 			} else {
 				// Referencing member from an instance
@@ -1096,9 +1102,10 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				compiled.prefix = left.generatedCode;
 				findReferencedMember(compiled, left.type, ctx.member.text, false);
 			}
+			
 			return compiled;
 		} else if (ctx.method_call_expr != null) {
-			var left = visit(ctx.method_call_expr)
+			var left = visitExpression(ctx.method_call_expr)
 			val List<CompiledExpression> paramsList = newArrayList();// ctx.invocation_parameters.expression.map[ visit ].toList
 			if (ctx.invocation_parameters != null) {
 				ctx.invocation_parameters.expression.forEach[
@@ -1106,11 +1113,10 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				]
 			}
 			
-			
 			var targetMethod = left.mutableAllMethods?.filter[
 				if (it.parameters.size != paramsList.length) return false;
 				for (var i =0;i<it.parameters.size;i++) {
-					if (it.parameters.get(i).type.isPrimitive && paramsList.get(i).type.isPrimitive 
+					if ((it.parameters.get(i).type.name == paramsList.get(i).type.typeName) || it.parameters.get(i).type.isPrimitive && paramsList.get(i).type.isPrimitive 
 						&& it.parameters.get(i).type.name == paramsList.get(i).type.typeName) {
 					} else if (paramsList.get(i).type.xtendClazz != null && it.parameters.get(i).type.isAssignableFrom(transformationContext.newTypeReference(paramsList.get(i).type.xtendClazz)))  {
 					} else {
@@ -1119,6 +1125,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				}
 				true
 			]?.last //TODO: Better determine most specific Class (find first common ancestor)
+			if (targetMethod == null) {
+				throw new Exception("No methods found")
+			}
 			
 			if (targetMethod != null) {
 				compiled.type = Type.fromTypeReference(targetMethod.returnType,null);
@@ -1133,22 +1142,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					
 
 				compiled.generatedCode = (if (left.prefix != null) left.prefix+"." else "") +targetMethod.simpleName+"(" + paramsList.map[ valueExpr |
-					if (valueExpr.generatedCode == null) {
-						if (valueExpr.preferredAccess == "this") {
-							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
-						} else if (valueExpr.preferredAccess == "getterMethod") {
-							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.getterMethod.name+"()";
-						} else if (valueExpr.preferredAccess == "mutableGetterMethod") {
-							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
-						} else if (valueExpr.preferredAccess == "mutableField") {
-							valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
-						} else if (valueExpr.field != null) {
-							valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
-						}
-					}
 					valueExpr.generatedCode
-
-
 				].join(",")+")";
 			}
 			return compiled;
@@ -1173,7 +1167,6 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		val protectedAccessible = true; //left.type.clazz;
 		val privateAccessible = true; //left.type.clazz;
 		var Type myType = null;
-		
 		compiled.mutableField = left.xtendClazz.declaredFields.findFirst[
 			it.simpleName == memberName
 			&& ( modifiers.isEmpty ||  modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.PUBLIC)|| 
@@ -1181,9 +1174,9 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			   ( modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.PACKAGE) && privateAccessible)	||
 			   packageAccessible				
 			)
-			&& (!onlyStatic || modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.STATIC))
+			&& (!onlyStatic || modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.STATIC) || it.static)
 		]
-		
+
 		compiled.mutableGetterMethod = left.xtendClazz.declaredMethods.findFirst[
 			it.simpleName == "get"+memberName.substring(0,1).toUpperCase + memberName.substring(1)
 			&& parameters.length == 0
@@ -1206,6 +1199,18 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			&& (!onlyStatic || modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.STATIC))
 		];
 
+		var typeRef = transformationContext.newTypeReference(left.xtendClazz);
+		
+		var upstreamMethods = transformationContext.findMethodsInSuper(typeRef, [			
+			it.simpleName == memberName
+			&& ( modifiers.isEmpty ||  modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.PUBLIC)|| 
+			   ( modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.PRIVATE) && protectedAccessible) ||
+			   ( modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.PACKAGE) && privateAccessible)	||
+			   packageAccessible				
+			)
+			&& (!onlyStatic || modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.STATIC))
+			&& (!onlyStatic || modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.STATIC))
+		]);
 		compiled.mutableAllMethods  = left.xtendClazz.declaredMethods.filter[
 			it.simpleName == memberName
 			&& ( modifiers.isEmpty ||  modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.PUBLIC)|| 
@@ -1214,13 +1219,12 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			   packageAccessible				
 			)
 			&& (!onlyStatic || modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.STATIC))
-		];
+		] + upstreamMethods;
+		
 
 		if (compiled.mutableGetterMethod == null) {
-			
 			// Look in super classes
-			var typeRef = transformationContext.newTypeReference(left.xtendClazz);
-			var upstreamMethods = transformationContext.findMethodsInSuper(typeRef, [			
+			var upstreamGetterMethods = transformationContext.findMethodsInSuper(typeRef, [			
 				it.simpleName == "get"+memberName.substring(0,1).toUpperCase + memberName.substring(1)
 			&& parameters.length == 0
 			&& ( modifiers.isEmpty ||  modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.PUBLIC)|| 
@@ -1230,12 +1234,12 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			)
 			&& (!onlyStatic || modifiers.contains(org.eclipse.xtend.lib.macro.declaration.Modifier.STATIC))
 			])
-			if (!upstreamMethods.isEmpty) {
-				compiled.mutableGetterMethod = upstreamMethods.get(0);
+			
+			if (!upstreamGetterMethods.isEmpty) {
+				compiled.mutableGetterMethod = upstreamGetterMethods.get(0);
 			}
-
 		}
-		
+		var determined = false;
 		if (compiled.mutableGetterMethod != null) {
 			compiled.preferredAccess = "mutableGetterMethod"
 			myType = Type.fromTypeReference(compiled.mutableGetterMethod.returnType, null)
@@ -1248,6 +1252,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					myType.xtendClazz = type;
 				}
 			}
+			determined = true;
 		}	
 		if (compiled.mutableField != null && (myType == null || left.xtendClazz == jvmContext.myClass)) {
 			compiled.preferredAccess = "mutableField"
@@ -1259,6 +1264,11 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					myType.xtendClazz = type;
 				}
 			}
+			determined = true;
+		}
+		if (!determined && compiled.mutableAllMethods.size > 0) {
+			myType = new Type();
+			myType.isMethodName = true;
 		}
 		
 		compiled.type = myType;
@@ -1375,21 +1385,23 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			if (compiled.type == null) {
 				findReferencedMember(compiled,Type.fromTypeReference(jvmContext.myTypeReference, jvmContext.myClass),ctx.Identifier.text,false)
 				if (compiled.type == null) {
-					var cls = jvmContext.findClass(ctx.Identifier.text)
+					var cls = transformationContext.findTypeGlobally(ctx.Identifier.text)
+
 					if (cls != null) {
-						compiled.type = Type.classRef(cls);
+						compiled.type = Type.classRef(transformationContext.newTypeReference(cls),cls as ClassDeclaration);
 					} else {
 						if (jvmContext.myClass.simpleName == ctx.Identifier.text) {
 							compiled.type = Type.classRef(jvmContext.myTypeReference, jvmContext.myClass);
 						} else {
+							
 							var pkg = jvmContext.findPackage(ctx.Identifier.text)
 							if (pkg != null) {
 								compiled.type = Type.packageRef(pkg);
+								
 							} else {
 								compiled.type = new Type();
 								compiled.type.typeName = ctx.Identifier.text;
 								compiled.type.isPackageRef = true;
-								return compiled
 							}
 						}
 					} 
