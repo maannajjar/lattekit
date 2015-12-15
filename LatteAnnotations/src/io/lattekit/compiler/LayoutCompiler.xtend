@@ -34,6 +34,7 @@ import org.eclipse.xtend.lib.macro.declaration.TypeDeclaration
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
 
 import static org.reflections.ReflectionUtils.*
+import io.lattekit.compiler.LatteXtendParser.LambdaBodyContext
 
 class LayoutCompiler {
 
@@ -354,7 +355,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			var forControl = visit(ctx.forControl);
 			var stmt = if (ctx.stmt.block != null) { 
 				// This insures variables declared in for control are included in the current scope
-				visitBlockBody(ctx.stmt.block.blockBody,forScope);
+				visitBlockBody(ctx.stmt.block.blockBody,forScope,false);
 			} else {
 				visit(ctx.stmt);
 			}
@@ -373,6 +374,16 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			var expr = visit(ctx.xexpr)
 			compiled.type = expr.type
 			compiled.generatedCode = expr.generatedCode
+		}  else if (ctx.xreturn != null) {
+			if (ctx.xpr != null) {
+				var compiledXpr = visit(ctx.xpr)
+				compiled.type = compiledXpr.type
+				compiled.generatedCode = 'return '+ compiledXpr.generatedCode	
+			} else {
+				compiled.generatedCode = 'return;'
+				compiled.type = Type.VOID;
+			}
+			
 		} else {
 			compiled.generatedCode = ctx.text;
 		}
@@ -386,6 +397,48 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		return compiled;
 	}
 		
+	override visitLambdaBody(LambdaBodyContext ctx) {
+		var compiled = new CompiledExpression();
+		var List<Pair<Type,String>> paramList = newArrayList(); 
+		val HashMap<String,Type> lambdaScope = newHashMap();
+		
+		if (ctx.formalParameterList != null ) {
+//			compiled.generatedCode = "DD";
+//			return compiled;
+			paramList += ctx.formalParameterList.formalParameter.map[
+				var xType =  lookupType(type);
+				lambdaScope.put(variableDeclaratorId.text,xType)				
+				xType -> variableDeclaratorId.text
+			]
+
+			if (ctx.formalParameterList.lastFormalParameter != null) {
+				var xType =  lookupType(ctx.formalParameterList.lastFormalParameter.type);
+				paramList += xType -> ctx.formalParameterList.lastFormalParameter.variableDeclaratorId.text
+				lambdaScope.put(ctx.formalParameterList.lastFormalParameter.variableDeclaratorId.text,xType)
+			}
+		}
+	
+		
+//		paramList += (lookupType("java.lang.String") -> "b"); 
+		scope.add(lambdaScope);
+		var blockCompiled = visitBlockBody(ctx.blockBody,lambdaScope,true);
+		var myTypeName = "org.eclipse.xtext.xbase.lib.Functions.Function"+paramList.size
+		var returnType = if (blockCompiled.type.isPrimitive) blockCompiled.type.boxed else blockCompiled.type;
+		var code = "new "+myTypeName+"<"+paramList.map[key.typeName].join(",")+","+returnType.boxed.typeName+">() { "
+		code += "     public "+returnType.typeName +" apply("+paramList.map[key.typeName +" "+value].join(",")+") {"
+		code += blockCompiled.generatedCode
+		code += "     }"
+		code += "}"
+		var myClz = transformationContext.findTypeGlobally(myTypeName) as TypeDeclaration;
+		//,paramList.map[key.typeRef]
+		var typeReference = transformationContext.newTypeReference(myClz);
+		compiled.type = Type.fromTypeReference(typeReference,myClz );
+		compiled.generatedCode = code;
+		
+		return compiled;
+		
+	}
+	
 	override visitForControl(ForControlContext ctx) {
 		super.visitForControl(ctx)
 		var compiled = new CompiledExpression();
@@ -441,7 +494,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		return compiled
 	}
 	
-	def visitBlockBody(BlockBodyContext ctx, Map<String,Type> blockScope) {
+	def visitBlockBody(BlockBodyContext ctx, Map<String,Type> blockScope,boolean addReturn) {
 		if (blockScope == null) {
 			scope.add(new HashMap<String,Type>());			
 		}
@@ -453,12 +506,20 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		ctx.blockStatement.forEach[ child, index |
 			var compiledChild = visit(child);
 			compiled.children += compiledChild;
+			
+			if (index == ctx.blockStatement.size-1 && addReturn && compiledChild.generatedCode.indexOf("return") != 0) {
+				compiledChild.generatedCode = "return "+compiledChild.generatedCode;
+			} 
+			
 			compiled.generatedCode = compiled.generatedCode + "\n" + compiledChild.generatedCode
 			if (!compiledChild.generatedCode.replace("\n","").trim().endsWith("}") && !compiledChild.generatedCode.replace("\n","").trim().endsWith(";")) { 
 				compiled.generatedCode =  compiled.generatedCode+ ";";
 			}
 			if (index == ctx.blockStatement.size-1) {
 				compiled.type = compiledChild.type;
+				if (addReturn && compiledChild.generatedCode.indexOf("return") != 0) {
+					compiledChild.generatedCode = "return "+compiledChild.generatedCode;
+				}
 			} 
 		]
 		scope.remove(scope.last)
@@ -466,7 +527,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	}	
 	
 	override visitBlockBody(BlockBodyContext ctx) {
-		return visitBlockBody(ctx,null);
+		return visitBlockBody(ctx,null,false);
 	}
 	
 	def findViewType( extension TransformationContext context, String view, List<String> importList) {
@@ -666,7 +727,11 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 						
 						value = valueExpr.generatedCode;
 						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
-					} else {
+					} else if (attr.lambdaBody != null) { 
+						var valueExpr = visit(attr.lambdaBody);
+						value = valueExpr.generatedCode;
+						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''						
+					}else {
 						value = attr.StringLiteral.text
 						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
 					}									
@@ -688,7 +753,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 					code += value+");";
 				}
 			}
-			code += '''it.addNewProperty("«attr.Identifier.text»",«value»);'''
+			code += '''it.addNewProperty("«attr.Identifier.text»",it.getAttribute("«attr.Identifier.text»"));'''
 			attrCode += code;
 			
 		]
@@ -769,7 +834,10 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				var type = transformationContext.findTypeGlobally(className)
 				if (type instanceof TypeDeclaration) {
 					myType.xtendClazz = type;
+					myType.typeRef = transformationContext.newTypeReference(myType.xtendClazz)
 				}
+			} else {
+				myType.typeRef = transformationContext.newTypeReference(myType.xtendClazz)
 			}
 			myType.typeName = myType.xtendClazz.qualifiedName
 			if (typeContext.arrayType != null) {
@@ -784,6 +852,26 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			if (typeContext.arrayType != null) {
 				myType.isArray = typeContext.arrayType.length > 0
 				myType.arrayDimensions = typeContext.arrayType.length;
+			}
+			
+			myType.typeRef = if (myType.typeName == "int") {
+				transformationContext.primitiveInt
+			}  else if (myType.typeName == "boolean") {
+				transformationContext.primitiveBoolean
+			} else if (myType.typeName == "byte") {
+				transformationContext.primitiveByte
+			} else if (myType.typeName == "char") {
+				transformationContext.primitiveChar
+			} else if (myType.typeName == "float") {
+				transformationContext.primitiveFloat
+			} else if (myType.typeName == "double") {
+				transformationContext.primitiveDouble
+			} else if (myType.typeName == "long") {
+				transformationContext.primitiveLong
+			} else if (myType.typeName == "short") {
+				transformationContext.primitiveShort
+			}else if (myType.typeName == "void") {
+				transformationContext.primitiveVoid
 			}
 			return myType
 			
@@ -853,7 +941,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			var right = this.visit(ctx.right);
 			compiled.children += left
 			compiled.children += right
-			compiled.generatedCode = left.generatedCode + ctx.logical_op.text + right.generatedCode 	
+			compiled.generatedCode = left.generatedCode + ctx.logical_op.text + right.generatedCode
 			return compiled
 		} else if (ctx.assign_op != null) {
 			// TODO: Type checking
@@ -1262,7 +1350,11 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			}
 		} else if (ctx.Identifier != null) {			
 			compiled.type = lookupLocalVariableType(ctx.Identifier.text)
-
+			if (ctx.Identifier.text == "a") {
+				compiled.generatedCode = "Hala";
+			return compiled;
+				
+				}
 			if (compiled.type == null) {
 				findReferencedMember(compiled,Type.fromTypeReference(jvmContext.myTypeReference, jvmContext.myClass),ctx.Identifier.text,false)
 				if (compiled.type == null) {

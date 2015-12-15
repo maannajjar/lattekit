@@ -484,10 +484,14 @@ xmlElement
 
 xmlAttribute
 	: Identifier '=' StringLiteral
+	| Identifier '=' '[' lambdaBody ']'
 	| Identifier '=' '{' expression '}'
 	| Identifier '=' '{{' styleMapLiteralBody '}}'
 	;
 
+lambdaBody
+	: (formalParameterList '|')?  blockBody 
+	;
 styleMapLiteralBody
 	: styleMapLiteralElement ((','|';') styleMapLiteralElement)*
 	;
@@ -516,7 +520,7 @@ statement
     |   xtry='try' resourceSpecification block catchClause* finallyBlock?
     |   xswitch='switch' parExpression '{' switchBlockStatementGroup* switchLabel* '}'
     |   xsynch='synchronized' parExpression block
-    |   xreturn='return' expression? eos
+    |   xreturn='return' xpr=expression? eos
     |   xthrow='throw' expression eos
     |   xbreak='break' Identifier? eos
     |   xcontinue='continue' Identifier? eos
@@ -597,7 +601,6 @@ statementExpression
 constantExpression
     :   expression
     ;
-
 
 expression
     :   primaryExpression=primary
