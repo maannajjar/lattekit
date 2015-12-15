@@ -78,6 +78,23 @@ class CompiledExpression {
 	@Accessors String prefix;
 	@Accessors String generatedVariableName;
 	
+	def String getGeneratedCode() {
+		if (generatedCode == null) {
+			if (preferredAccess == "this") {
+				generatedCode = (if (prefix!=null) prefix+ "." else"")+"this";
+			} else if (preferredAccess == "getterMethod") {
+				generatedCode = (if (prefix!=null) prefix+ "." else"")+getterMethod.name+"()";
+			} else if (preferredAccess == "mutableGetterMethod") {
+				generatedCode = (if (prefix!=null) prefix+ "." else"")+mutableGetterMethod.simpleName+"()";
+			} else if (preferredAccess == "mutableField") {
+				generatedCode = (if (prefix!=null) prefix+ "." else"")+mutableField.simpleName+"";
+			} else if (field != null) {
+				generatedCode =(if (prefix!=null) prefix+"." else"")+field.name
+			}
+		}
+		return generatedCode;
+		
+	}
 }
 
 class Type {
