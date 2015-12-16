@@ -436,7 +436,6 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 					modifiedAttributes.put(key, myValue -> newValue);
 				}
 			}
-			Log.d("Latte", "Setting "+key +" to "+newValue)
 			attributes.put(key,newValue);
  
 		]
