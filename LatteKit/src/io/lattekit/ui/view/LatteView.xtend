@@ -31,7 +31,8 @@ import java.util.Map
 import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
 
-import static io.lattekit.xtend.ArrayLiterals2.*
+import static io.lattekit.util.Util.*
+import io.lattekit.util.Util
 
 public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
@@ -421,7 +422,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def List<String> getStateFields() {}
 	def boolean copyState(LatteView<?> fromView) {true}
 	def copyAttributes(LatteView<?> fromView) {
-
+		onApplyAttributes = fromView.onApplyAttributes;
 		fromView.attributes.keySet().forEach[ key |
 			var newValue = fromView.attributes.get(key); 
 			var myValue = attributes.get(key);
@@ -435,6 +436,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			}
 			Log.d("Latte", "Setting "+key +" to "+newValue)
 			attributes.put(key,newValue);
+ 
 		]
 		// TODO: Since we're copying attributes to replicate fromView,
 		// We should be removing our old attributes  that don't exist in fromView		
@@ -534,7 +536,10 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		}		
 	}
 	def void render() {
-	 	this.children = newArrayList();	 	
+	 	this.children = newArrayList();	 
+		if (attributesProc != null) {
+			attributesProc.apply(this);
+		}
 		if (layoutProc != null) {
 			layoutProc.apply(this);
 		}
@@ -578,7 +583,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		}
 		
 		if (this.androidView.id == -1 && this.id != null) {
-			this.androidView.id = this.id.hashCode
+			this.androidView.id = Util.makeResId("io.lattekit", "id", id);
 		}
 		if (this.androidView.layoutParams == null) {
 			this.androidView.layoutParams = lp;
@@ -636,8 +641,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 		copy.layoutProc = layoutProc;
 		copy.attributesProc = attributesProc;
 		copy.stylesheet = stylesheet;
-		copy.onCreateAndroidView = onCreateAndroidView;	
-		copy.onApplyAttributes = onApplyAttributes
+		copy.onCreateAndroidView = onCreateAndroidView;
 		return copy;
 	}
 	
