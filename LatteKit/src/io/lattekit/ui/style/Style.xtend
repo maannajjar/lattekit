@@ -139,7 +139,7 @@ class Style {
     public NumberValue paddingRight = new NumberValue(0,TypedValue.COMPLEX_UNIT_PX);
     
     @StyleProperty(animatable=false) public String fontFamily = "default";
-    @StyleProperty(animatable=false) public String fontStyle = "bold";
+    @StyleProperty(animatable=false) public String fontStyle = "normal";
     @StyleProperty public NumberValue fontSize;
     
     @StyleProperty(animatable=false) public List<List<Object>> transitions;
@@ -174,10 +174,11 @@ class Style {
     		} else {
     			if (it.endsWith(".ttf") || it.endsWith(".otf")) {
     				try {
+    					Log.d("Latte","Loading font "+ it);
     					var font = Typeface.createFromAsset(assets, it);
     					allFonts.put(it.substring(0,it.length-4).toLowerCase(), font);
     				} catch (Exception ex) {
-    					
+    					ex.printStackTrace
     				}
     			}
     		}
