@@ -50,7 +50,6 @@ class ListView extends LatteView<android.widget.ListView>  {
 			var modelType = (testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
 			if (modelType.isAssignableFrom(item.class)) {
 				var isMatch = testLambda.class.getMethod("apply",modelType).invoke(testLambda,item) as Boolean;
-				Log.d("Latte","Results = "+isMatch)
 				return isMatch;
 			} else {
 				Log.d("Latte", "Warning: model of type "+item.class.name +" is not assignable to "+ modelType)
