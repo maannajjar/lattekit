@@ -65,7 +65,6 @@ class ListView extends LatteView<android.widget.ListView>  {
 				template = convertView.getTag() as LatteView;
 				template.setAttribute("model", getItem(position));
 				template.setAttribute("modelIndex", position);
-				template.render();
 				template.handleStateChanged();
 				return convertView;
 			}
