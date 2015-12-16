@@ -24,9 +24,6 @@ public class RelativeLayout extends LatteView<android.widget.RelativeLayout> {
 		super.onChildrenAdded()
 		val viewMap = newHashMap()
 		subviews.forEach[
-			if (rootAndroidView.id == -1 && id != null) {
-				rootAndroidView.id = id.hashCode;
-			}
 			if (id != null) {
 				viewMap.put(id, rootAndroidView.id);
 			}
@@ -69,7 +66,7 @@ public class RelativeLayout extends LatteView<android.widget.RelativeLayout> {
 				if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM);
 			}
 		]
-		rootAndroidView.layoutParams =  params;		
+		rootAndroidView.layoutParams = params
 	}
 	
 }
