@@ -423,6 +423,8 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def boolean copyState(LatteView<?> fromView) {true}
 	def copyAttributes(LatteView<?> fromView) {
 		onApplyAttributes = fromView.onApplyAttributes;
+		layoutProc = fromView.layoutProc;
+		attributesProc = fromView.attributesProc;
 		fromView.attributes.keySet().forEach[ key |
 			var newValue = fromView.attributes.get(key); 
 			var myValue = attributes.get(key);
@@ -595,7 +597,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 			for (LatteView<?> v : subviews) {
 				var childLP = createLayoutParams(v.normalStyle.width.inPixelsInt(androidView.context), v.normalStyle.height.inPixelsInt(androidView.context));
 				if (childLP != null) {
-					// In case we get null LayoutParams, this means that view adapter doesn't want ass to build & add the child
+					// In case we get null LayoutParams, this means that view adapter doesn't want us to build & add the child
 					var View childView = v.buildAndroidViewTree(a, childLP);
 					if (i >= myContainer.childCount) {
 						myContainer.addView(childView, i, childLP)	
