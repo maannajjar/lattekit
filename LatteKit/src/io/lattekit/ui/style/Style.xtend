@@ -169,13 +169,15 @@ class Style {
     
     def static void loadFontsInAssetPath(AssetManager assets, String path, Map<String,Typeface> fonts) {
     	assets.list(path).forEach[
-    		if (assets.list(it).length > 0 ){
-    			loadFontsInAssetPath(assets,it,fonts);
+    		var fullPath = ( if (path != "") path +"/" else "")+it
+    		if (assets.list(fullPath).length > 0 ){
+    			loadFontsInAssetPath(assets,fullPath,fonts);
     		} else {
     			if (it.endsWith(".ttf") || it.endsWith(".otf")) {
     				try {
-    					Log.d("Latte","Loading font "+ it);
-    					var font = Typeface.createFromAsset(assets, it);
+    					
+    					Log.d("Latte","Loading font "+ fullPath);
+    					var font = Typeface.createFromAsset(assets,fullPath);
     					allFonts.put(it.substring(0,it.length-4).toLowerCase(), font);
     				} catch (Exception ex) {
     					ex.printStackTrace
