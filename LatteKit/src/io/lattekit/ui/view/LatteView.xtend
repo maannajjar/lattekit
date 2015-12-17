@@ -10,9 +10,6 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.MeasureSpec
@@ -26,13 +23,13 @@ import android.widget.TextView
 import codetail.graphics.drawables.RippleDrawable
 import io.lattekit.ui.style.Style
 import io.lattekit.ui.style.Stylesheet
+import io.lattekit.util.Util
 import java.util.List
 import java.util.Map
 import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.util.Util.*
-import io.lattekit.util.Util
 
 public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	
