@@ -686,7 +686,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 				value = valueExpr.generatedCode;
 				code = '''it.setStyle(«value»);'''
 				
-			} else if (compiledExpr.preferredAccess == null && !hasSetter) {
+			} else if (!hasSetter) {
 				if (isAndroidView) {
 					if (attr.expression !=null) {
 						// JavaCode
@@ -747,7 +747,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 						var valueExpr = visit(attr.lambdaBody);
 						value = valueExpr.generatedCode;
 						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''						
-					}else {
+					} else {
 						value = attr.StringLiteral.text
 						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
 					}									
