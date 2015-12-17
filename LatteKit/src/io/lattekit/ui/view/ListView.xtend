@@ -8,6 +8,7 @@ import android.widget.BaseAdapter
 import java.lang.reflect.ParameterizedType
 import java.util.List
 import org.eclipse.xtext.xbase.lib.Functions.Function1
+import org.eclipse.xtext.xbase.lib.Functions.Function2
 
 class ListView extends LatteView<android.widget.ListView>  {
 	
@@ -24,7 +25,7 @@ class ListView extends LatteView<android.widget.ListView>  {
 			var int defaultView = -1;
 			for (i : 0..<children.size) {
 				var child = children.get(i);
-				if (isMatch(child, item)) {
+				if (isMatch(child, item,position)) {
 					return i;
 				}
 				if (child.attributes.get("defaultView") == true || child.attributes.get("defaultView") == "true") {
@@ -38,18 +39,33 @@ class ListView extends LatteView<android.widget.ListView>  {
 			return defaultView;
 		}
 		
-		def isMatch(LatteView<?> template, Object item) {
+		def isMatch(LatteView<?> template, Object item,int position) {
 			var testLambda = template.attributes.get("when");
 			if (testLambda == null) {
 				return false;
 			}
-			if (!(testLambda instanceof Function1)) {
+			
+			if (!(testLambda instanceof Function1) && !(testLambda instanceof Function2)) {
 				// TODO: Warn about wrong "when" variable
 				return false;
 			}
+			var isFn2 = testLambda instanceof Function2 
 			var modelType = (testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
+			
 			if (modelType.isAssignableFrom(item.class)) {
-				var isMatch = testLambda.class.getMethod("apply",modelType).invoke(testLambda,item) as Boolean;
+				var Class<?> secondParamType;
+				if (isFn2) {
+					secondParamType =(testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(1) as Class;
+					if (!secondParamType.isAssignableFrom(Integer)) {
+						Log.d("Latte", "Warning: second parameter's type is "+ secondParamType.name +". It must be an integer which will contain model index")
+						return false;
+					}
+				}	
+				var isMatch = if (!isFn2) {
+					testLambda.class.getMethod("apply",modelType).invoke(testLambda,item) as Boolean;
+				} else {
+					testLambda.class.getMethod("apply",modelType,secondParamType).invoke(testLambda,item,position) as Boolean;
+				}
 				return isMatch;
 			} else {
 				Log.d("Latte", "Warning: model of type "+item.class.name +" is not assignable to "+ modelType)
