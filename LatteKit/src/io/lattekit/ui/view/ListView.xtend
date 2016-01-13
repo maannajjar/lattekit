@@ -4,16 +4,21 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemClickListener
 import android.widget.BaseAdapter
 import java.lang.reflect.ParameterizedType
 import java.util.List
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtext.xbase.lib.Functions.Function1
 import org.eclipse.xtext.xbase.lib.Functions.Function2
+import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
+import org.eclipse.xtext.xbase.lib.Procedures.Procedure2
 
-class ListView extends LatteView<android.widget.ListView>  {
+class ListView extends LatteView<android.widget.ListView> implements OnItemClickListener {
 	
 	@Accessors Integer dividerHeight;
+	
 	
 	var adapter = new BaseAdapter() {
 		
@@ -120,6 +125,34 @@ class ListView extends LatteView<android.widget.ListView>  {
 		if (dividerHeight != null) {
 			view.dividerHeight = dividerHeight;	
 		}
+		if (attributes.get("onItemClickListener") != null) {
+			view.onItemClickListener = attributes.get("onItemClickListener")  as OnItemClickListener;
+		} else {
+			view.onItemClickListener = this;	
+		}
+	}
+	
+	override onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		var handlerLambda = attributes.get("onItemClick");
+		if (handlerLambda == null) {
+			return
+		}
+		var obj = adapter.getItem(position);
+		var paramType = (handlerLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
+		if (!paramType.isAssignableFrom(obj.class)) {
+			// TODO: warn about wrong param type
+			return;
+		}
+		if (handlerLambda instanceof Procedure1) {
+			handlerLambda.apply(obj);
+		} else if (handlerLambda instanceof Procedure2) {
+			handlerLambda.apply(obj, position);
+		} else {
+			// TODO: Warn about wrong "onItemClick" variable
+			return;			
+		}
+		
+		
 	}
 	
 	override View createAndroidView(Context a) {

@@ -42,6 +42,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	@Accessors public String id;
 	@Accessors public (LatteView<?>)=>void onTap;
 	@Accessors public (LatteView<?>, MotionEvent)=>boolean onTouch;
+	@Accessors public boolean clickable;
 	
 	public var Animator currentAnimation;
 	public var List<Animator> pendingChildAnimations = newArrayList(); 
@@ -287,6 +288,7 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 					transitionStyle
 				}
 			}
+			androidView.clickable = clickable;
 			onApplyAttributes?.apply(this);
 		}
 	}
