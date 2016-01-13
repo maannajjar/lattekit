@@ -419,8 +419,6 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		val HashMap<String,Type> lambdaScope = newHashMap();
 		
 		if (ctx.formalParameterList != null ) {
-//			compiled.generatedCode = "DD";
-//			return compiled;
 			paramList += ctx.formalParameterList.formalParameter.map[
 				var xType =  lookupType(type);
 				lambdaScope.put(variableDeclaratorId.text,xType)				
@@ -438,12 +436,19 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 //		paramList += (lookupType("java.lang.String") -> "b"); 
 		scope.add(lambdaScope);
 		var blockCompiled = visitBlockBody(ctx.blockBody,lambdaScope,true);
-		var myTypeName = "org.eclipse.xtext.xbase.lib.Functions.Function"+paramList.size
 		var returnType = if (blockCompiled.type.isPrimitive) blockCompiled.type.boxed else blockCompiled.type;
-		var code = "new "+myTypeName+"<"+paramList.map[key.typeName].join(",")+","+returnType.boxed.typeName+">() { "
-		code += "     public "+returnType.typeName +" apply("+paramList.map[key.typeName +" "+value].join(",")+") {"
+		var isVoidReturn = false;
+		var myTypeName = if (returnType.typeName == "void" || returnType.typeName == "Void") {
+			isVoidReturn = true
+			"org.eclipse.xtext.xbase.lib.Procedures.Procedure"+paramList.size
+		} else {
+			"org.eclipse.xtext.xbase.lib.Functions.Function"+paramList.size
+		}
+		
+		var code = "new "+myTypeName+"<"+paramList.map[key.typeName].join(",")+(if (isVoidReturn) "" else ","+returnType.boxed.typeName)+">() { "
+		code += "     public "+  returnType.typeName +" apply("+paramList.map[key.typeName +" "+value].join(",")+") {"
 		code += blockCompiled.generatedCode
-		code += "     }"
+		code += "     } "
 		code += "}"
 		var myClz = transformationContext.findTypeGlobally(myTypeName) as TypeDeclaration;
 		//,paramList.map[key.typeRef]
@@ -523,7 +528,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			var compiledChild = visit(child);
 			compiled.children += compiledChild;
 			
-			if (index == ctx.blockStatement.size-1 && addReturn && compiledChild.generatedCode.indexOf("return") != 0) {
+			if (index == ctx.blockStatement.size-1 && addReturn && compiledChild.generatedCode.indexOf("return") != 0 && compiledChild.type.typeName.toFirstLower != "void") {
 				compiledChild.generatedCode = "return "+compiledChild.generatedCode;
 			} 
 			
@@ -533,7 +538,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			}
 			if (index == ctx.blockStatement.size-1) {
 				compiled.type = compiledChild.type;
-				if (addReturn && compiledChild.generatedCode.indexOf("return") != 0) {
+				if (addReturn && compiledChild.generatedCode.indexOf("return") != 0 && compiledChild.type.typeName.toFirstLower != "void") {
 					compiledChild.generatedCode = "return "+compiledChild.generatedCode;
 				}
 			} 
