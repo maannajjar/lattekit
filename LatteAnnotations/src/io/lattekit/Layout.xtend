@@ -1,6 +1,15 @@
 package io.lattekit
 
+import com.google.common.base.Charsets
+import com.google.common.hash.Hashing
 import io.lattekit.compiler.LayoutCompiler
+import java.io.IOException
+import java.io.PrintWriter
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.util.Date
+import java.util.Map
 import org.eclipse.xtend.lib.macro.AbstractFieldProcessor
 import org.eclipse.xtend.lib.macro.AbstractMethodProcessor
 import org.eclipse.xtend.lib.macro.Active
@@ -15,7 +24,22 @@ annotation Layout {
 }
 
 class LayoutProcessor extends AbstractMethodProcessor {
+	static Map<String,String> cachedCode = newHashMap();
 	
+	def static String byteArrayToHexString(byte[] b) {
+	  var result = "";
+	  for (var i=0; i < b.length; i++) {
+	    result +=
+	          Integer.toString( ( b.get(i).bitwiseAnd(0xff) ) + 0x100, 16).substring( 1 );
+	  }
+	  return result;
+	}
+			
+	def static String readFile(String path, Charset encoding) throws IOException  {
+	  var encoded = Files.readAllBytes(Paths.get(path));
+	  return new String(encoded, encoding);
+	}
+			
 	override doTransform(MutableMethodDeclaration annotatedMethod, extension TransformationContext context) {
 		super.doTransform(annotatedMethod, context)
 
@@ -32,23 +56,53 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		if (importListParam.size > 0) {
 			importList += importListParam 
 		}
+		
 
 		val isAdHoc = annotatedMethod.simpleName != "render" || !latteViewTR.isAssignableFrom(annotatedMethod.declaringType.newTypeReference());
 		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
+		var hash = importList.join(",")+layoutSource.replaceAll(" ","").replaceAll("\t","").replaceAll("\n","");
 		if (isAdHoc) {
 			annotatedMethod.returnType = latteViewTR;
+			hash+=":adhoc";
 		}
-		val layoutCode = if (isAdHoc) { 
-			LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"null",importList);
-		} else {
-			LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"this",importList);
-		}
+		hash  = Hashing.sha1().hashString(hash,Charsets.UTF_8).toString;
 		
+		var String cachedCompiled = null;
+		var isCached = false;
+		
+//		try {
+//			cachedCompiled = readFile("/tmp/"+hash+".lattekit",Charset.defaultCharset());
+//			isCached = true;
+//		} catch(IOException ioex) {
+//			
+//		}
+		
+		var layoutCode = if (cachedCompiled != null) {
+			isCached = true
+			"// Using cached compilation\n"+cachedCompiled
+		} else if (isAdHoc) { 
+			"/* Recompiled j"+ hash+" "+ new Date().toLocaleString +" " + cachedCode.size +" */ "
+			+LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"null",importList);
+		} else {
+			"/* Recompiled "+ hash+" "+ new Date().toLocaleString +" " + cachedCode.size +" */ "
+			+LayoutCompiler.compileLayout(context,layoutSource,annotatedMethod.declaringType as MutableClassDeclaration,"this",importList);
+		}
+		if (!isCached) {
+			try {
+				var pw = new PrintWriter("/tmp/"+hash+".lattekit");
+				pw.print(layoutCode);
+				pw.flush
+				pw.close
+			} catch(IOException ioex) {
+				layoutCode = "/** "+ioex+ "**/ \n"+ layoutCode
+			}				
+		}
+		val lc = layoutCode;
 		annotatedMethod.body = '''
 			«IF !isAdHoc»
-				«layoutCode»
+				«lc»
 			«ELSE»
-				«layoutCode»
+				«lc»
 				«IF annotatedMethod.declaringType.findDeclaredField("latteCss") != null»
 					myView.loadStylesheets(this.latteCss);
 				«ENDIF»
