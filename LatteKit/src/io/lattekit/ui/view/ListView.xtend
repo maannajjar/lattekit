@@ -7,10 +7,13 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import java.lang.reflect.ParameterizedType
 import java.util.List
+import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtext.xbase.lib.Functions.Function1
 import org.eclipse.xtext.xbase.lib.Functions.Function2
 
 class ListView extends LatteView<android.widget.ListView>  {
+	
+	@Accessors Integer dividerHeight;
 	
 	var adapter = new BaseAdapter() {
 		
@@ -111,6 +114,14 @@ class ListView extends LatteView<android.widget.ListView>  {
 	}
 	
 
+	override applyAttributes() {
+		super.applyAttributes()
+		var view = androidView as android.widget.ListView;
+		if (dividerHeight != null) {
+			view.dividerHeight = dividerHeight;	
+		}
+	}
+	
 	override View createAndroidView(Context a) {
 		return new android.widget.ListView(a);
 	}

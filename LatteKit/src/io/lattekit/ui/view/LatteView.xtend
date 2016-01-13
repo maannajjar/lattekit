@@ -501,14 +501,6 @@ public  class LatteView<T> implements OnTouchListener, OnClickListener {
 	def onStateChanged(String... states) {
 		if (!isRendering) {
 			handleStateChanged
-//			if (!dirtyState) {
-//				// No need to post another task if dirtyState is already true
-//				dirtyState = true;
-//			    new Handler(Looper.getMainLooper()).postAtFrontOfQueue([
-//			 		handleStateChanged
-//			 		dirtyState = false;   	
-//			    ])
-//			}
 		}
 	}
 	

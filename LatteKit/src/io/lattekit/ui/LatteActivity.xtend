@@ -18,12 +18,17 @@ class LatteActivity extends Activity {
 		latteView =  LatteActivity.this.render();
 		latteView.loadStylesheet(cssFiles);
 		androidView = latteView.buildView(this);
+		latteView.onViewMounted = [ LatteActivity.this.onViewMounted() ]
 		setContentView(androidView);
 	}
 	
 	def onStateChanged() {
 		latteView.onStateChanged();		
 	}
+	
+	def onViewMounted() {
+		latteView.onViewMounted();	
+	}	
 	
 	def List<Stylesheet> getCssFiles() {
 		return #[]		
