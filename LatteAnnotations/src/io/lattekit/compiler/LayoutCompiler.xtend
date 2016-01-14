@@ -286,6 +286,7 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 	@Accessors List<String> importList;
 	
 	int viewCounter = 0;
+	var currentSubViewIndex = 0;
 	
 	
 
@@ -624,209 +625,60 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 		var imports = importList + newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget", "android.view");
 		
 				
-		var isNativeView = false;
-		var androidViewType = "";
-		var androidCreator = "";
-		val List<String> androidAttrsProc = newArrayList();
 		var findViewType = transformationContext.findViewType(ctx.el.text,imports.toList);
 		if (findViewType == null) {
 			// TODO :Error
 		}  else {
-			var androidView = transformationContext.findTypeGlobally("android.view.View");
-			if (androidView.isAssignableFrom(findViewType)) {
-				isNativeView = true
-				androidViewType = findViewType.qualifiedName
-				androidCreator = '''
-				it.setOnCreateAndroidView(new org.eclipse.xtext.xbase.lib.Functions.Function1<android.content.Context,android.view.View>() {
-					public «findViewType.qualifiedName» apply(android.content.Context context) {
-							return new «findViewType.qualifiedName»(context);
-					}
-				});'''
-			} else {
-				latteViewType = findViewType.qualifiedName
-			}
+			latteViewType = findViewType.qualifiedName
 		}
 
-		val List<String> attrCode = newArrayList()
 		val mutableType = transformationContext.findTypeGlobally(latteViewType);
 		val viewType = Type.fromTypeReference(transformationContext.newTypeReference(mutableType),mutableType as ClassDeclaration)
 		compiled.type = viewType;
 		compiled.generatedCode = "// "+ mutableType.simpleName
 		
-		val isAndroidView = isNativeView;
-		val androidViewTypeName = androidViewType
-		ctx.xmlAttribute.forEach[ attr |
-			val propertySetter = "set"+attr.Identifier.text.substring(0,1).toUpperCase+attr.Identifier.text.substring(1)
-			var compiledExpr = new CompiledExpression();
-			findReferencedMember(compiledExpr,viewType,attr.Identifier.text, false);
-			
-			
-			var List<MethodDeclaration> setterMethods = newArrayList();						
-			var currentClass = mutableType as ClassDeclaration
-			var methods = currentClass.declaredMethods.filter[
-				simpleName == propertySetter && parameters.size == 1
-			]
-			setterMethods += methods
-			var declaringClasses = transformationContext.findDeclaringClasses(transformationContext.newTypeReference(currentClass),[simpleName == propertySetter])
-			var upstreamMethods = declaringClasses.map[ declaredResolvedMethods ].flatten.map[ declaration ]
-			setterMethods += upstreamMethods.filter[
-				simpleName == propertySetter && parameters.size == 1
-			]
-
-//			val procClosureSetter = setterMethods.findFirst[
-//				transformationContext.getProcedureType(parameters.findFirst[true].type) != null
-//			];	
-//			
-//			val fnClosureSetter = setterMethods.findFirst[
-//				transformationContext.getFunctionType(parameters.findFirst[true].type) != null
-//			];	
-			
-			var hasSetter = !setterMethods.isEmpty
-									
-			var code = "";
+		var props = ctx.xmlAttribute.map[ attr |
 			var value = "";
-			if (attr.Identifier.text == "style"  && attr.styleMapLiteralBody != null) {
-				// TODO: Handle regular map literal body (not style)
-				var valueExpr = visit(attr.styleMapLiteralBody);
-				value = valueExpr.generatedCode;
-				code = '''it.setStyle(«value»);'''
-				
-			} else if (!hasSetter) {
-				if (isAndroidView) {
-					if (attr.expression !=null) {
-						// JavaCode
-						var valueExpr = visit(attr.expression);
-						if (valueExpr.generatedCode == null) {
-							if (valueExpr.preferredAccess == "this") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
-							} else if (valueExpr.preferredAccess == "getterMethod") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.getterMethod.name+"()";
-							} else if (valueExpr.preferredAccess == "mutableGetterMethod") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
-							} else if (valueExpr.preferredAccess == "mutableField") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
-							}  else {
-								valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
-							}
-						}
-						value = valueExpr.generatedCode 
-						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
-					} else {
-						value = attr.StringLiteral.text
-						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
-					}									
-					// Try Regular Setter:
-					var androidViewClass =  try { Class.forName(androidViewTypeName) } catch (Exception ex) { null };
-					var allMethods = getAllMethods(androidViewClass);
-					var regularSetter = allMethods.findFirst[name == propertySetter && parameterCount == 1];
-					if (regularSetter != null) {
-						var typedValue = if (regularSetter.parameters.get(0).type == String || regularSetter.parameters.get(0).type == CharSequence) {
-							value
-						} else value
-						
-						androidAttrsProc += '''
-							myView.«regularSetter.name»(«typedValue»);
-						'''
+			if (attr.expression !=null) {
+				// JavaCode
+				var valueExpr = visit(attr.expression);
+				if (valueExpr.generatedCode == null) {
+					if (valueExpr.preferredAccess == "this") {
+						valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
+					} else if (valueExpr.preferredAccess == "getterMethod") {
+						valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.getterMethod.name+"()";
+					} else if (valueExpr.preferredAccess == "mutableGetterMethod") {
+						valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
+					} else if (valueExpr.preferredAccess == "mutableField") {
+						valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
+					}  else {
+						valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
 					}
-				} else {
-					if (attr.expression !=null) {
-						// JavaCode
-						var valueExpr = visit(attr.expression);
-						if (valueExpr.generatedCode == null) {
-							if (valueExpr.preferredAccess == "this") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+"this";
-							} else if (valueExpr.preferredAccess == "getterMethod") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.getterMethod.name+"()";
-							} else if (valueExpr.preferredAccess == "mutableGetterMethod") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableGetterMethod.simpleName+"()";
-							} else if (valueExpr.preferredAccess == "mutableField") {
-								valueExpr.generatedCode = (if (valueExpr.prefix!=null) valueExpr.prefix+ "." else"")+valueExpr.mutableField.simpleName+"";
-							}  else {
-								valueExpr.generatedCode =(if (valueExpr.prefix!=null) valueExpr.prefix+"." else"")+valueExpr.field.name
-							}
-						}
-						
-						value = valueExpr.generatedCode;
-						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
-					} else if (attr.lambdaBody != null) { 
-						var valueExpr = visit(attr.lambdaBody);
-						value = valueExpr.generatedCode;
-						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''						
-					} else {
-						value = attr.StringLiteral.text
-						code = '''it.setAttribute("«attr.Identifier.text»", «value»);'''
-					}									
-					
-				}
-			} else if (hasSetter) {
-				if (viewType.xtendClazz != null) {
-//					code = "it."+compiledExpr.mutableSetterMethods.get(0).simpleName+"(";
-					code = "it."+propertySetter+"(";
-				} else {
-					code = "it."+propertySetter+"(";
-				}			
-				if (attr.expression !=null) {
-					// JavaCode
-					value = visit(attr.expression).generatedCode
-					code += value+");"
-				} else {
-					value = attr.StringLiteral.text
-					code += value+");";
 				}
 				
-			}
-			
-			code += '''it.addNewProperty("«attr.Identifier.text»",it.getAttribute("«attr.Identifier.text»"));'''
-			attrCode += code;
-			
+				value = valueExpr.generatedCode;
+			} else if (attr.lambdaBody != null) { 
+				var valueExpr = visit(attr.lambdaBody);
+				value = valueExpr.generatedCode;
+			} else {
+				value = attr.StringLiteral.text
+			}			
+			return attr.Identifier.text -> value 			
 		]
 
-		var xmlAttributesProc = '''
-		final org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»> «variableName»_attrsProc = new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»>() {
-			public void apply(final «latteViewType» it) {
-				«FOR c: attrCode»
-					«c»
-				«ENDFOR»
-				«IF isNativeView»					
-					«androidCreator»
-					it.setOnApplyAttributes(new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»>() {
-						public void apply(«latteViewType» applyTo) {
-							«androidViewType» myView = («androidViewType»)applyTo.getAndroidView();
-							«FOR c : androidAttrsProc»
-								«c»
-							«ENDFOR»
-						}
-					});
-				«ENDIF»
-			}
-		};
-		'''
 		var childCode = ctx.blockStatement.map[
 			visit.generatedCode
 		]
-		
-
-		val isLatteSubclass = jvmContext.myTypeReference.isAssignableFrom(transformationContext.newTypeReference(transformationContext.findTypeGlobally(latteViewType)));
-		var childrenProc = '''
-		final org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»> «variableName»_childrenProc = new org.eclipse.xtext.xbase.lib.Procedures.Procedure1<«latteViewType»>() {
-			public void apply(final «latteViewType» it) {
-				«FOR child: childCode»
-					«child»
-				«ENDFOR»
-			}
-		};
-		'''		
 		compiled.generatedCode = '''
-		«latteViewType» «variableName» = new «latteViewType»();
-		«xmlAttributesProc»
-		«childrenProc»
-		«IF rootView»
-			«variableName».processNode(«attachToObject», «variableName»_attrsProc, «variableName»_childrenProc); 
-			«IF attachToObject != "null"»this.addChild(0,«variableName»);«ENDIF»
-		«ELSE»
-			«variableName».processNode(it, «variableName»_attrsProc, «variableName»_childrenProc);
-		«ENDIF»
-		
+			«IF !rootView»it.reconcileChild(i++,«ENDIF»io.lattekit.ui.view.LatteView.createLayout("«latteViewType»", io.lattekit.util.Util.props(«FOR pair : props SEPARATOR ','»"«pair.key»",«pair.value»«ENDFOR»),
+					new io.lattekit.ui.view.ChildrenProc() {  
+						public void apply(LatteView it) {
+							int i = 0;
+							«FOR child: ctx.blockStatement»
+								«visit(child).generatedCode»
+							«ENDFOR»
+						}
+					})«IF !rootView»);«ENDIF»
 		''' 
 		return compiled;
 	}

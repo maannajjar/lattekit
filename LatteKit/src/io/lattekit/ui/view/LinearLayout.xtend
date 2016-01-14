@@ -3,16 +3,18 @@ package io.lattekit.ui.view
 import android.content.Context
 import android.view.View
 import android.widget.LinearLayout.LayoutParams
-import org.eclipse.xtend.lib.annotations.Accessors
 
-public class LinearLayout extends LatteView<android.widget.LinearLayout> {
+public class LinearLayout extends NativeViewGroup {
 	
-	@Accessors String orientation;
+//	@Accessors String orientation;
 	def void init() {
 	}
 	
-	override applyAttributes() {
-		super.applyAttributes()
+	def String getOrientation() {
+		return props.get("orientation") as String
+	}
+	override applyProps() {
+		super.applyProps()
 		var view = androidView as android.widget.LinearLayout;
 		if (orientation == "horizontal") {
 			view.orientation = android.widget.LinearLayout.HORIZONTAL;
@@ -21,12 +23,12 @@ public class LinearLayout extends LatteView<android.widget.LinearLayout> {
 		}
 	}
 	
-	override View createAndroidView(Context a) {
+	override View renderNative(Context a) {
 		return new android.widget.LinearLayout(a);
 	}
 
-	override LayoutParams createLayoutParams(int width, int height) {
-		var lp = new android.widget.LinearLayout.LayoutParams(width, height);
+	override LayoutParams createLayoutParams() {
+		var lp = new android.widget.LinearLayout.LayoutParams(0,0);
 		return lp
 	}
 }

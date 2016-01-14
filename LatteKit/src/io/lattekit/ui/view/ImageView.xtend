@@ -4,13 +4,16 @@ import android.content.Context
 import android.view.View
 import org.eclipse.xtend.lib.annotations.Accessors
 
-class ImageView extends LatteView<android.widget.ImageView> {
+class ImageView extends NativeView {
 	
-	@Accessors int src;
 	@Accessors String scaleType;
 	
-	override applyAttributes() {
-		super.applyAttributes()
+	def int getSrc() {
+		return props.get("src") as Integer
+	}
+
+	override applyProps() {
+		super.applyProps()
 		var view = androidView as android.widget.ImageView;
 		if (src != 0) {
 			view.imageResource = src;
@@ -31,7 +34,7 @@ class ImageView extends LatteView<android.widget.ImageView> {
 	}
 	
 	
-	override View createAndroidView(Context a) {
+	override View renderNative(Context a) {
 		return new android.widget.ImageView(a);
 	}
 	

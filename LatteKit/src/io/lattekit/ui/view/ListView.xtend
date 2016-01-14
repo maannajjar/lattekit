@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.BaseAdapter
+import android.widget.FrameLayout
 import java.lang.reflect.ParameterizedType
 import java.util.List
 import org.eclipse.xtend.lib.annotations.Accessors
@@ -14,11 +15,11 @@ import org.eclipse.xtext.xbase.lib.Functions.Function1
 import org.eclipse.xtext.xbase.lib.Functions.Function2
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure2
+import java.util.Map
 
-class ListView extends LatteView<android.widget.ListView> implements OnItemClickListener {
+class ListView extends NativeView implements OnItemClickListener {
 	
 	@Accessors Integer dividerHeight;
-	
 	
 	var adapter = new BaseAdapter() {
 		
@@ -36,7 +37,7 @@ class ListView extends LatteView<android.widget.ListView> implements OnItemClick
 				if (isMatch(child, item,position)) {
 					return i;
 				}
-				if (child.attributes.get("defaultView") == true || child.attributes.get("defaultView") == "true") {
+				if (child.props.get("defaultView") == true || child.props.get("defaultView") == "true") {
 					defaultView = i;
 				}
 			}
@@ -47,8 +48,8 @@ class ListView extends LatteView<android.widget.ListView> implements OnItemClick
 			return defaultView;
 		}
 		
-		def isMatch(LatteView<?> template, Object item,int position) {
-			var testLambda = template.attributes.get("when");
+		def isMatch(LatteView template, Object item,int position) {
+			var testLambda = template.props.get("when");
 			if (testLambda == null) {
 				return false;
 			}
@@ -83,57 +84,47 @@ class ListView extends LatteView<android.widget.ListView> implements OnItemClick
 		
 		override getView(int position, View convertView, ViewGroup parent) {
 			var type = getItemViewType(position);
+			Log.d("Latte","Getting item "+getItem(position))
 			var template = children.get(type);
 			if (convertView != null) {
 				template = convertView.getTag() as LatteView;
-				template.setAttribute("model", getItem(position));
-				template.setAttribute("modelIndex", position);
+				template.props.put("model", getItem(position));
+				template.props.put("modelIndex", position);
 				template.onStateChanged();
 				return convertView;
 			}
+			
 			template = template.copy();
-			template.setAttribute("modelIndex", position);
-			template.setAttribute("model", getItem(position));
-			template.render();
-			var v = template.buildView(activity)
+			template.props.put("modelIndex", position);
+			template.props.put("model", getItem(position));
+			var lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT); 
+			var v = template.buildView(activity,lp)
 			v.setTag = template;
 			return v;
 		}
 
 	}
-	
-	override void renderChildren() {
-		// Do nothing. Children here are just used for templates and not rendering real views
-	}
-	
-	
-	def void setData(List<?> data) {
-		attributes.put("data",data);
-		if (isMounted()) {
-			adapter.notifyDataSetChanged
-		}
-	}
-	
+			
 	def List<?> getData() {
-		attributes.get("data") as List<?>;
+		props.get("data") as List<?>;
 	}
 	
 
-	override applyAttributes() {
-		super.applyAttributes()
+	override applyProps() {
+		super.applyProps()
 		var view = androidView as android.widget.ListView;
 		if (dividerHeight != null) {
 			view.dividerHeight = dividerHeight;	
 		}
-		if (attributes.get("onItemClickListener") != null) {
-			view.onItemClickListener = attributes.get("onItemClickListener")  as OnItemClickListener;
+		if (props.get("onItemClickListener") != null) {
+			view.onItemClickListener = props.get("onItemClickListener")  as OnItemClickListener;
 		} else {
 			view.onItemClickListener = this;	
 		}
 	}
 	
 	override onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		var handlerLambda = attributes.get("onItemClick");
+		var handlerLambda = props.get("onItemClick");
 		if (handlerLambda == null) {
 			return
 		}
@@ -150,25 +141,22 @@ class ListView extends LatteView<android.widget.ListView> implements OnItemClick
 		} else {
 			// TODO: Warn about wrong "onItemClick" variable
 			return;			
-		}
-		
-		
+		}	
 	}
 	
-	override View createAndroidView(Context a) {
+	override View renderNative(Context a) {
 		return new android.widget.ListView(a);
 	}
-	
-	override createLayoutParams(int width, int height) {
-		null;
-	}
-	
-	override onViewRendered() {
+
+	override onViewMounted() {
+		super.onViewMounted()
+		(androidView as android.widget.ListView).adapter = adapter;
 		adapter.notifyDataSetChanged
 	}
 	
-	override onViewMounted() {
-		nativeView.adapter = adapter;
+	override onWillReceiveProps(Map<String, Object> props) {
+		adapter.notifyDataSetChanged
 	}
+	
 	
 }

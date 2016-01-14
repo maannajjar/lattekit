@@ -1,45 +1,40 @@
 package io.lattekit.ui.view
 
 import android.content.Context
-import android.util.Log
 import android.view.View
 import java.util.HashMap
 
-public class RelativeLayout extends LatteView<android.widget.RelativeLayout> {
+public class RelativeLayout extends NativeViewGroup {
 	
 	
-	def void init() {
-	}
-		
-	override View createAndroidView(Context a) {
+	override View renderNative(Context a) {
 		return new android.widget.RelativeLayout(a);
 	}
 
-	override android.widget.RelativeLayout.LayoutParams createLayoutParams(int width, int height) {
-		var lp = new android.widget.RelativeLayout.LayoutParams(width, height);
+	override android.widget.RelativeLayout.LayoutParams createLayoutParams() {
+		var lp = new android.widget.RelativeLayout.LayoutParams(0,0);
 		return lp
 	}
 	
 	override onChildrenAdded() {
-		super.onChildrenAdded()
 		val viewMap = newHashMap()
-		subviews.forEach[
-			if (id != null) {
-				viewMap.put(id, rootAndroidView.id);
+		children.forEach[
+			if ((it as NativeView).id != null) {
+				viewMap.put( (it as NativeView).id, rootAndroidView.id);
 			}
 		]
-		subviews.forEach[ clearRules ]
-		subviews.forEach[ applyLayoutRules(viewMap) ]
+		children.forEach[ clearRules ]
+		children.forEach[ applyLayoutRules(viewMap) ]
 	}
 	
-	def clearRules(LatteView<?> virtualView) {
+	def clearRules(LatteView virtualView) {
 		for (i:0..21) (virtualView.rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams).removeRule(i);
 	}
 	
-	def applyLayoutRules(LatteView<?> virtualView, HashMap<String,Integer> viewIds) {
+	def applyLayoutRules(LatteView virtualView, HashMap<String,Integer> viewIds) {
 		var rootAndroidView = virtualView.rootAndroidView
 		val params = rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams; 
-		virtualView.attributes.forEach[key, value|
+		virtualView.props.forEach[key, value|
 			if (key == "below") {
 				params.addRule(android.widget.RelativeLayout.BELOW, viewIds.get(value));
 			} else if (key == "above") {

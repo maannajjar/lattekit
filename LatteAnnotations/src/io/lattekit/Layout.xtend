@@ -5,25 +5,30 @@ import com.google.common.hash.Hashing
 import io.lattekit.compiler.LayoutCompiler
 import java.io.IOException
 import java.io.PrintWriter
+import java.lang.annotation.ElementType
+import java.lang.annotation.Target
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Date
+import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.macro.AbstractFieldProcessor
-import org.eclipse.xtend.lib.macro.AbstractMethodProcessor
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
+import org.eclipse.xtend.lib.macro.TransformationParticipant
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableMemberDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 
+@Target(/*ElementType.FIELD,*/ ElementType.METHOD)
 @Active(typeof(LayoutProcessor))
 annotation Layout {
 	String[] imports = #[]
 }
 
-class LayoutProcessor extends AbstractMethodProcessor {
+class LayoutProcessor implements TransformationParticipant<MutableMemberDeclaration> {
 	static Map<String,String> cachedCode = newHashMap();
 	
 	def static String byteArrayToHexString(byte[] b) {
@@ -40,15 +45,19 @@ class LayoutProcessor extends AbstractMethodProcessor {
 	  return new String(encoded, encoding);
 	}
 			
-	override doTransform(MutableMethodDeclaration annotatedMethod, extension TransformationContext context) {
-		super.doTransform(annotatedMethod, context)
-
+	override doTransform(List<? extends MutableMemberDeclaration> elements, extension TransformationContext context) {
+		elements.forEach[transform(context)]
+	}
+			
+	def dispatch void transform(MutableFieldDeclaration annotatedMethod, extension TransformationContext context) {
+	}			
+	def dispatch void transform(MutableMethodDeclaration annotatedMethod, extension TransformationContext context) {
 		val layoutStr = annotatedMethod.body.toString
 		annotatedMethod.markAsRead
 		
 		val latteViewTR = findTypeGlobally("io.lattekit.ui.view.LatteView").newTypeReference();
 		
-		var importList = newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
+		var importList = newArrayList("io.lattekit.ui.view","android.webkit", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
 		var importListParam = annotatedMethod.annotations.findFirst[ a|
 			a.annotationTypeDeclaration == Layout.newTypeReference().type
 		].getStringArrayValue("imports")
@@ -100,17 +109,14 @@ class LayoutProcessor extends AbstractMethodProcessor {
 		val lc = layoutCode;
 		annotatedMethod.body = '''
 			«IF !isAdHoc»
-				«lc»
+				return «lc»
 			«ELSE»
-				«lc»
-				«IF annotatedMethod.declaringType.findDeclaredField("latteCss") != null»
-					myView.loadStylesheets(this.latteCss);
-				«ENDIF»
-				return myView;
+				return «lc»
 			«ENDIF»
 		''';
 
 	}
+	
 }
 
 
