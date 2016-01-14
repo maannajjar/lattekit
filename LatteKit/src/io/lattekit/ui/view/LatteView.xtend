@@ -21,7 +21,7 @@ public  class LatteView {
     public final static int match_parent = LayoutParams.MATCH_PARENT;
     public final static int wrap_content = LayoutParams.WRAP_CONTENT;
         
-    String viewType;
+    @Accessors String viewType;
     @Accessors LatteView renderedView;
     @Accessors View androidView;
     
@@ -204,6 +204,7 @@ public  class LatteView {
         copy.props = props;
         copy.childrenProc = childrenProc;
         copy.viewType = viewType
+        copy.stylesheet = stylesheet;
         return copy;
     }
     

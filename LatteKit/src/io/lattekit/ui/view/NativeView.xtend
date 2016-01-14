@@ -63,7 +63,12 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
      
 	
 	def View renderNative(Context context) {
-		return new View(context)
+		var cls = if (viewType.startsWith("android")) {
+			Class.forName(viewType);
+		} else {
+			View
+		}
+		return cls.constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
 	}
 	def void applyProps() {
         if (androidView != null) {
