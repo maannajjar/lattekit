@@ -22,7 +22,8 @@ public  class LatteView {
     public final static int wrap_content = LayoutParams.WRAP_CONTENT;
         
     @Accessors String viewType;
-    @Accessors LatteView renderedView;
+//    @Accessors LatteView renderedView;
+    @Accessors List<LatteView> renderedViews = newArrayList()
     @Accessors View androidView;
     
         
@@ -38,7 +39,6 @@ public  class LatteView {
     public Context activity;
     
     protected ChildrenProc childrenProc;
-    private boolean isRendering = false;
     private boolean isMounted = false;
 
     
@@ -58,28 +58,18 @@ public  class LatteView {
     def onStateChanged() {
         handleStateChanged
     }
-    def void doRender() {
-    	if (this.childrenProc != null) {
-    		this.childrenProc.apply(this);
-    	}
-    	this.renderedView = this.render()
-    	if (this.renderedView != null) {
-    		this.renderedView.stylesheet = this.stylesheet;
-    		this.renderedView.doRender();
-    	}
-    }
+
     def View buildView(Context context,LayoutParams lp) {
         activity = context;
-        this.doRender();
+        this.step1()
         this.buildAndroidViewTree(activity,lp); 
         return this.rootAndroidView;        
     }
     
     def void handleStateChanged() {    	
-        var newView = this.render();
-        newView.doRender()
-        this.renderedView = reconcile(this.renderedView,newView)
-        this.buildAndroidViewTree(activity,rootAndroidView.layoutParams);    
+//        this.buildAndroidViewTree(activity,rootAndroidView.layoutParams);   
+		this.step1() 
+		this.buildAndroidViewTree(activity,rootAndroidView.layoutParams);
     }
         
     def static sameView(LatteView leftView, LatteView rightView) {
@@ -99,54 +89,58 @@ public  class LatteView {
     	layout.viewType = viewType;
     	layout.props = props;
     	layout.childrenProc = childrenProc;
+    	layout.children = layout.childrenProc.apply(layout);
+    	
     	return layout
     }
     
-    def static LatteView reconcile(LatteView previous, LatteView newView) {
-    	if (previous == null) {
-    		return newView;
-    	}
-    	if (sameView(previous,newView)) {  
-    		Log.d("Latte", previous +" is same as "+ newView);
-    		Log.d("Latte", previous.children.size +" VS "+ newView.children.size);
-			previous.onWillReceiveProps(newView.props);    		              
-			previous.props = newView.props;
-			if (previous.renderedView != null && newView.renderedView != null) {
-				Log.d("Latte", previous.renderedView +" RECONCILING WITH  "+ newView.renderedView);
-				previous.renderedView.reconcile(newView.renderedView)
-			} else if (newView.renderedView != null) {
-				previous.renderedView = newView.renderedView
+    
+    def void step1() {
+    	Log.d("Latte", "-----------------")
+    	Log.d("Latte", "Step 1 "+ this)
+    	var List<LatteView> newRenderedViews = newArrayList()
+    	var renderMe = this.render()
+    	if (renderMe != null) {
+    		renderMe.stylesheet = this.stylesheet
+    		newRenderedViews += renderMe
+    	} 
+    	if (this instanceof NativeViewGroup) {
+	    	for (child: children) {
+	    		newRenderedViews += child
+	    	}
+	    }
+	    
+		for (var i =0;i<newRenderedViews.length;i++) {
+			var newView = newRenderedViews.get(i);
+			if (i < renderedViews.length) {
+				var oldView = renderedViews.get(i)
+				if (sameView(oldView, newView)) {
+					var oldProps = oldView.props
+					oldView.children = newView.children
+					oldView.props = newView.props
+					if (oldView.onPropsUpdated(oldProps)) {
+						oldView.step1()	
+					}
+					newRenderedViews.set(i, oldView)
+				} else {
+					newView.step1()
+				}
+			} else {
+	    		newView.parentView = this
+	    		newView.stylesheet = this.stylesheet
+	    		newView.step1()			
 			}
-			for (var i =0 ; i < newView.children.size; i++) {
-	            var newChild = newView.children.get(i);
-	            Log.d("Latte", previous.children.get(i) +" RECONCILING WITH  "+ newChild);
-    	        previous.reconcileChild(i,newChild);
-	        }
-			return previous;
-         }
-         return newView;
-    }
-        
-    def void onWillReceiveProps(Map<String,Object> props) {
-    	
-    }
-    def reconcileChild(int index, LatteView newChild) {
-        // Compare child with existing subview
-        // If accepted then just call render in existing subview after transferring properties
-        // If not, then add new subview
-        Log.d("Latte",this +" adding child to"+ newChild)
-        if (index < children.size) {
-            children.set(index,reconcile(children.get(index),newChild))
-        } else {
-            children.add(index,newChild);
-        }
-        children.get(index).stylesheet = this.stylesheet
-        if (!(this instanceof ListView)) {
-        	children.get(index).doRender()
-        }
+		}
 
+		this.renderedViews = newRenderedViews;
     }
-        
+    
+
+    def boolean onPropsUpdated(Map<String,Object> props) {
+    	return true;
+    }
+    
+
     def LatteView render() {
        	return null;
     }
@@ -158,8 +152,8 @@ public  class LatteView {
     def View getRootAndroidView() {
         if (this.androidView != null) {
         	 return this.androidView
-        } else if (this.renderedView != null) {
-    		return this.renderedView.rootAndroidView;
+        } else if (this.renderedViews.get(0) != null) {
+    		return this.renderedViews.get(0).rootAndroidView;
     	}
     }
     def void onViewMounted() {
@@ -173,19 +167,22 @@ public  class LatteView {
             if (this.androidView == null) {
             	this.androidView = (this as NativeView).renderNative(a);
             } 
-            Log.d("Latte", this+" Created "+this.androidView)
         	if (this.androidView.layoutParams == null) {
         		this.androidView.layoutParams = lp;
         	}
         	if (!isMounted) {
             	isMounted = true;
             	onViewMounted();
-        	}
+        	}			
+        	
+			if (this instanceof NativeViewGroup) {
+				(this as NativeViewGroup).mountChildren()
+			}
             return this.androidView
         } else {
             // If we don't have native android view, then we are virtual node
-            Log.d("Latte", this +" : asking "+this.renderedView +" To build view itself");
-            var subAndroid =  this.renderedView.buildAndroidViewTree(a, lp);
+            Log.d("Latte", this +" : asking "+this.renderedViews.get(0) +" To build view itself");
+            var subAndroid =  this.renderedViews.get(0).buildAndroidViewTree(a, lp);
             if (!isMounted) {
                 isMounted = true;
                 onViewMounted();
@@ -199,10 +196,23 @@ public  class LatteView {
     }
     
     
+    def NativeView getNonVirtualParent() {
+        if (parentView == null) {
+            return null;
+        }
+        if (parentView instanceof NativeView) {
+            return parentView as NativeView;
+        }
+        return parentView.nonVirtualParent
+    }
+    
+    
+    
     def LatteView copy() {
         val copy = this.class.newInstance
         copy.props = props;
-        copy.childrenProc = childrenProc;
+        copy.childrenProc = childrenProc
+        copy.children = childrenProc.apply(copy);
         copy.viewType = viewType
         copy.stylesheet = stylesheet;
         return copy;
@@ -215,5 +225,5 @@ public  class LatteView {
 }
 
 interface ChildrenProc {
-	def void apply(LatteView view);
+	def List<LatteView> apply(LatteView view);
 }

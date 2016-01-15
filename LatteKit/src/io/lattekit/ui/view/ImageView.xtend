@@ -5,13 +5,14 @@ import android.view.View
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class ImageView extends NativeView {
-	
-	@Accessors String scaleType;
-	
+		
 	def int getSrc() {
-		return props.get("src") as Integer
+		return if (props.containsKey("src")) props.get("src") as Integer else 0;
 	}
 
+	def String getScaleType(){
+		return if (props.containsKey("scaleType")) props.get("scaleType") as String else null
+	}
 	override applyProps() {
 		super.applyProps()
 		var view = androidView as android.widget.ImageView;

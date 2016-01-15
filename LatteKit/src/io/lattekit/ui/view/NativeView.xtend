@@ -11,6 +11,7 @@ import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.os.Build
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.MeasureSpec
@@ -70,24 +71,17 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 		}
 		return cls.constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
 	}
+
 	def void applyProps() {
         if (androidView != null) {
 	        if (this.androidView.id == -1 && this.id != null) {
 	            this.androidView.id = Util.makeResId("io.lattekit", "id", id);
 	        }
-        	
-            if (isStyleModified) {
-                computeAllStyles();
-            }
-
-            if (!isMounted) {
-                _style.cloneFrom(activeStyle);
-                _style.applyToView(this);
-            } else {
-                if (isStyleModified) {
-                    transitionStyle
-                }
-            }
+	        if (props.get("clickable") != null && (props.get("clickable") == true ||props.get("clickable") == "true")) {
+	        	this.androidView.clickable = true
+	        } else {
+	        	this.androidView.clickable = false
+	        }
             if (androidView instanceof TextView) {
             	if (props.get("text") != null) {
             		(androidView as TextView).text = props.get("text") as String
@@ -95,26 +89,28 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
             }
         }
     }
-        
-    def boolean isStyleModified() {
-//        var modifiedKeys = modifiedProps.keySet()
-        return !isMounted /*|| modifiedKeys.contains("cls") || modifiedKeys.contains("style") || (parentView != null && parentView.isStyleModified); */
-    }
 
+	override onPropsUpdated(Map<String, Object> oldProps) {
+		if (props.get("cls") != oldProps.get("cls")) {
+			updateStyles(true, true)
+		}
+		Log.d("LatteXX", this.props +" VS" +oldProps);
+		return false
+	}
+	
 	override onViewMounted() {
 		if (androidView != null) {
 			computeAllStyles();
-			
-			androidView.layoutParams.width = normalStyle.width.inPixelsInt(androidView.context);
-			androidView.layoutParams.height = normalStyle.height.inPixelsInt(androidView.context)
 	        createBackgroundDrawable();
 	        updateTextColorDrawable();
 	        
             _style.cloneFrom(activeStyle);
             _style.applyToView(this);
+			
+			androidView.layoutParams.width = _style.width.inPixelsInt(androidView.context);
+			androidView.layoutParams.height = _style.height.inPixelsInt(androidView.context)
 		
-	        
-	        if (!(androidView instanceof AdapterView<?>)) {
+		    if (!(androidView instanceof AdapterView<?>)) {
 	            androidView.onClickListener = this;
 	        }
 	        androidView.onTouchListener = this;
@@ -122,6 +118,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	        if (normalStyle._computedX == null) {
 	            watchTree();
 	        }
+	        applyProps()
 		}
     }
     
@@ -267,8 +264,8 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
     }
     
     def void findDesecendantStyles(List<String> selectors, List<Style> outList) {
-        if (parentView != null) {
-            (parentView as NativeView).findDesecendantStyles(selectors,outList);
+        if (nonVirtualParent != null) {
+            nonVirtualParent.findDesecendantStyles(selectors,outList);
         }
         selectedStyles.forEach[  style | 
             selectors.forEach[ selector |
@@ -296,9 +293,9 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
             mySelectors += mySelectors.map[it+":"+pseudo];
         }
         selectedStyles += mySelectors.map[ stylesheet.getStyle(it)].filterNull
-        if (parentView != null) {
-            (parentView as NativeView).findDesecendantStyles(mySelectors, selectedStyles)
-            (parentView as NativeView).findDirectChildrenStyles(mySelectors, selectedStyles);
+        if (nonVirtualParent != null) {
+            nonVirtualParent.findDesecendantStyles(mySelectors, selectedStyles)
+            nonVirtualParent.findDirectChildrenStyles(mySelectors, selectedStyles);
         }
         selectedStyles.forEach[
             targetStyle.overrideWithStyle(it);
@@ -363,17 +360,6 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
     }        
     
 
-    def NativeView getNonVirtualParent() {
-        if (parentView == null) {
-            return null;
-        }
-        if (parentView.androidView != null) {
-            return parentView as NativeView;
-        }
-        return (parentView as NativeView).nonVirtualParent
-    }
-    
-    
     def Activity getActivity() {
     	return (rootAndroidView.context as Activity)
     }

@@ -4,6 +4,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import java.util.Map
 
 class NativeViewGroup extends NativeView {
 	
@@ -13,24 +14,27 @@ class NativeViewGroup extends NativeView {
 	
 	def void onChildrenAdded() {}
 	
-	override onViewMounted() {
-		super.onViewMounted()
-		Log.d("Latte",this+" Here about to add my children "+this.children.size)
-        if (children.size > 0) {
+	def mountChildren() {
+		Log.d("Latte",this+" Here about to add my children "+this.renderedViews.size)
+        if (renderedViews.size > 0) {
             var myContainer = this.androidView as ViewGroup
             var i = 0;
-            for (LatteView v : children) {
+            for (LatteView v : renderedViews) {
                 var childLP = createLayoutParams();
-                if (childLP != null) {
-                    // In case we get null LayoutParams, this means that view adapter doesn't want us to build & add the child
-                    var View childView = v.buildAndroidViewTree(this.activity, childLP);
-                    if (i >= myContainer.childCount) {
-                        myContainer.addView(childView, i, childLP)  
-                    } else if (myContainer.getChildAt(i) == childView) {
-                    } else {
-                        childView.layoutParams = childLP;
-                        myContainer.addView(childView,i, childLP);
-                    }
+                var View childView = v.buildAndroidViewTree(this.activity, childLP);
+                if (i >= myContainer.childCount) {
+                    myContainer.addView(childView, i, childLP)  
+                } else if (myContainer.getChildAt(i) == childView) {
+//                    	childView.layoutParams = childLP;
+                } else {
+                    childView.layoutParams = childLP;
+                    myContainer.addView(childView,i, childLP);
+                }
+                v.androidView = childView
+            
+               
+                if (!v.isMounted){
+                	v.onViewMounted()
                 }
                 i++;
             }
@@ -39,6 +43,10 @@ class NativeViewGroup extends NativeView {
             }
         }
         onChildrenAdded()
+	}
+	
+	override onPropsUpdated(Map<String, Object> oldProps) {
+		return true
 	}
 	
 }

@@ -10,17 +10,14 @@ import android.widget.BaseAdapter
 import android.widget.FrameLayout
 import java.lang.reflect.ParameterizedType
 import java.util.List
-import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.Map
 import org.eclipse.xtext.xbase.lib.Functions.Function1
 import org.eclipse.xtext.xbase.lib.Functions.Function2
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure2
-import java.util.Map
 
 class ListView extends NativeView implements OnItemClickListener {
-	
-	@Accessors Integer dividerHeight;
-	
+		
 	var adapter = new BaseAdapter() {
 		
 		override getCount() { data.size }		
@@ -97,7 +94,9 @@ class ListView extends NativeView implements OnItemClickListener {
 			template = template.copy();
 			template.props.put("modelIndex", position);
 			template.props.put("model", getItem(position));
-			var lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT); 
+			template.parentView = ListView.this
+			template.stylesheet = ListView.this.stylesheet
+			var lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT); 
 			var v = template.buildView(activity,lp)
 			v.setTag = template;
 			return v;
@@ -109,7 +108,13 @@ class ListView extends NativeView implements OnItemClickListener {
 		props.get("data") as List<?>;
 	}
 	
-
+	
+	def getDividerHeight() {
+		if (this.props.containsKey("dividerHeight")) {
+			return this.props.get("dividerHeight") as Integer
+		}
+		return 0;
+	}
 	override applyProps() {
 		super.applyProps()
 		var view = androidView as android.widget.ListView;
@@ -121,6 +126,10 @@ class ListView extends NativeView implements OnItemClickListener {
 		} else {
 			view.onItemClickListener = this;	
 		}
+		
+		view.adapter = adapter;
+		adapter.notifyDataSetChanged
+		
 	}
 	
 	override onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -150,13 +159,11 @@ class ListView extends NativeView implements OnItemClickListener {
 
 	override onViewMounted() {
 		super.onViewMounted()
-		(androidView as android.widget.ListView).adapter = adapter;
-		adapter.notifyDataSetChanged
 	}
 	
-	override onWillReceiveProps(Map<String, Object> props) {
+	override onPropsUpdated(Map<String, Object> props) {
 		adapter.notifyDataSetChanged
+		return false
 	}
-	
 	
 }
