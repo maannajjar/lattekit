@@ -6,10 +6,7 @@ import android.widget.LinearLayout.LayoutParams
 
 public class LinearLayout extends NativeViewGroup {
 	
-//	@Accessors String orientation;
-	def void init() {
-	}
-	
+
 	def String getOrientation() {
 		return props.get("orientation") as String
 	}

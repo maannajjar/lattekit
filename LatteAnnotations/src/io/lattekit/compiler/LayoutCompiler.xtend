@@ -666,17 +666,15 @@ class LatteLayoutCompiler extends LatteXtendBaseVisitor<CompiledExpression> {
 			return attr.Identifier.text -> value 			
 		]
 
-		var childCode = ctx.blockStatement.map[
-			visit.generatedCode
-		]
 		compiled.generatedCode = '''
-			«IF !rootView»it.reconcileChild(i++,«ENDIF»io.lattekit.ui.view.LatteView.createLayout("«latteViewType»", io.lattekit.util.Util.props(«FOR pair : props SEPARATOR ','»"«pair.key»",«pair.value»«ENDFOR»),
+			«IF !rootView»myChildren.add(«ENDIF»io.lattekit.ui.view.LatteView.createLayout("«latteViewType»", io.lattekit.util.Util.props(«FOR pair : props SEPARATOR ','»"«pair.key»",«pair.value»«ENDFOR»),
 					new io.lattekit.ui.view.ChildrenProc() {  
-						public void apply(LatteView it) {
-							int i = 0;
+						public java.util.List<io.lattekit.ui.view.LatteView> apply() {
+							java.util.List<io.lattekit.ui.view.LatteView> myChildren = new java.util.ArrayList<io.lattekit.ui.view.LatteView>();
 							«FOR child: ctx.blockStatement»
 								«visit(child).generatedCode»
 							«ENDFOR»
+							return myChildren;
 						}
 					})«IF !rootView»);«ENDIF»
 		''' 

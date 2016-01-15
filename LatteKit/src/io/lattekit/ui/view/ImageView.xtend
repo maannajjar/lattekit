@@ -2,7 +2,6 @@ package io.lattekit.ui.view
 
 import android.content.Context
 import android.view.View
-import org.eclipse.xtend.lib.annotations.Accessors
 
 class ImageView extends NativeView {
 		

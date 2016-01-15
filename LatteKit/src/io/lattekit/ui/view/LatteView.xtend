@@ -2,17 +2,17 @@ package io.lattekit.ui.view
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import io.lattekit.ui.LatteActivity
 import io.lattekit.ui.style.Stylesheet
+import java.util.ArrayList
 import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 
-public  class LatteView {
+public class LatteView {
     
     static Map<String,LatteView> SAVED_OBJECTS = newHashMap();
     
@@ -22,7 +22,6 @@ public  class LatteView {
     public final static int wrap_content = LayoutParams.WRAP_CONTENT;
         
     @Accessors String viewType;
-//    @Accessors LatteView renderedView;
     @Accessors List<LatteView> renderedViews = newArrayList()
     @Accessors View androidView;
     
@@ -47,12 +46,12 @@ public  class LatteView {
     }
     
         
-    def show(LatteView object) {
+    def show(LatteView caller) {
         var myId = System.currentTimeMillis+"";
-        var intent = new Intent(rootAndroidView.context, LatteActivity);
+        var intent = new Intent(caller.rootAndroidView.context, LatteActivity);
         intent.putExtra("_LATTE_KIT_OBJ_ID",myId)
-        LatteView.SAVED_OBJECTS.put(myId,object)
-        rootAndroidView.context.startActivity(intent);
+        LatteView.SAVED_OBJECTS.put(myId,this)
+        caller.rootAndroidView.context.startActivity(intent);
     }
 
     def onStateChanged() {
@@ -61,14 +60,13 @@ public  class LatteView {
 
     def View buildView(Context context,LayoutParams lp) {
         activity = context;
-        this.step1()
+        this.renderTree()
         this.buildAndroidViewTree(activity,lp); 
         return this.rootAndroidView;        
     }
     
     def void handleStateChanged() {    	
-//        this.buildAndroidViewTree(activity,rootAndroidView.layoutParams);   
-		this.step1() 
+		this.renderTree() 
 		this.buildAndroidViewTree(activity,rootAndroidView.layoutParams);
     }
         
@@ -89,15 +87,13 @@ public  class LatteView {
     	layout.viewType = viewType;
     	layout.props = props;
     	layout.childrenProc = childrenProc;
-    	layout.children = layout.childrenProc.apply(layout);
+    	layout.children = layout.childrenProc.apply()
     	
     	return layout
     }
     
     
-    def void step1() {
-    	Log.d("Latte", "-----------------")
-    	Log.d("Latte", "Step 1 "+ this)
+    def void renderTree() {
     	var List<LatteView> newRenderedViews = newArrayList()
     	var renderMe = this.render()
     	if (renderMe != null) {
@@ -119,16 +115,16 @@ public  class LatteView {
 					oldView.children = newView.children
 					oldView.props = newView.props
 					if (oldView.onPropsUpdated(oldProps)) {
-						oldView.step1()	
+						oldView.renderTree()	
 					}
 					newRenderedViews.set(i, oldView)
 				} else {
-					newView.step1()
+					newView.renderTree()
 				}
 			} else {
 	    		newView.parentView = this
 	    		newView.stylesheet = this.stylesheet
-	    		newView.step1()			
+	    		newView.renderTree()			
 			}
 		}
 
@@ -156,8 +152,8 @@ public  class LatteView {
     		return this.renderedViews.get(0).rootAndroidView;
     	}
     }
+    
     def void onViewMounted() {
-    	
     }
    	
     def View buildAndroidViewTree(Context a, ViewGroup.LayoutParams lp) {
@@ -181,7 +177,6 @@ public  class LatteView {
             return this.androidView
         } else {
             // If we don't have native android view, then we are virtual node
-            Log.d("Latte", this +" : asking "+this.renderedViews.get(0) +" To build view itself");
             var subAndroid =  this.renderedViews.get(0).buildAndroidViewTree(a, lp);
             if (!isMounted) {
                 isMounted = true;
@@ -194,8 +189,7 @@ public  class LatteView {
     def boolean isMounted() {
         return this.isMounted
     }
-    
-    
+
     def NativeView getNonVirtualParent() {
         if (parentView == null) {
             return null;
@@ -206,13 +200,11 @@ public  class LatteView {
         return parentView.nonVirtualParent
     }
     
-    
-    
     def LatteView copy() {
         val copy = this.class.newInstance
         copy.props = props;
-        copy.childrenProc = childrenProc
-        copy.children = childrenProc.apply(copy);
+        copy.children = new ArrayList<LatteView>()
+        children.forEach[ copy.children += it.copy() ]
         copy.viewType = viewType
         copy.stylesheet = stylesheet;
         return copy;
@@ -221,9 +213,8 @@ public  class LatteView {
     def String getId() {
     	return props.get("id") as String
     }
-    
 }
 
 interface ChildrenProc {
-	def List<LatteView> apply(LatteView view);
+	def List<LatteView> apply();
 }

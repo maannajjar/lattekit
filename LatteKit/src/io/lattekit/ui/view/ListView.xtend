@@ -10,7 +10,6 @@ import android.widget.BaseAdapter
 import android.widget.FrameLayout
 import java.lang.reflect.ParameterizedType
 import java.util.List
-import java.util.Map
 import org.eclipse.xtext.xbase.lib.Functions.Function1
 import org.eclipse.xtext.xbase.lib.Functions.Function2
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
@@ -115,6 +114,7 @@ class ListView extends NativeView implements OnItemClickListener {
 		}
 		return 0;
 	}
+
 	override applyProps() {
 		super.applyProps()
 		var view = androidView as android.widget.ListView;
@@ -129,7 +129,6 @@ class ListView extends NativeView implements OnItemClickListener {
 		
 		view.adapter = adapter;
 		adapter.notifyDataSetChanged
-		
 	}
 	
 	override onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -141,6 +140,7 @@ class ListView extends NativeView implements OnItemClickListener {
 		var paramType = (handlerLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
 		if (!paramType.isAssignableFrom(obj.class)) {
 			// TODO: warn about wrong param type
+			Log.d("LatteX","Warning "+paramType +" is not the same as "+obj.class)
 			return;
 		}
 		if (handlerLambda instanceof Procedure1) {
@@ -148,6 +148,7 @@ class ListView extends NativeView implements OnItemClickListener {
 		} else if (handlerLambda instanceof Procedure2) {
 			handlerLambda.apply(obj, position);
 		} else {
+			Log.d("LatteX","Warning: onItemClick should have parameters ("+paramType+",(optional)int) ")
 			// TODO: Warn about wrong "onItemClick" variable
 			return;			
 		}	
@@ -157,13 +158,5 @@ class ListView extends NativeView implements OnItemClickListener {
 		return new android.widget.ListView(a);
 	}
 
-	override onViewMounted() {
-		super.onViewMounted()
-	}
-	
-	override onPropsUpdated(Map<String, Object> props) {
-		adapter.notifyDataSetChanged
-		return false
-	}
 	
 }

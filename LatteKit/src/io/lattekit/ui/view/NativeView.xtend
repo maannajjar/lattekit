@@ -94,7 +94,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 		if (props.get("cls") != oldProps.get("cls")) {
 			updateStyles(true, true)
 		}
-		Log.d("LatteXX", this.props +" VS" +oldProps);
+		applyProps();
 		return false
 	}
 	
