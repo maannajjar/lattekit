@@ -21,16 +21,35 @@ class Prop extends Node {
 }
 
 @Accessors
-class LambdaProp extends Prop { }
+class LambdaProp extends Prop {
+	List<String> paramList;
+	List<String> paramTypes;
+	String returnType;
+	List<CodeStatement> statements = newArrayList()
+	override void setValue(String value) {
+		super.setValue(value)
+		parseLambdaCode()
+	}	
+	def parseLambdaCode() {
+		var split = value.split('''\|''',2)
+		paramList = split.get(0).trim().split(",").map[trim]
+		paramTypes = paramList.map[ trim().split(" ").get(0).trim() ]
+		statements = new CodeParser().parse(split.get(1))
+	}
+}
+
 @Accessors
 class DictProp extends Prop { }
 @Accessors
-class CodeProp extends Prop { }
+class CodeProp extends Prop {
+	List<CodeStatement> statements = newArrayList()
+}
 
 
 class PropsParser {
 	static var TOKENS_RE = Pattern.compile('''(\s+|[^ \[\{\}\]="]+|\{\{|\}\}|\{|\}|\[|\]|=|(?:(["'])(?:(?=(\\?))\3.)*?\2))''')
 	String source;
+
 
 	def consumeSpaces(Matcher m) {
 		while (!m.hitEnd && m.group(1).trim() == "") {
@@ -123,6 +142,7 @@ class PropsParser {
 			prop.end = end
 			prop.name = name
 			prop.value = value
+			prop.statements = new CodeParser().parse(value);
 			prop.text = source.substring(start,end)
 			return prop
 		}

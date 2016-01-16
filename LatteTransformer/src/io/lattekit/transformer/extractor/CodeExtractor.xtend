@@ -3,6 +3,7 @@ package io.lattekit.transformer.extractor
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import org.eclipse.xtend.lib.annotations.Data
+import org.eclipse.xtend.lib.annotations.Accessors
 
 abstract class CodeExtractor {
 	def void readSource(String source);
@@ -21,7 +22,7 @@ class LayoutCode {
 
 class GenricCodeExtractor extends CodeExtractor {
 	var pattern = Pattern.compile('''\$\(\/\*((?:(?!\*\/\))[\s\S])*)\*\/\)''')
-	var Matcher matcher;
+	@Accessors var Matcher matcher;
 	override readSource(String source) {
 		matcher = pattern.matcher(source)
 	}
