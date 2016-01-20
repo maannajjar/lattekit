@@ -12,7 +12,7 @@ class TagParser {
 	
 	def Tag parse(String code) {
 		var m = tagPattern.matcher(code)
-		var Tag lastTag = null
+		var Tag rootTag = null
 		while (m.find()) {
 			if (m.group(7) != null && m.group(7) != "") {
 				if (!stack.empty()) {
@@ -33,29 +33,34 @@ class TagParser {
 				} else if ((stack.peek() as Tag).name != m.group(2)) {
 //				 	System.out.println("ERROR: Unmatched closing tag.Found: "+ m.group(2)+" Expected: "+stack.peek().name)
 				} else {
-					lastTag = stack.pop()
+					stack.pop()
 				}
 			} else {
 //				System.out.println("Found tag "+m.group(2))
 				var tag = new Tag(m, code)
 				tag.start = m.start
 				tag.attributesString = m.group(3);
-				tag.props = new PropsParser().parse(tag.attributesString)
+				if (tag.attributesString == null) {
+					tag.attributesString = ""
+				} else {
+					tag.props = new PropsParser().parse(tag.attributesString)
+				}
 				tag.tagEnd = m.end
 				tag.name = m.group(2);
 				if (!stack.empty()) {
+					tag.parentTag = stack.peek();
 					stack.peek().childNodes += tag
+				} else {
+					rootTag = tag
 				}
-				if (m.group(6) == "") {
-					stack.push(tag)
+				if (m.group(6).trim() == "" || m.group(6) == null) {
+					stack.push(tag) // This is not self-closed
 				} else {
 					tag.selfClosed = true;
-					lastTag = tag
 				}
 			}
 		}
-		
-		return lastTag
+		return rootTag
 	}
 	
 	

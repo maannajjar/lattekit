@@ -13,7 +13,6 @@ import java.nio.file.Paths
 import java.util.Date
 import java.util.List
 import java.util.Map
-import org.eclipse.xtend.lib.macro.AbstractFieldProcessor
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.TransformationParticipant
@@ -21,6 +20,10 @@ import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMemberDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
+
+annotation Latte {
+	
+}
 
 @Target(/*ElementType.FIELD,*/ ElementType.METHOD)
 @Active(typeof(LayoutProcessor))
@@ -120,47 +123,5 @@ class LayoutProcessor implements TransformationParticipant<MutableMemberDeclarat
 }
 
 
-@Active(typeof(LayoutFieldProcessor))
-annotation Latte {
-	String[] imports = #[]
-}
-
-class LayoutFieldProcessor extends AbstractFieldProcessor {
-	
-	override doTransform(MutableFieldDeclaration annotatedField, extension TransformationContext context) {
-		super.doTransform(annotatedField, context)
-
-		val layoutStr = annotatedField.initializer.toString
-		annotatedField.markAsRead
-		
-		val latteViewTR = findTypeGlobally("io.lattekit.ui.view.LatteView").newTypeReference();
-		
-		var importList = newArrayList("io.lattekit.ui.view", "android.widget","android.support.v4.widget","android.support.v7.widget","android.support.v13.widget");
-		var importListParam = annotatedField.annotations.findFirst[ a|
-			a.annotationTypeDeclaration == Latte.newTypeReference().type
-		].getStringArrayValue("imports")
-		
-		if (importListParam.size > 0) {
-			importList += importListParam 
-		}
-		val layoutSource = layoutStr.substring(3,layoutStr.length-3);
-		val layoutCode = LayoutCompiler.compileLayout(context,layoutSource,annotatedField.declaringType as MutableClassDeclaration,"this",importList);
-
-		annotatedField.type = latteViewTR;
-		annotatedField.initializer = ''' 
-			new io.lattekit.ui.view.LatteView() {
-				public void render() {
-					«layoutCode»
-					«IF annotatedField.declaringType.findDeclaredField("latteCss") != null»
-						myView.loadStylesheets(«annotatedField.declaringType.simpleName».this.latteCss);
-					«ENDIF»
-				}
-			};
-		''';
-
-	}
-	
-	
-}
 
 

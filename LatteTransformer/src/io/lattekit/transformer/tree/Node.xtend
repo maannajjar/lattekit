@@ -33,12 +33,13 @@ public class TextNode extends Node {
 @Accessors
 public class Tag extends Node {
 	
+	Tag parentTag;
 	String name;
 	String attributesString
 	int tagEnd
 	int end;
 	boolean selfClosed = false;
-	List<Prop> props;
+	List<Prop> props = #[];
 	
 	new(Matcher m,String source) {
 		super(m,source)
