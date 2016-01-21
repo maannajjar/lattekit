@@ -8,6 +8,7 @@ import android.view.ViewGroup.LayoutParams
 import io.lattekit.ui.LatteActivity
 import io.lattekit.ui.style.Stylesheet
 import java.util.ArrayList
+import java.util.HashMap
 import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
@@ -25,7 +26,6 @@ public class LatteView {
     @Accessors List<LatteView> renderedViews = newArrayList()
     @Accessors View androidView;
     
-        
     // Generic Props
     public Map<String,Object> props = newHashMap();
     
@@ -76,14 +76,48 @@ public class LatteView {
         }
         return false;
     }    
-    
     def static createLayout(String viewType, Map<String,Object> props, ChildrenProc childrenProc) {
-    	var cls = if (viewType.startsWith("android")) {
+    	return createLayout(#[], viewType,props,childrenProc)
+    	
+    }
+    def static createLayout(List<String> imports, String vT, Map<String,Object> props, ChildrenProc childrenProc) {
+    	var LatteView layout = null;
+    	var viewType = vT;
+    	var cls = if (viewType.startsWith("android") || viewType == "View") {
+    		viewType = "andorid.view.View";
+			layout = new io.lattekit.ui.view.NativeView();
     		"io.lattekit.ui.view.NativeView"
     	} else {
     		viewType
     	}
-    	var layout = Class.forName(cls).newInstance as LatteView
+    	
+    	if (layout == null) {
+	    	try { 
+	    		layout = Class.forName(cls).newInstance as LatteView
+	    	} catch (ClassNotFoundException e) {
+	    		for (String i: imports) {
+	    			try {
+	    				if (i.endsWith(".*")) {
+	    					layout = Class.forName(i.substring(0,i.length-1)+cls).newInstance as LatteView
+	    				} else if (i.endsWith("."+cls)) {
+	    					layout = Class.forName(i).newInstance as LatteView
+	    				} 
+	    			} catch (ClassNotFoundException ce) {
+	    				
+	    			}
+	    		}
+	    	}
+	    }
+	    if (layout == null) {
+	    	try {
+	    		Class.forName("android.widget."+viewType);
+	    		viewType = "android.widget."+viewType
+	    		layout = new io.lattekit.ui.view.NativeView();
+    			cls = "io.lattekit.ui.view.NativeView"
+	    	} catch (ClassNotFoundException ex) {
+	    		
+	    	}
+	    }
     	layout.viewType = viewType;
     	layout.props = props;
     	layout.childrenProc = childrenProc;
@@ -213,6 +247,18 @@ public class LatteView {
     def String getId() {
     	return props.get("id") as String
     }
+    def LatteView $() {
+    	return null
+    }
+	def static Map<String,Object> props(Object...objects) {
+		var HashMap<String,Object> map = new HashMap<String,Object>(objects.length/2);
+		for (var i = 0; i< objects.length;i+=2) {
+			map.put(objects.get(i) as String, objects.get(i+1));
+		}
+		return map;
+	}
+
+    
 }
 
 interface ChildrenProc {
