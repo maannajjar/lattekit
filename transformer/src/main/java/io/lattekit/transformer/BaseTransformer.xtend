@@ -29,9 +29,6 @@ abstract class BaseTransformer {
 			"io.lattekit.ui.view.RelativeLayout"
 		] + extractor.imports
 		while ((next = extractor.getNext()) != null) {
-			System.out.println("-------")
-			System.out.println(next.code)
-			System.out.println("-------")
 			var layouCode = new TagParser().parse(next.code)
 			var compiledCode = compile(layouCode)
 			next.matcher.appendReplacement(sb,compiledCode)

@@ -63,25 +63,4 @@ class CodeParser {
 		
 		return statements
 	}
-	
-	def static void main(String... args) {
-		var result = new CodeParser().parse('''		if (currentCode.trim() != "" && currentCode.trim() != ";") {
-		
-					var statement = new CodeStatement(matcher);
-					statement.text = currentCode
-					statements += statement
-				}
-				console.log("x");
-''');
-		if (result.last?.text.trim().endsWith("}")) {
-			System.out.println("Must return something!!")
-		} else {
-			result.last.text = "return "+ result.last.text.trim() + ( if (result.last.text.trim().endsWith(";")) "" else ";");
-		}
-		result.forEach[
-			println(text)
-		];
-		
-		
-	}
 }

@@ -9,13 +9,16 @@ import java.nio.file.WatchEvent
 import java.nio.file.WatchKey
 import java.nio.file.WatchService
 import java.util.Map
+import io.lattekit.css.CssCompiler
 
 class Main {
 
 	var static compiler = new Transformer();
 	var static xtendCompiler = new XtendTransformer();
+	var static cssCompiler = new CssCompiler();
 	var static Map<WatchKey, Path> keys = newHashMap()
 	var static Map<WatchKey, File> keysOut = newHashMap()
+	var static Path rootDir;
 
 	def static transformFile(File file, String outFile) {
 		if (file.absolutePath.endsWith(".java") || file.absolutePath.endsWith(".xtend")) {
@@ -25,10 +28,20 @@ class Main {
 				} else {
 					compiler.transform(code)
 				}
-			System.out.println(outFile);
 			var writer = new PrintWriter(new File(outFile), "UTF-8");
 			writer.print(out);
 			writer.close();
+		} else if (file.absolutePath.endsWith(".css")) {
+			var filePath = file.toPath;
+			var fileName = filePath.fileName.toString
+			var packageName = rootDir.relativize(filePath).map[toString].join(".").replace("."+fileName,"")
+			var code = new String(Files.readAllBytes(file.toPath));
+			var out = cssCompiler.compile(packageName,fileName, code)
+			var outFileJava = outFile.replace(fileName,CssCompiler.toClass(fileName)+".java");
+			var writer = new PrintWriter(new File(outFileJava), "UTF-8");
+			writer.print(out);
+			writer.close();
+			
 		}
 	}
 
@@ -63,6 +76,7 @@ class Main {
 		var outDir = new File(args.get(1));
 		outDir.delete
 		var sourceDir = new File(args.get(0)).toPath();
+		rootDir = sourceDir;
 		var WatchService watcher = sourceDir.getFileSystem().newWatchService();
 		transformDir(args.get(0), args.get(1), watcher)
 		/*
