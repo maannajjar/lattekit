@@ -16,11 +16,6 @@ import org.eclipse.xtend.lib.annotations.Accessors
 public class LatteView {
     
     static Map<String,LatteView> SAVED_OBJECTS = newHashMap();
-    
-    public final static int MATCH_PARENT = LayoutParams.MATCH_PARENT;
-    public final static int WRAP_CONTENT = LayoutParams.WRAP_CONTENT;
-    public final static int match_parent = LayoutParams.MATCH_PARENT;
-    public final static int wrap_content = LayoutParams.WRAP_CONTENT;
         
     @Accessors String viewType;
     @Accessors List<LatteView> renderedViews = newArrayList()

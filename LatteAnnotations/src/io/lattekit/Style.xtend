@@ -198,9 +198,9 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 				addParameter("value", String.newTypeReference())
 				body = '''
 					if (value.toLowerCase().equals("match_parent") || value.toLowerCase().equals("fill_parent")) {
-						_«rawName» = new NumberValue(io.lattekit.ui.view.LatteView.MATCH_PARENT,0);
+						_«rawName» = new NumberValue(Style.MATCH_PARENT,0);
 					} else if (value.toLowerCase().equals("wrap_content")) {
-						_«rawName» = new NumberValue(io.lattekit.ui.view.LatteView.WRAP_CONTENT,0);
+						_«rawName» = new NumberValue(Style.WRAP_CONTENT,0);
 					} else {
 						int unitType = android.util.TypedValue.COMPLEX_UNIT_PX;
 						if (value.indexOf("dp")  != -1) {

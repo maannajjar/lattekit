@@ -27,13 +27,18 @@ import android.view.ViewGroup.MarginLayoutParams
 import android.widget.TextView
 import io.lattekit.StyleProperty
 import io.lattekit.ui.drawable.BorderDrawable
+import io.lattekit.ui.view.NativeView
 import java.util.List
 import java.util.Map
 import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
-import io.lattekit.ui.view.NativeView
 
 class Style {
+    public final static int MATCH_PARENT = LayoutParams.MATCH_PARENT;
+    public final static int WRAP_CONTENT = LayoutParams.WRAP_CONTENT;
+    public final static int match_parent = LayoutParams.MATCH_PARENT;
+    public final static int wrap_content = LayoutParams.WRAP_CONTENT;
+	
     @Accessors String definedSelector;
     
     @Accessors Map<String, Style> descendantStyles = newHashMap();
@@ -142,7 +147,7 @@ class Style {
     @StyleProperty(animatable=false) public String fontStyle = "normal";
     @StyleProperty public NumberValue fontSize;
     
-    @StyleProperty(animatable=false) public List<List<Object>> transitions;
+    @StyleProperty(animatable=false) public List<List<Object>> transition;
     
     @StyleProperty public NumberValue width = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
     @StyleProperty public NumberValue height = new NumberValue(ViewGroup.LayoutParams.WRAP_CONTENT, TypedValue.COMPLEX_UNIT_PX);
@@ -205,8 +210,8 @@ class Style {
         val Map<String,Set<String>> animationGroups = newHashMap(); // Group of transition by duration, delay & timing function
         val Map<String,List<Object>> animationParams = newHashMap(); // Contains duration, delay & timing function values
         
-         if (transitions != null) {
-            transitions.forEach[
+         if (transition != null) {
+            transition.forEach[
                 val transitionName = it.get(0) as String;
                 val duration = (it.get(1) as Integer) ?: 0;
                 val fn = (it.get(2) as String) ?: "";                
