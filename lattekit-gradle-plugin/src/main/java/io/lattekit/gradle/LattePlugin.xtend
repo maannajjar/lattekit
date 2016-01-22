@@ -3,11 +3,13 @@ package io.lattekit.gradle
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.api.BaseVariant
-import io.lattekit.transformer.Main
+import groovy.lang.Closure
+import io.lattekit.transformer.LatteTransformer
 import java.io.File
+import java.nio.file.Path
 import java.util.List
+import java.util.Map
 import java.util.Set
 import javax.inject.Inject
 import org.eclipse.xtend.lib.annotations.Accessors
@@ -20,43 +22,64 @@ import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.TaskAction
 
 class LattePlugin implements Plugin<Project> {
+
 	FileResolver fileResolver
 	Project project
-	List<String> sources;
 	BaseExtension android
 	DomainObjectSet<? extends BaseVariant> variants
-
+	var Map<String,Set<File>> originalSourceDir = newHashMap()
+	
 	@Inject
 	new(FileResolver fileResolver) {
 		this.fileResolver = fileResolver
-	}	override apply(Project project) {
-		this.project = project
+	}
 
+
+	override apply(Project project) {
+		this.project = project
+			
+		project.gradle.buildFinished(new Closure(this) {
+			def doCall() {
+				android.sourceSets.forEach [ sourceSet |
+					if (originalSourceDir.containsKey(sourceSet.name)) {
+						sourceSet.java.srcDirs = originalSourceDir.get(sourceSet.name)
+					}
+				]
+			}
+		});
+		
 		project.afterEvaluate [
 			android = project.extensions.getByName("android") as BaseExtension
+			
 			variants = switch android {
 				AppExtension: android.applicationVariants as DomainObjectSet<? extends BaseVariant>
 				LibraryExtension: android.libraryVariants
 				default: throw new GradleException('''Unknown packaging type «android.class.simpleName»''')
 			}
-			variants.all [ variant |
-				if (variant.name == "debug") {
-					android.sourceSets.forEach [ sourceSet |
-						val compileTaskName = '''transform«variant.name.toFirstUpper»«sourceSet.name»Latte'''
-						var transformTask = project.tasks.create(compileTaskName, LatteTransform)
-						transformTask.javaSrc = sourceSet.java.srcDirs
-						transformTask.aidlSrc = sourceSet.aidl.srcDirs
-						transformTask.assetsSrc = sourceSet.assets.srcDirs
-						transformTask.jniSrc = sourceSet.jniLibs.srcDirs
-						transformTask.resSrc = sourceSet.res.srcDirs
-						transformTask.manifestFile = sourceSet.manifest.srcFile
-						transformTask.sourceSet = sourceSet;
-						sourceSet.root = ".latte/" + sourceSet.name
-						variant.preBuild.dependsOn(transformTask)
-					
-					]
+			android.sourceSets.forEach [ sourceSet |
+				var task = new LatteTransform()
+				task.javaSrc = sourceSet.java.srcDirs
+				var aidlSrc = sourceSet.aidl.srcDirs
+				var assetsSrc = sourceSet.assets.srcDirs
+				var jniSrc = sourceSet.jniLibs.srcDirs
+				var resSrc = sourceSet.res.srcDirs
+				var manifestFile = sourceSet.manifest.srcFile;
+
+				if (manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
+					var files = sourceSet.java.srcDirs.map[it.absoluteFile]
+////					sourceSet.root = "build/latte/" + sourceSet.name
+//					sourceSet.manifest.srcFile = manifestFile
+//					sourceSet.aidl.srcDirs = aidlSrc
+//					sourceSet.assets.srcDirs = assetsSrc
+//					sourceSet.jniLibs.srcDirs = jniSrc
+//					sourceSet.res.srcDirs = resSrc
+					originalSourceDir.put(sourceSet.name, sourceSet.java.srcDirs)
+					var target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name)
+					sourceSet.java.srcDirs = newHashSet(target)
+					task.javaToSrc = sourceSet.java.srcDirs
+					task.project = project;
+					task.execute
 				}
-					
 			]
 		]
 	}
@@ -64,14 +87,28 @@ class LattePlugin implements Plugin<Project> {
 }
 
 @Accessors
-public class LatteTransform extends DefaultTask {
+public class LatteCssCompile extends DefaultTask {
+	var List<File> srcDirs;
+	var Path srcRoot;
+	var File outDir;
+
+	@TaskAction
+	def compile() {
+		srcDirs.forEach [ src, i |
+			new LatteTransformer().transform(project.file(src).absolutePath, project.file(outDir).absolutePath, ".css");
+		]
+
+	}
+
+}
+
+@Accessors
+public class LatteTransform /*extends DefaultTask*/ {
+	
 	var Set<File> javaSrc;
-	var Set<File> aidlSrc;
-	var Set<File> assetsSrc;
-	var Set<File> jniSrc;
-	var Set<File> resSrc;
-	AndroidSourceSet sourceSet;
-	var File manifestFile;
+	var Set<File> javaToSrc;
+
+	var Project project;
 	
 	def copy(Set<File> from, Set<File> to) {
 		from.forEach [ file, i |
@@ -82,34 +119,15 @@ public class LatteTransform extends DefaultTask {
 		]
 	}
 
-
 	@TaskAction
-	def compile() {
-
-		println(javaSrc + " -> " + sourceSet.java.srcDirs);
-		println(aidlSrc + " -> " + sourceSet.aidl.srcDirs);
-		println(assetsSrc + " -> " + sourceSet.assets.srcDirs);
-		println(jniSrc + " -> " + sourceSet.jniLibs.srcDirs);
-		println(resSrc + " -> " + sourceSet.res.srcDirs);
-		println(manifestFile + " -> " + sourceSet.manifest.srcFile);
-
-		project.copy [
-			from(manifestFile)
-			into(sourceSet.manifest.srcFile.parentFile)
-		]
-		copy(aidlSrc, sourceSet.aidl.srcDirs);
-		copy(assetsSrc, sourceSet.assets.srcDirs);
-		copy(jniSrc, sourceSet.jniLibs.srcDirs);
-		copy(resSrc, sourceSet.res.srcDirs);
+	def execute() {
 		javaSrc.forEach [ src, i |
-			var to = sourceSet.java.srcDirs.get(0)
+			var to = javaToSrc.get(0)
 			if (project.file(src).exists) {
-				println("Transforming this " + project.file(src).absolutePath + " to this " + to)
-				Main.main(#[project.file(src).absolutePath, project.file(to).absolutePath])
+				new LatteTransformer().transform(project.file(src).absolutePath, project.file(to).absolutePath, 
+					".java", ".xtend","css")			
 			}
 		]
-
-	
 
 	}
 
