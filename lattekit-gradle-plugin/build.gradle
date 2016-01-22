@@ -41,7 +41,7 @@ dependencies {
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.13'
     compile gradleApi()
-    compile 'io.lattekit:transformer:1.1-SNAPSHOT'
+    compile 'io.lattekit:lattekit-transformer:1.1-SNAPSHOT'
 	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
 	compile 'com.android.tools.build:gradle:1.5.0'
 
