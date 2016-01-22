@@ -1,4 +1,4 @@
-package io.lattekit
+package io.lattekit.annotations
 
 import com.google.common.base.CaseFormat
 import java.util.List

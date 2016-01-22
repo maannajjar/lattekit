@@ -1,4 +1,4 @@
-package io.lattekit
+package io.lattekit.annotations
 
 import java.util.List
 import org.eclipse.xtend.lib.macro.AbstractClassProcessor
