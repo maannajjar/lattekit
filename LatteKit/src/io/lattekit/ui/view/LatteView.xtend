@@ -78,8 +78,8 @@ public class LatteView {
     def static createLayout(List<String> imports, String vT, Map<String,Object> props, ChildrenProc childrenProc) {
     	var LatteView layout = null;
     	var viewType = vT;
-    	var cls = if (viewType.startsWith("android") || viewType == "View") {
-    		viewType = "andorid.view.View";
+    	var cls = if (viewType.startsWith("android") || viewType == "View" ) {
+    		if (viewType == "View") viewType = "andorid.view.View";
 			layout = new io.lattekit.ui.view.NativeView();
     		"io.lattekit.ui.view.NativeView"
     	} else {
