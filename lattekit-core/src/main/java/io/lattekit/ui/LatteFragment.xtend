@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import io.lattekit.Layout
 import io.lattekit.ui.style.Stylesheet
 import io.lattekit.ui.view.LatteView
 import java.util.List

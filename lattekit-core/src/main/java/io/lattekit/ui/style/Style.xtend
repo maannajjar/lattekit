@@ -25,9 +25,8 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.MarginLayoutParams
 import android.widget.TextView
-import io.lattekit.StyleProperty
+import io.lattekit.annotations.StyleProperty
 import io.lattekit.ui.drawable.BorderDrawable
-import io.lattekit.ui.view.NativeView
 import java.util.List
 import java.util.Map
 import java.util.Set
@@ -203,7 +202,7 @@ class Style {
         return style;
     }
         
-    def createAnimatorFrom(Style startStyle,NativeView latteView, boolean revertToNormal) {
+    def createAnimatorFrom(Style startStyle,io.lattekit.ui.view.NativeView latteView, boolean revertToNormal) {
         val animSet = new AnimatorSet();
         val Set<String> transitionProperties = newHashSet();
         
@@ -586,7 +585,7 @@ class Style {
         ].reduce[g,i|  g.bitwiseOr(i) ]
     }
     
-    def updateDrawables(NativeView view) {
+    def updateDrawables(io.lattekit.ui.view.NativeView view) {
         if (backgroundGradientDrawable == null) {
             backgroundGradientDrawable = new GradientDrawable();
         }
@@ -657,7 +656,7 @@ class Style {
         borderDrawable.rightBorderColor =  borderRightColor.asColor;
     }
 
-    def applyDrawableStyle(NativeView view) {
+    def applyDrawableStyle(io.lattekit.ui.view.NativeView view) {
         updateDrawables(view);
         
         view.backgroundDrawable.setDrawableByLayerId(0, backgroundGradientDrawable);
@@ -666,7 +665,7 @@ class Style {
         
     }
     
-    def float[] getCornerRadii(NativeView latteView) {
+    def float[] getCornerRadii(io.lattekit.ui.view.NativeView latteView) {
         var topLeft = borderTopLeftRadiusH.inPixels(latteView.androidView.context)
         var topRight = borderTopRightRadiusH.inPixels(latteView.androidView.context)
         var bottomLeft = borderBottomLeftRadiusH.inPixels(latteView.androidView.context)
@@ -674,7 +673,7 @@ class Style {
         return #[topLeft,topLeft,topRight,topRight,bottomRight,bottomRight,bottomLeft,bottomLeft];
     }
     
-    def getShape(NativeView latteView) {
+    def getShape(io.lattekit.ui.view.NativeView latteView) {
         return new RoundRectShape(getCornerRadii(latteView), null,null);
     }
     
@@ -683,7 +682,7 @@ class Style {
         return DRAWABLE_PROPS.contains(propertyName);
     }
 
-    def applyToView(NativeView latteView, String... properties) {
+    def applyToView(io.lattekit.ui.view.NativeView latteView, String... properties) {
         if (latteView.androidView == null) {
             return;
         }
