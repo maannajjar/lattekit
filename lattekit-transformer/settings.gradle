@@ -9,5 +9,6 @@
  * in the user guide at https://docs.gradle.org/2.9/userguide/multi_project_builds.html
  */
 
+include ':transformer',':gradle-plugin'
 
-rootProject.name = 'lattekit-transformer'
+rootProject.name = 'lattekit-tools'

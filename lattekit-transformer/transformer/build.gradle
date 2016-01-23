@@ -7,10 +7,6 @@
  * user guide available at https://docs.gradle.org/2.9/userguide/tutorial_java_projects.html
  */
 
-// Apply the java plugin to add support for Java
-apply plugin: 'java'
-apply plugin: "org.xtext.xtend"
-apply plugin: 'maven'
 
 buildscript {
   repositories {
@@ -23,24 +19,21 @@ buildscript {
   }
 }
 
+apply plugin: 'java'
+apply plugin: "org.xtext.xtend"
+apply plugin: 'maven'
+
+
+group='io.lattekit.tools'
+version='1.1-SNAPSHOT'
 
 repositories {
     jcenter()
-    maven {
-      url uri('/Users/maan/.m2/repository')
-    }    
 }
-group='io.lattekit' 
-version='1.1-SNAPSHOT'
 
-// In this section you declare the dependencies for your production and test code
 dependencies {
-  compile gradleApi()
-  compile project(':lattekit-transformer')
-	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
-	compile 'com.android.tools.build:gradle:1.5.0'
+    compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
 }
-
 
 uploadArchives {
     repositories {
