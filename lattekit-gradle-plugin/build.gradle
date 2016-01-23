@@ -24,10 +24,7 @@ buildscript {
 }
 
 
-// In this section you declare where to find the dependencies of your project
 repositories {
-    // Use 'jcenter' for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
     maven {
       url uri('/Users/maan/.m2/repository')
@@ -38,18 +35,10 @@ version='1.1-SNAPSHOT'
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
-    // The production code uses the SLF4J logging API at compile time
-    compile 'org.slf4j:slf4j-api:1.7.13'
-    compile gradleApi()
-    compile 'io.lattekit:lattekit-transformer:1.1-SNAPSHOT'
+  compile gradleApi()
+  compile project(':lattekit-transformer')
 	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
 	compile 'com.android.tools.build:gradle:1.5.0'
-
-    // Declare the dependency for your favourite test framework you want to use in your tests.
-    // TestNG is also supported by the Gradle Test task. Just change the
-    // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
-    // 'test.useTestNG()' to your build script.
-    testCompile 'junit:junit:4.12'
 }
 
 
