@@ -59,8 +59,8 @@ class JavaGenerator extends BaseGenerator {
 	}
 	override String compile(Tag tag) '''
 		LatteView.createLayout(«getFirstParams(tag)», LatteView.props(«tag.props.map[compile].join(",")»), new io.lattekit.ui.view.ChildrenProc() {
-			public List<LatteView> apply() {
-				List<LatteView> myChildren = new ArrayList<LatteView>();
+			public java.util.List<LatteView> apply() {
+				java.util.List<LatteView> myChildren = new java.util.ArrayList<LatteView>();
 				«FOR child:tag.childNodes»
 					«IF child instanceof TextNode»«child.text»«ENDIF»
 					«IF child instanceof Tag»
