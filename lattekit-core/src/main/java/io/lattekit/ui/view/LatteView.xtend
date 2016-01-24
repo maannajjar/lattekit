@@ -11,6 +11,8 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
 import java.util.Map
+import android.util.Log
+
 import org.eclipse.xtend.lib.annotations.Accessors
 
 public class LatteView {
@@ -71,9 +73,11 @@ public class LatteView {
         }
         return false;
     }    
+    def static createLayout(String viewType, Map<String,Object> props) {
+        return createLayout(#[], viewType,props,[])
+    }    
     def static createLayout(String viewType, Map<String,Object> props, ChildrenProc childrenProc) {
     	return createLayout(#[], viewType,props,childrenProc)
-    	
     }
     def static createLayout(List<String> imports, String vT, Map<String,Object> props, ChildrenProc childrenProc) {
     	var LatteView layout = null;
@@ -85,24 +89,52 @@ public class LatteView {
     	} else {
     		viewType
     	}
-    	
-    	if (layout == null) {
-	    	try { 
-	    		layout = Class.forName(cls).newInstance as LatteView
-	    	} catch (ClassNotFoundException e) {
-	    		for (String i: imports) {
-	    			try {
-	    				if (i.endsWith(".*")) {
-	    					layout = Class.forName(i.substring(0,i.length-1)+cls).newInstance as LatteView
-	    				} else if (i.endsWith("."+cls)) {
-	    					layout = Class.forName(i).newInstance as LatteView
-	    				} 
-	    			} catch (ClassNotFoundException ce) {
-	    				
-	    			}
-	    		}
-	    	}
-	    }
+        if (layout == null) {
+            try { 
+                layout = Class.forName(cls+"Impl").newInstance as LatteView
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                for (String i: imports) {
+                    try {
+                        if (i.endsWith(".*")) {
+                            Log.d("Latte", "Trying "+(i.substring(0,i.length-1)+cls+"Impl"))
+                            layout = Class.forName(i.substring(0,i.length-1)+cls+"Impl").newInstance as LatteView
+                        } else if (i.endsWith("."+cls)) {
+                            Log.d("Latte", "Trying "+i+"Impl")
+                            layout = Class.forName(i+"Impl").newInstance as LatteView
+                        } 
+                    } catch (ClassNotFoundException ce) {
+                        ce.printStackTrace();
+                        
+                    }
+                }
+            }
+        }    
+
+        
+        if (layout == null) {
+            try { 
+                Log.d("Latte","Trying "+ cls)
+                layout = Class.forName(cls).newInstance as LatteView
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                for (String i: imports) {
+                    try {
+                        if (i.endsWith(".*")) {
+                            Log.d("Latte","Trying "+ (i.substring(0,i.length-1)+cls))
+                            layout = Class.forName(i.substring(0,i.length-1)+cls).newInstance as LatteView
+                        } else if (i.endsWith("."+cls)) {
+                            Log.d("Latte","Trying "+ (i))
+                            layout = Class.forName(i).newInstance as LatteView
+                        } 
+                    } catch (ClassNotFoundException ce) {
+                        ce.printStackTrace();
+                    }
+                }
+            }
+        }
+
+
 	    if (layout == null) {
 	    	try {
 	    		Class.forName("android.widget."+viewType);
