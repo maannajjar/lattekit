@@ -1,69 +1,121 @@
 package io.lattekit.transformer
 
-import io.lattekit.transformer.parser.CodeProp
-import io.lattekit.transformer.parser.CodeStatement
-import io.lattekit.transformer.parser.DictProp
-import io.lattekit.transformer.parser.LambdaProp
-import io.lattekit.transformer.parser.Prop
-import io.lattekit.transformer.tree.Tag
-import io.lattekit.transformer.tree.TextNode
+import io.lattekit.css.CssCompiler
+import java.io.File
+import java.io.PrintWriter
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardWatchEventKinds
+import java.nio.file.WatchEvent
+import java.nio.file.WatchKey
+import java.nio.file.WatchService
 import java.util.List
+import java.util.Map
+import io.lattekit.transformer.generator.JavaGenerator
+import io.lattekit.transformer.generator.XtendGenerator
 
-class Transformer extends BaseTransformer {
-	def  String compile(Prop prop) { prop.compileProp }
-	
-	def dispatch String compileProp(Prop prop) ''' "«prop.name»",«prop.value» '''
-	def dispatch String compileProp(CodeProp prop) ''' "«prop.name»",«prop.value» '''
-	def dispatch String compileProp(DictProp prop) ''' "«prop.name»",«prop.value» '''
-	def dispatch String compileProp(LambdaProp prop) ''' "«prop.name»", new org.eclipse.xtext.xbase.lib.Functions.Function«prop.paramList.size»<«FOR type: prop.paramTypes SEPARATOR ',' AFTER ','»«type»«ENDFOR»Object>() {
-		public Object apply(«prop.paramList.join(",")») {
-			«prop.statements.compileStatements»
-		} 
-	}'''
-	
-	def compileStatements(List<CodeStatement> statements) {
-		if (statements.empty) {
-			// TOOD: Warn of no-op
-			return '''return null;'''
-		} else if (statements.last.text.trim().endsWith("}")) {
-			var i = statements.length
-			// TOOD: Warn of no-return
-			return '''«FOR x : i..<statements.length»
-			«statements.get(i).text»
-			«ENDFOR»
-			return null;
-			'''						
-		} else {
-			var i = statements.length
-			return '''«FOR x : i..<statements.length-1»
-			«statements.get(i).text»
-			«ENDFOR»
-			return  «statements.last.text»«IF !statements.last.text.endsWith(";")»;«ENDIF»
-			'''
-		}		
-	}
-	
-	def getFirstParams(Tag tag) {
-		if (findFQN(tag.name) != null) {
-			return '''"«findFQN(tag.name)»"'''
-		} else { 
-			return '''java.util.Arrays.asList(«imports.map['''"«it»"'''].join(",")»),"«tag.name»"'''
+class Transformer {
+
+
+	var compiler = new JavaGenerator();
+	var xtendCompiler = new XtendGenerator();
+	var cssCompiler = new CssCompiler();
+	var Path rootDir;
+	var List<String> extensions;
+
+	var Map<WatchKey, Path> keys = newHashMap()
+	var Map<WatchKey, File> keysOut = newHashMap()
+
+
+	def void transformFile(File file, File outDir) {
+		if (extensions.filter[file.absolutePath.endsWith(it)].empty) {
+			return;
+		}
+
+		if (file.absolutePath.endsWith(".java") || file.absolutePath.endsWith(".xtend")) {
+
+			var code = new String(Files.readAllBytes(file.toPath));
+			val ext =  if (file.absolutePath.endsWith(".xtend")) ".xtend" else ".java";
+			var results = if (file.absolutePath.endsWith(".xtend")) {
+				xtendCompiler.transform(code)
+			} else {
+				compiler.transform(code)
+			}
+			results.forEach[
+				if (!outDir.exists()) {
+					outDir.mkdirs()
+				}
+				var writer = new PrintWriter(new File(outDir.absolutePath+File.separator+it.name+ext), "UTF-8");
+				writer.print(toString);
+				writer.close();
+			]
+
+		} else if (file.absolutePath.endsWith(".css")) {
+
+			var filePath = file.toPath;
+			var fileName = filePath.fileName.toString
+			var packageName = rootDir.relativize(filePath).map[toString].join(".").replace("."+fileName,"")
+			var code = new String(Files.readAllBytes(file.toPath));
+			var out = cssCompiler.compile(packageName,fileName, code)
+			var outFileJava = outDir.absolutePath+File.separator+CssCompiler.toClass(fileName)+".java";
+			if (!outDir.exists()) {
+				outDir.mkdirs()
+			}
+
+			var writer = new PrintWriter(new File(outFileJava), "UTF-8");
+			println("Complied "+ file.absolutePath +" to "+outFileJava)
+			writer.print(out);
+			writer.close();
+
 		}
 	}
-	override String compile(Tag tag) '''
-		LatteView.createLayout(«getFirstParams(tag)», LatteView.props(«tag.props.map[compile].join(",")»), new io.lattekit.ui.view.ChildrenProc() {
-			public List<LatteView> apply() {
-				List<LatteView> myChildren = new ArrayList<LatteView>();
-				«FOR child:tag.childNodes»
-					«IF child instanceof TextNode»«child.text»«ENDIF»
-					«IF child instanceof Tag»
-						myChildren.add(«child.compile»);
-					«ENDIF»
-				«ENDFOR»
-				return myChildren;
+
+	def void transformDir(String dir, String out, WatchService watcher) {
+		val outDir = new File(out+File.separator);
+		var sourceDir = new File(dir);
+		var dirPath = sourceDir.toPath
+		var key = dirPath.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY,
+		StandardWatchEventKinds.ENTRY_DELETE);
+		keys.put(key, dirPath)
+		keysOut.put(key, outDir)
+		sourceDir.listFiles().forEach [
+			if (isDirectory) {
+				transformDir(it.absolutePath, out + File.separator + it.name, watcher)
+			} else {
+				transformFile(it.absoluteFile, outDir)
 			}
-		})
-	'''
+		]
 
+	}
+
+	def static <T> WatchEvent<T> cast(WatchEvent<?> event) {
+		return event as WatchEvent<T>
+	}
+
+
+	def void transform(String source, String out, String... extensions) {
+		this.extensions = if (extensions.empty) {
+			#[".css",".xtend",".java"]
+		} else {
+			extensions
+		}
+
+		var outDir = new File(out);
+		outDir.delete
+		var sourceDir = new File(source).toPath();
+		rootDir = sourceDir;
+		var WatchService watcher = sourceDir.getFileSystem().newWatchService();
+		transformDir(source, out, watcher)
+
+	}
+
+	def static void main(String[] args) {
+		if (args.length < 2) {
+			System.out.println("Usage: java Main SRC_DIR OUT_DIR");
+			return
+		}
+
+		new Transformer().transform(args.get(0),args.get(1),".java",".xtend",".css")
+
+	}
 }
-

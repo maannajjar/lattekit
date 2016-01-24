@@ -5,7 +5,7 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import groovy.lang.Closure
-import io.lattekit.transformer.LatteTransformer
+import io.lattekit.transformer.Transformer
 import java.io.File
 import java.nio.file.Path
 import java.util.List
@@ -20,6 +20,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.TaskAction
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 
 class LattePlugin implements Plugin<Project> {
 
@@ -27,7 +28,7 @@ class LattePlugin implements Plugin<Project> {
 	Project project
 	BaseExtension android
 	DomainObjectSet<? extends BaseVariant> variants
-	var Map<String,Set<File>> originalSourceDir = newHashMap()
+	var Map<String,File> originalSourceDir = newHashMap()
 	
 	@Inject
 	new(FileResolver fileResolver) {
@@ -42,7 +43,7 @@ class LattePlugin implements Plugin<Project> {
 			def doCall() {
 				android.sourceSets.forEach [ sourceSet |
 					if (originalSourceDir.containsKey(sourceSet.name)) {
-						sourceSet.java.srcDirs = originalSourceDir.get(sourceSet.name)
+//						sourceSet.java.srcDirs.remove(originalSourceDir.get(sourceSet.name))
 					}
 				]
 			}
@@ -56,27 +57,18 @@ class LattePlugin implements Plugin<Project> {
 				LibraryExtension: android.libraryVariants
 				default: throw new GradleException('''Unknown packaging type «android.class.simpleName»''')
 			}
+
 			android.sourceSets.forEach [ sourceSet |
 				var task = new LatteTransform()
 				task.javaSrc = sourceSet.java.srcDirs
-				var aidlSrc = sourceSet.aidl.srcDirs
-				var assetsSrc = sourceSet.assets.srcDirs
-				var jniSrc = sourceSet.jniLibs.srcDirs
-				var resSrc = sourceSet.res.srcDirs
 				var manifestFile = sourceSet.manifest.srcFile;
 
 				if (manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
 					var files = sourceSet.java.srcDirs.map[it.absoluteFile]
-////					sourceSet.root = "build/latte/" + sourceSet.name
-//					sourceSet.manifest.srcFile = manifestFile
-//					sourceSet.aidl.srcDirs = aidlSrc
-//					sourceSet.assets.srcDirs = assetsSrc
-//					sourceSet.jniLibs.srcDirs = jniSrc
-//					sourceSet.res.srcDirs = resSrc
-					originalSourceDir.put(sourceSet.name, sourceSet.java.srcDirs)
-					var target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name)
-					sourceSet.java.srcDirs = newHashSet(target)
-					task.javaToSrc = sourceSet.java.srcDirs
+                    var target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name)
+                    originalSourceDir.put(sourceSet.name, target)
+					sourceSet.java.srcDirs += target
+					task.javaToSrc = target
 					task.project = project;
 					task.execute
 				}
@@ -87,26 +79,10 @@ class LattePlugin implements Plugin<Project> {
 }
 
 @Accessors
-public class LatteCssCompile extends DefaultTask {
-	var List<File> srcDirs;
-	var Path srcRoot;
-	var File outDir;
-
-	@TaskAction
-	def compile() {
-		srcDirs.forEach [ src, i |
-			new LatteTransformer().transform(project.file(src).absolutePath, project.file(outDir).absolutePath, ".css");
-		]
-
-	}
-
-}
-
-@Accessors
 public class LatteTransform /*extends DefaultTask*/ {
 	
 	var Set<File> javaSrc;
-	var Set<File> javaToSrc;
+	var File javaToSrc;
 
 	var Project project;
 	
@@ -122,9 +98,9 @@ public class LatteTransform /*extends DefaultTask*/ {
 	@TaskAction
 	def execute() {
 		javaSrc.forEach [ src, i |
-			var to = javaToSrc.get(0)
+			var to = javaToSrc
 			if (project.file(src).exists) {
-				new LatteTransformer().transform(project.file(src).absolutePath, project.file(to).absolutePath, 
+				new Transformer().transform(project.file(src).absolutePath, project.file(to).absolutePath,
 					".java", ".xtend","css")			
 			}
 		]
