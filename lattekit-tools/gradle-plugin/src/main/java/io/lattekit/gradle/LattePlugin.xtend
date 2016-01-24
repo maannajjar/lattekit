@@ -65,9 +65,13 @@ class LattePlugin implements Plugin<Project> {
 
 				if (manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
 					var files = sourceSet.java.srcDirs.map[it.absoluteFile]
-                    var target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name)
+                    var target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/")
+					target.mkdirs()
                     originalSourceDir.put(sourceSet.name, target)
-					sourceSet.java.srcDirs += target
+					val Set<File> javaDirs = newHashSet(target);
+					sourceSet.java.srcDirs.forEach[ javaDirs += it ]
+					sourceSet.java.srcDirs = javaDirs
+					println("New source dirs =" +javaDirs);
 					task.javaToSrc = target
 					task.project = project;
 					task.execute

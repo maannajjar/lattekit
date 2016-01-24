@@ -38,12 +38,13 @@ abstract class BaseGenerator {
 
 	def List<TransformedClass> transform(String source) {
 		val sb = new StringBuffer();
+		var fileImports = getImports(source);
 		imports = #[
 			"io.lattekit.ui.view.ImageView",
 			"io.lattekit.ui.view.LinearLayout",
 			"io.lattekit.ui.view.ListView",
 			"io.lattekit.ui.view.RelativeLayout"
-		] + getImports(source)
+		] + fileImports
 
 		var result = new TransformResult();
 
@@ -61,15 +62,15 @@ abstract class BaseGenerator {
 					isInner = false;
 				}
 				bracesStack.push(matcher.group(1));
+				currentClass.imports = fileImports.toList;
 
-				if (matcher.group(3) == "extends" && (matcher.group(4) == "LatteView") || matcher.group(4) == "io.lattekit.ui.LatteView") {
+				if (matcher.group(3) == "extends") {
 					if (!isInner) {
-						currentClass.name= matcher.group(2)
+						currentClass.name= matcher.group(2)+"Impl"
 					}
-                    currentClass.imports = imports.toList;
                     currentClass.packageName = packageName;
-                    currentClass.hasLayout = true;
-					currentClass.append( "class "+matcher.group(2) + "Impl extends "+matcher.group(2)+ " {")
+
+					currentClass.append( "class "+matcher.group(2) + "Impl extends "+matcher.group(4)+ " {")
 				} else {
 					if (!isInner) {
 						currentClass.name = matcher.group(2)+"Impl"
@@ -80,6 +81,8 @@ abstract class BaseGenerator {
 			} else if (matcher.group(5) != null && matcher.group(5) != "") {
 				var layouCode = new TagParser().parse(matcher.group(5))
 				var compiledCode = compile(layouCode)
+				println(currentClass.name +" Is indeed a layout")
+				currentClass.hasLayout = true;
 				currentClass.append(compiledCode)
 			} else {
 				if (currentClass != null) {
