@@ -7,13 +7,13 @@ buildscript {
   }
   dependencies {
     classpath 'com.android.tools.build:gradle:2.0.0-alpha6'
-    classpath "org.xtext:xtext-gradle-plugin:1.0.2"
+    classpath "org.xtext:xtext-android-gradle-plugin:1.0.2"
   }
 }
 
 // Apply the java plugin to add support for Java
-apply plugin: 'java'
-apply plugin: "org.xtext.xtend"
+apply plugin: 'com.android.library'
+apply plugin: "org.xtext.android.xtend"
 apply plugin: 'maven'
 
 repositories {
@@ -26,12 +26,27 @@ repositories {
 group='io.lattekit' 
 version='1.1-SNAPSHOT'
 
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
+android {
+    compileSdkVersion 23
+    buildToolsVersion '23.0.2'
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 21
+    }
+    lintOptions {
+      abortOnError false
+    }    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+}
 
 dependencies {
-    compile files(System.getenv('ANDROID_HOME')+'/platforms/android-23/android.jar')
-    compile files(System.getenv('ANDROID_HOME')+'/extras/android/support/v4/android-support-v4.jar')
+    //compile files(System.getenv('ANDROID_HOME')+'/platforms/android-23/android.jar')
+    //compile files(System.getenv('ANDROID_HOME')+'/extras/android/support/v4/android-support-v4.jar')
+    provided "com.android.support:support-v4:21.0.+"
     compile project(":active-annotations")
     compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
 }
