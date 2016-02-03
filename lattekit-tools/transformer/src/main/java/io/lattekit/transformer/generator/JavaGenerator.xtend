@@ -20,7 +20,7 @@ class JavaGenerator extends BaseGenerator {
 	}
 
 	def dispatch String compileProp(Prop prop) ''' "«prop.name»",«prop.value» '''
-	def dispatch String compileProp(CodeProp prop) ''' "«prop.name»",«prop.value» '''
+	def dispatch String compileProp(CodeProp prop) ''' "«prop.name»",(«prop.value») '''
 	def dispatch String compileProp(DictProp prop) ''' "«prop.name»",«prop.value» '''
 	def dispatch String compileProp(LambdaProp prop) ''' "«prop.name»", new org.eclipse.xtext.xbase.lib.Functions.Function«prop.paramList.size»<«FOR type: prop.paramTypes SEPARATOR ',' AFTER ','»«type»«ENDFOR»Object>() {
 		public Object apply(«prop.paramList.join(",")») {
@@ -71,6 +71,21 @@ class JavaGenerator extends BaseGenerator {
 			}
 		})
 	'''
+
+	def static void main(String... args) {
+		println(new JavaGenerator().transform('''
+			package hello.test;
+
+			public class Test extends LatteView {
+				public LatteView render() {
+				    return $(/*
+				    	<RelativeLayout test={(View v)=>{System.out.println("What'sup")}}>
+						</RelativeLayout>
+				    */);
+				}
+			}
+		'''))
+	}
 
 }
 

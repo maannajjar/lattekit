@@ -47,7 +47,7 @@ class CodeProp extends Prop {
 
 
 class PropsParser {
-	static var TOKENS_RE = Pattern.compile('''(\s+|[^ \[\{\}\]="]+|\{\{|\}\}|\{|\}|\[|\]|=|(?:(["'])(?:(?=(\\?))\3.)*?\2))''')
+	static var TOKENS_RE = Pattern.compile('''(\s+|[^ \[\{\}\]="]+|\{|\}|\[|\]|=|(?:(["'])(?:(?=(\\?))\3.)*?\2))''')
 	String source;
 
 
@@ -75,7 +75,7 @@ class PropsParser {
 			var Stack<String> stack = new Stack();
 			stack.push(bracket)
 			var text = ""
-			if (bracket == "{{") {
+			if (bracket == "{" && m.group(1) == "{") {
 				type = "dict"
 			} else if (bracket == "{") {
 				type = "code"
