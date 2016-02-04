@@ -11,14 +11,16 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
 import java.util.Map
-import android.util.Log
 
 import org.eclipse.xtend.lib.annotations.Accessors
 
 public class LatteView {
     
     static Map<String,LatteView> SAVED_OBJECTS = newHashMap();
-        
+    public final static int ANDROID = 1;
+    public final static int WEB = 2
+    public static int RENDER_TARGET = ANDROID;
+
     @Accessors String viewType;
     @Accessors List<LatteView> renderedViews = newArrayList()
     @Accessors View androidView;
@@ -31,18 +33,25 @@ public class LatteView {
     @Accessors public List<LatteView> children = newArrayList;
     
     @Accessors private Stylesheet stylesheet = new Stylesheet();
+
+    String objectId;
     
     public Context activity;
     
     protected ChildrenProc childrenProc;
     private boolean isMounted = false;
 
-    
+
     def static getSavedObject(String id) {
         return SAVED_OBJECTS.get(id);
     }
-    
-        
+
+    def String getObjectId() {
+        if (objectId == null) {
+            objectId =  System.currentTimeMillis+"";
+        }
+        return objectId;
+    }
     def show(LatteView caller) {
         var myId = System.currentTimeMillis+"";
         var intent = new Intent(caller.rootAndroidView.context, LatteActivity);
@@ -59,12 +68,12 @@ public class LatteView {
         activity = context;
         this.renderTree()
         this.buildAndroidViewTree(activity,lp); 
-        return this.rootAndroidView;        
+        return if (RENDER_TARGET == WEB) null else this.rootAndroidView;
     }
     
-    def void handleStateChanged() {    	
+    def void handleStateChanged() {
 		this.renderTree() 
-		this.buildAndroidViewTree(activity,rootAndroidView.layoutParams);
+		this.buildAndroidViewTree(activity, if (RENDER_TARGET == ANDROID) rootAndroidView.layoutParams else null);
     }
         
     def static sameView(LatteView leftView, LatteView rightView) {
@@ -74,7 +83,9 @@ public class LatteView {
         return false;
     }    
     def static createLayout(String viewType, Map<String,Object> props) {
-        return createLayout(#[], viewType,props,[])
+        return createLayout(#[], viewType,props,[
+            return #[]
+        ])
     }    
     def static createLayout(String viewType, Map<String,Object> props, ChildrenProc childrenProc) {
     	return createLayout(#[], viewType,props,childrenProc)
@@ -97,10 +108,10 @@ public class LatteView {
                 for (String i: imports) {
                     try {
                         if (i.endsWith(".*")) {
-                            Log.d("Latte", "Trying "+(i.substring(0,i.length-1)+cls+"Impl"))
+                            log("Trying "+(i.substring(0,i.length-1)+cls+"Impl"))
                             layout = Class.forName(i.substring(0,i.length-1)+cls+"Impl").newInstance as LatteView
                         } else if (i.endsWith("."+cls)) {
-                            Log.d("Latte", "Trying "+i+"Impl")
+                            log("Trying "+i+"Impl")
                             layout = Class.forName(i+"Impl").newInstance as LatteView
                         } 
                     } catch (ClassNotFoundException ce) {
@@ -114,17 +125,17 @@ public class LatteView {
         
         if (layout == null) {
             try { 
-                Log.d("Latte","Trying "+ cls)
+                log("Trying "+ cls)
                 layout = Class.forName(cls).newInstance as LatteView
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 for (String i: imports) {
                     try {
                         if (i.endsWith(".*")) {
-                            Log.d("Latte","Trying "+ (i.substring(0,i.length-1)+cls))
+                            log("Trying "+ (i.substring(0,i.length-1)+cls))
                             layout = Class.forName(i.substring(0,i.length-1)+cls).newInstance as LatteView
                         } else if (i.endsWith("."+cls)) {
-                            Log.d("Latte","Trying "+ (i))
+                            log("Trying "+ (i))
                             layout = Class.forName(i).newInstance as LatteView
                         } 
                     } catch (ClassNotFoundException ce) {
@@ -221,10 +232,10 @@ public class LatteView {
         // First build my view
         this.activity = a;
         if (this instanceof NativeView) {
-            if (this.androidView == null) {
+            if (RENDER_TARGET == ANDROID && this.androidView == null) {
             	this.androidView = (this as NativeView).renderNative(a);
             } 
-        	if (this.androidView.layoutParams == null) {
+        	if (RENDER_TARGET == ANDROID && this.androidView.layoutParams == null) {
         		this.androidView.layoutParams = lp;
         	}
         	if (!isMounted) {
@@ -285,7 +296,9 @@ public class LatteView {
 		return map;
 	}
 
-    
+    def static void log(String message) {
+        System.out.println(message);
+    }
 }
 
 interface ChildrenProc {

@@ -1,7 +1,6 @@
 package io.lattekit.ui.view
 
 import android.content.Context
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
@@ -14,19 +13,19 @@ import org.eclipse.xtext.xbase.lib.Functions.Function1
 import org.eclipse.xtext.xbase.lib.Functions.Function2
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure2
+import android.app.Activity
 
 class ListView extends NativeView implements OnItemClickListener {
 		
-	var adapter = new BaseAdapter() {
-		
-		override getCount() { data.size }		
+	var BaseAdapter adapter = new BaseAdapter() {
+		override getCount() { data.size }
 		override getItem(int position) { data.get(position); }
 		override getItemId(int position) { position }
 		override getViewTypeCount() { children.size }
-		
+
 		override getItemViewType(int position) {
 			var item = getItem(position);
-			
+
 			var int defaultView = -1;
 			for (i : 0..<children.size) {
 				var child = children.get(i);
@@ -37,50 +36,18 @@ class ListView extends NativeView implements OnItemClickListener {
 					defaultView = i;
 				}
 			}
-			
+
 			if (defaultView == -1) {
 				throw new Exception("Couldn't find template matching for item "+position);
 			}
 			return defaultView;
 		}
-		
-		def isMatch(LatteView template, Object item,int position) {
-			var testLambda = template.props.get("when");
-			if (testLambda == null) {
-				return false;
-			}
-			
-			if (!(testLambda instanceof Function1) && !(testLambda instanceof Function2)) {
-				// TODO: Warn about wrong "when" variable
-				return false;
-			}
-			var isFn2 = testLambda instanceof Function2 
-			var modelType = (testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
-			
-			if (modelType.isAssignableFrom(item.class)) {
-				var Class<?> secondParamType;
-				if (isFn2) {
-					secondParamType =(testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(1) as Class;
-					if (!secondParamType.isAssignableFrom(Integer)) {
-						Log.d("Latte", "Warning: second parameter's type is "+ secondParamType.name +". It must be an integer which will contain model index")
-						return false;
-					}
-				}	
-				var isMatch = if (!isFn2) {
-					testLambda.class.getMethod("apply",modelType).invoke(testLambda,item) as Boolean;
-				} else {
-					testLambda.class.getMethod("apply",modelType,secondParamType).invoke(testLambda,item,position) as Boolean;
-				}
-				return isMatch;
-			} else {
-				Log.d("Latte", "Warning: model of type "+item.class.name +" is not assignable to "+ modelType)
-			}
-			false;
-		}
-		
+
+
+
 		override getView(int position, View convertView, ViewGroup parent) {
 			var type = getItemViewType(position);
-			Log.d("Latte","Getting item "+getItem(position))
+			log("Getting item "+getItem(position))
 			var template = children.get(type);
 			if (convertView != null) {
 				template = convertView.getTag() as LatteView;
@@ -89,20 +56,21 @@ class ListView extends NativeView implements OnItemClickListener {
 				template.onStateChanged();
 				return convertView;
 			}
-			
+
 			template = template.copy();
 			template.props.put("modelIndex", position);
 			template.props.put("model", getItem(position));
 			template.parentView = ListView.this
 			template.stylesheet = ListView.this.stylesheet
-			var lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT); 
+			var lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT);
 			var v = template.buildView(activity,lp)
 			v.setTag = template;
 			return v;
 		}
 
 	}
-			
+
+
 	def List<?> getData() {
 		props.get("data") as List<?>;
 	}
@@ -115,20 +83,78 @@ class ListView extends NativeView implements OnItemClickListener {
 		return 0;
 	}
 
+	def isMatch(LatteView template, Object item,int position) {
+		var testLambda = template.props.get("when");
+		if (testLambda == null) {
+			return false;
+		}
+
+		if (!(testLambda instanceof Function1) && !(testLambda instanceof Function2)) {
+			// TODO: Warn about wrong "when" variable
+			return false;
+		}
+		var isFn2 = testLambda instanceof Function2
+		var modelType = (testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
+
+		if (modelType.isAssignableFrom(item.class)) {
+			var Class<?> secondParamType;
+			if (isFn2) {
+				secondParamType =(testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(1) as Class;
+				if (!secondParamType.isAssignableFrom(Integer)) {
+					log("Warning: second parameter's type is "+ secondParamType.name +". It must be an integer which will contain model index")
+					return false;
+				}
+			}
+			var isMatch = if (!isFn2) {
+				var m = testLambda.class.getMethod("apply",modelType);
+				m.setAccessible(true);
+				m.invoke(testLambda,item) as Boolean;
+			} else {
+				var m = testLambda.class.getMethod("apply",modelType,secondParamType)
+				m.setAccessible(true);
+				m.invoke(testLambda,item,position) as Boolean;
+			}
+			return isMatch;
+		} else {
+			log("Warning: model of type "+item.class.name +" is not assignable to "+ modelType)
+		}
+		false;
+	}
+
+	def getLatteView(int position) {
+		var type = adapter.getItemViewType(position);
+		log("Getting item "+ adapter.getItem(position))
+		var template = children.get(type);
+		template = template.copy();
+		template.props.put("modelIndex", position);
+		template.props.put("model", adapter.getItem(position));
+		template.parentView = ListView.this
+		template.stylesheet = ListView.this.stylesheet
+		template.buildView(new Activity(),null);
+		return template;
+	}
+
 	override applyProps() {
 		super.applyProps()
-		var view = androidView as android.widget.ListView;
-		if (dividerHeight != null) {
-			view.dividerHeight = dividerHeight;	
-		}
-		if (props.get("onItemClickListener") != null) {
-			view.onItemClickListener = props.get("onItemClickListener")  as OnItemClickListener;
+		if (RENDER_TARGET == ANDROID) {
+			var view = androidView as android.widget.ListView;
+			if(dividerHeight != null) {
+				view.dividerHeight = dividerHeight;
+			}
+			if(props.get("onItemClickListener") != null) {
+				view.onItemClickListener = props.get("onItemClickListener")  as OnItemClickListener;
+			} else {
+				view.onItemClickListener = this;
+			}
+
+			view.adapter = adapter;
+			adapter.notifyDataSetChanged
 		} else {
-			view.onItemClickListener = this;	
+			this.renderedViews = newArrayList();
+			this.data.forEach([item, index |
+				this.renderedViews += getLatteView(index);
+			])
 		}
-		
-		view.adapter = adapter;
-		adapter.notifyDataSetChanged
 	}
 	
 	override onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -140,7 +166,7 @@ class ListView extends NativeView implements OnItemClickListener {
 		var paramType = (handlerLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
 		if (!paramType.isAssignableFrom(obj.class)) {
 			// TODO: warn about wrong param type
-			Log.d("LatteX","Warning "+paramType +" is not the same as "+obj.class)
+			log("Warning "+paramType +" is not the same as "+obj.class)
 			return;
 		}
 		if (handlerLambda instanceof Procedure1) {
@@ -152,7 +178,7 @@ class ListView extends NativeView implements OnItemClickListener {
 		}  else if (handlerLambda instanceof Function2) {
 			handlerLambda.apply(obj, position);
 		}  else {
-			Log.d("LatteX","Warning: onItemClick should have parameters ("+paramType+",(optional)int) ")
+			log("Warning: onItemClick should have parameters ("+paramType+",(optional)int) ")
 			// TODO: Warn about wrong "onItemClick" variable
 			return;			
 		}	

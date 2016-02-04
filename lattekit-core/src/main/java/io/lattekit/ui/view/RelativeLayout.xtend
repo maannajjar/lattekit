@@ -17,14 +17,16 @@ public class RelativeLayout extends NativeViewGroup {
 	}
 	
 	override onChildrenAdded() {
-		val viewMap = newHashMap()
-		renderedViews.forEach[
-			if (it.id != null) {
-				viewMap.put(it.id, it.rootAndroidView.id);
-			}
-		]
-		renderedViews.forEach[ clearRules ]
-		renderedViews.forEach[ applyLayoutRules(viewMap) ]
+		if (RENDER_TARGET == ANDROID) {
+			val viewMap = newHashMap()
+			renderedViews.forEach[
+				if(it.id != null) {
+					viewMap.put(it.id, it.rootAndroidView.id);
+				}
+			]
+			renderedViews.forEach[ clearRules ]
+			renderedViews.forEach[ applyLayoutRules(viewMap) ]
+		}
 	}
 	
 	def clearRules(LatteView virtualView) {
