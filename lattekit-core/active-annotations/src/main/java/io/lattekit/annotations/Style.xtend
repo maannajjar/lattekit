@@ -8,6 +8,8 @@ import org.eclipse.xtend.lib.macro.AbstractFieldProcessor
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
+import org.eclipse.xtend.lib.macro.declaration.Modifier
+import org.eclipse.xtend.lib.macro.declaration.Visibility
 
 @Active(typeof(StylePropertyProcessor))
 annotation StyleProperty {
@@ -48,6 +50,7 @@ class StylePropertyProcessor extends AbstractFieldProcessor {
 			val propertyNames = properties.map[it.simpleName]
 			annotatedField.declaringType.addField("PROPERTIES") [
 				type = List.newTypeReference(String.newTypeReference());
+				visibility = Visibility.PUBLIC
 				initializer = '''
 				java.util.Collections.<String>unmodifiableList(org.eclipse.xtext.xbase.lib.CollectionLiterals.<String>newArrayList(«propertyNames.map['''"«if (it.startsWith("_")) it.substring(1) else it»"'''].join(",")»))
 				'''			
