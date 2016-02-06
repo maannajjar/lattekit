@@ -11,7 +11,7 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
 import java.util.Map
-
+import android.util.Log
 import org.eclipse.xtend.lib.annotations.Accessors
 
 public class LatteView {
@@ -297,7 +297,7 @@ public class LatteView {
 	}
 
     def static void log(String message) {
-        System.out.println(message);
+        Log.d("Latte",message)
     }
 }
 
