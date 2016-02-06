@@ -7,6 +7,7 @@ import io.lattekit.ui.view.LatteView
 import io.lattekit.LatteLayout
 import android.app.Activity
 import java.util.Map
+import io.lattekit.ui.style.Stylesheet
 
 /**
  * Created by maan on 2/2/16.
@@ -76,6 +77,12 @@ class WebSimulator {
         get(new Route("/layout")  {
             override handle(Request request, Response response) {
                 '''«view.toJson»'''
+            }
+        })
+
+        get(new Route("/css")  {
+            override handle(Request request, Response response) {
+                '''«view.stylesheet»'''
             }
         })
     }
