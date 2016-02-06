@@ -41,6 +41,13 @@ public class LatteView {
     protected ChildrenProc childrenProc;
     private boolean isMounted = false;
 
+    private static Map<String,Class> LOOKUP_CACHE = newHashMap(
+        "TextView" -> TextView,
+        "ImageView"-> ImageView,
+        "ListView"-> ListView,
+        "LinearLayout" -> LinearLayout,
+        "RelativeLayout" -> RelativeLayout
+    );
 
     def static getSavedObject(String id) {
         return SAVED_OBJECTS.get(id);
@@ -93,69 +100,78 @@ public class LatteView {
     def static createLayout(List<String> imports, String vT, Map<String,Object> props, ChildrenProc childrenProc) {
     	var LatteView layout = null;
     	var viewType = vT;
-    	var cls = if (viewType.startsWith("android") || viewType == "View" ) {
-    		if (viewType == "View") viewType = "andorid.view.View";
-			layout = new io.lattekit.ui.view.NativeView();
-    		"io.lattekit.ui.view.NativeView"
-    	} else {
-    		viewType
-    	}
-        if (layout == null) {
-            try { 
-                layout = Class.forName(cls+"Impl").newInstance as LatteView
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                for (String i: imports) {
-                    try {
-                        if (i.endsWith(".*")) {
-                            log("Trying "+(i.substring(0,i.length-1)+cls+"Impl"))
-                            layout = Class.forName(i.substring(0,i.length-1)+cls+"Impl").newInstance as LatteView
-                        } else if (i.endsWith("."+cls)) {
-                            log("Trying "+i+"Impl")
-                            layout = Class.forName(i+"Impl").newInstance as LatteView
-                        } 
-                    } catch (ClassNotFoundException ce) {
-                        ce.printStackTrace();
-                        
+        var Class cachedCls;
+        if ( (cachedCls = LOOKUP_CACHE.get(vT)) != null ) {
+            layout = cachedCls.newInstance as LatteView;
+            viewType = cachedCls.name
+        } else {
+            var cls = if(viewType.startsWith("android") || viewType == "View" ) {
+                if(viewType == "View") viewType = "andorid.view.View";
+                layout = new io.lattekit.ui.view.NativeView();
+                "io.lattekit.ui.view.NativeView"
+            } else {
+                viewType
+            }
+            if(layout == null) {
+                try {
+                    var layoutCls =  Class.forName(cls+"Impl")
+                    layout = layoutCls.newInstance as LatteView
+                    LOOKUP_CACHE.put(vT,layoutCls);
+                } catch(ClassNotFoundException e) {
+                    e.printStackTrace();
+                    for(String i: imports) {
+                        try {
+                            if(i.endsWith(".*")) {
+                                log("Trying "+(i.substring(0,i.length-1)+cls+"Impl"))
+                                layout = Class.forName(i.substring(0,i.length-1)+cls+"Impl").newInstance as LatteView
+                            } else if(i.endsWith("."+cls)) {
+                                log("Trying "+i+"Impl")
+                                layout = Class.forName(i+"Impl").newInstance as LatteView
+                            }
+                        } catch(ClassNotFoundException ce) {
+                            ce.printStackTrace();
+
+                        }
                     }
                 }
             }
-        }    
 
-        
-        if (layout == null) {
-            try { 
-                log("Trying "+ cls)
-                layout = Class.forName(cls).newInstance as LatteView
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                for (String i: imports) {
-                    try {
-                        if (i.endsWith(".*")) {
-                            log("Trying "+ (i.substring(0,i.length-1)+cls))
-                            layout = Class.forName(i.substring(0,i.length-1)+cls).newInstance as LatteView
-                        } else if (i.endsWith("."+cls)) {
-                            log("Trying "+ (i))
-                            layout = Class.forName(i).newInstance as LatteView
-                        } 
-                    } catch (ClassNotFoundException ce) {
-                        ce.printStackTrace();
+
+            if(layout == null) {
+                try {
+                    var layoutCls =  Class.forName(cls)
+                    layout = layoutCls.newInstance as LatteView
+                    LOOKUP_CACHE.put(vT,layoutCls);
+                } catch(ClassNotFoundException e) {
+                    e.printStackTrace();
+                    for(String i: imports) {
+                        try {
+                            if(i.endsWith(".*")) {
+                                log("Trying "+ (i.substring(0,i.length-1)+cls))
+                                layout = Class.forName(i.substring(0,i.length-1)+cls).newInstance as LatteView
+                            } else if(i.endsWith("."+cls)) {
+                                log("Trying "+ (i))
+                                layout = Class.forName(i).newInstance as LatteView
+                            }
+                        } catch(ClassNotFoundException ce) {
+                            ce.printStackTrace();
+                        }
                     }
+                }
+            }
+
+
+            if(layout == null) {
+                try {
+                    Class.forName("android.widget."+viewType);
+                    viewType = "android.widget."+viewType
+                    layout = new io.lattekit.ui.view.NativeView();
+                    cls = "io.lattekit.ui.view.NativeView"
+                } catch(ClassNotFoundException ex) {
+
                 }
             }
         }
-
-
-	    if (layout == null) {
-	    	try {
-	    		Class.forName("android.widget."+viewType);
-	    		viewType = "android.widget."+viewType
-	    		layout = new io.lattekit.ui.view.NativeView();
-    			cls = "io.lattekit.ui.view.NativeView"
-	    	} catch (ClassNotFoundException ex) {
-	    		
-	    	}
-	    }
     	layout.viewType = viewType;
     	layout.props = props;
     	layout.childrenProc = childrenProc;

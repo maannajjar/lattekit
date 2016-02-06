@@ -15,34 +15,30 @@ class NativeViewGroup extends NativeView {
 	
 	def mountChildren() {
 		log(this+" Here about to add my children "+this.renderedViews.size)
-        if (renderedViews.size > 0) {
-            if (LatteView.RENDER_TARGET == WEB) {
 
-            } else {
-                var myContainer = this.androidView as ViewGroup
-                var i = 0;
-                for(LatteView v : renderedViews) {
-                    var childLP = createLayoutParams();
-                    var View childView = v.buildAndroidViewTree(this.activity, childLP);
-                    if(i >= myContainer.childCount) {
-                        myContainer.addView(childView, i, childLP)
-                    } else if(myContainer.getChildAt(i) == childView) {
-                        //                    	childView.layoutParams = childLP;
-                    } else {
-                        childView.layoutParams = childLP;
-                        myContainer.addView(childView,i, childLP);
-                    }
-                    v.androidView = childView
-
-
-                    if(!v.isMounted) {
-                        v.onViewMounted()
-                    }
-                    i++;
+        if (LatteView.RENDER_TARGET == ANDROID) {
+            var myContainer = this.androidView as ViewGroup
+            var i = 0;
+            for(LatteView v : renderedViews) {
+                var childLP = createLayoutParams();
+                var View childView = v.buildAndroidViewTree(this.activity, childLP);
+                if(i >= myContainer.childCount) {
+                    myContainer.addView(childView, i, childLP)
+                } else if(myContainer.getChildAt(i) == childView) {
+                    //                    	childView.layoutParams = childLP;
+                } else {
+                    childView.layoutParams = childLP;
+                    myContainer.addView(childView,i, childLP);
                 }
-                for(var z = i; z < myContainer.childCount; z++) {
-                    myContainer.removeViewAt(z);
+                v.androidView = childView
+
+                if(!v.isMounted) {
+                    v.onViewMounted()
                 }
+                i++;
+            }
+            for(var z = i; z < myContainer.childCount; z++) {
+                myContainer.removeViewAt(z);
             }
         }
         onChildrenAdded()
