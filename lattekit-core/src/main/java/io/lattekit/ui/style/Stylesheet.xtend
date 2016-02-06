@@ -97,5 +97,21 @@ class Stylesheet {
 	def void apply(Stylesheet stylesheet) {
 		
 	}
+
+	def String getCssFile() '''
+		«classes.keySet().map[ key |
+			'''
+				.«key» {
+				    width: «classes.get(key).width.value»px;
+				    height: «classes.get(key).height.value»px;
+				    border-right-width: «classes.get(key).borderRightWidth.value»px;
+				    border-left-width: «classes.get(key).borderLeftWidth.value»px;
+				    border-top-width: «classes.get(key).borderTopWidth.value»px;
+				    border-bottom-width: «classes.get(key).borderRightWidth.value»px;
+
+				}
+			'''
+		]»
+	'''
 	
 }
