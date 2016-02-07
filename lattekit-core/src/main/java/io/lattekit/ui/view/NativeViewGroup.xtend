@@ -6,18 +6,27 @@ import android.view.ViewGroup.LayoutParams
 import java.util.Map
 
 class NativeViewGroup extends NativeView {
-	
-	def LayoutParams createLayoutParams() {
-        return null;
+
+    def Class<? extends ViewGroup.LayoutParams> getLayoutParamsClass() {
+        return ViewGroup.LayoutParams
     }
-	
-	def void onChildrenAdded() {}
+	def LayoutParams createLayoutParams() {
+        return getLayoutParamsClass().constructors.findFirst[ parameterTypes.size == 2 &&
+                                            parameterTypes.get(0) == typeof(int) &&
+                                            parameterTypes.get(1) == typeof(int)].newInstance(-1,-1) as LayoutParams
+    }
+
+    def getContainer() {
+        return this.androidView as ViewGroup;
+    }
+
+
+    def void onChildrenAdded() {}
 	
 	def mountChildren() {
 		log(this+" Here about to add my children "+this.renderedViews.size)
-
         if (LatteView.RENDER_TARGET == ANDROID) {
-            var myContainer = this.androidView as ViewGroup
+            var myContainer = getContainer();
             var i = 0;
             for(LatteView v : renderedViews) {
                 var childLP = createLayoutParams();

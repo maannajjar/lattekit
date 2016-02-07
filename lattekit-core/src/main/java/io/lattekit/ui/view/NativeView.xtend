@@ -51,8 +51,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
     
     var Set<String> currentSelectedPseudos = newHashSet("normal"); 
     
-   
-	
+
     @Accessors public Style normalStyle = new Style();
     @Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
     @Accessors public Style disabledStyle = new Style() => [ parentStyle = normalStyle ];
@@ -62,14 +61,15 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
     public ShapeDrawable shapeDrawable;
     public LayerDrawable backgroundDrawable;
      
-	
+	def getViewClass() {
+        return if (viewType.startsWith("android")) {
+            Class.forName(viewType);
+        } else {
+            View
+        }
+    }
 	def View renderNative(Context context) {
-		var cls = if (viewType.startsWith("android")) {
-			Class.forName(viewType);
-		} else {
-			View
-		}
-		return cls.constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
+		return getViewClass().constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
 	}
 
 	def void applyProps() {
@@ -77,16 +77,20 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	        if (this.androidView.id == -1 && this.id != null) {
 	            this.androidView.id = Util.makeResId("io.lattekit", "id", id);
 	        }
-	        if (props.get("clickable") != null && (props.get("clickable") == true ||props.get("clickable") == "true")) {
-	        	this.androidView.clickable = true
-	        } else {
-	        	this.androidView.clickable = false
-	        }
-            if (androidView instanceof TextView) {
-            	if (props.get("text") != null) {
-            		(androidView as TextView).text = props.get("text") as String
-            	}
-            }
+
+            val myCls = getViewClass()
+            props.keySet().forEach[
+                val setter = "set"+it.substring(0,1).toUpperCase()+it.substring(1)
+                var value = props.get(it);
+                var cls = myCls;
+
+                try {
+                    var method = myCls.getMethod(setter, value.class);
+                    method.invoke(androidView,value);
+                } catch (NoSuchMethodException ex) {
+                }
+            ]
+
         }
     }
 

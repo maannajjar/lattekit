@@ -184,8 +184,8 @@ class ListView extends NativeView implements OnItemClickListener {
 		}	
 	}
 	
-	override View renderNative(Context a) {
-		return new android.widget.ListView(a);
+	override getViewClass() {
+		return android.widget.ListView;
 	}
 
 	

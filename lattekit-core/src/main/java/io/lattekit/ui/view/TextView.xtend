@@ -19,8 +19,8 @@ class TextView extends NativeView {
         view.text = text
     }
 
-    override View renderNative(Context a) {
-        return new android.widget.TextView(a);
+    override getViewClass() {
+        return android.widget.TextView;
     }
 
 }

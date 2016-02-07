@@ -20,12 +20,11 @@ public class LinearLayout extends NativeViewGroup {
 		}
 	}
 	
-	override View renderNative(Context a) {
-		return new android.widget.LinearLayout(a);
+	override getViewClass() {
+		return android.widget.LinearLayout;
 	}
 
-	override LayoutParams createLayoutParams() {
-		var lp = new android.widget.LinearLayout.LayoutParams(0,0);
-		return lp
+	override getLayoutParamsClass() {
+		return android.widget.LinearLayout.LayoutParams
 	}
 }

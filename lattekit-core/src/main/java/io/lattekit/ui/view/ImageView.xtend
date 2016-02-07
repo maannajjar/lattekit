@@ -34,8 +34,8 @@ class ImageView extends NativeView {
 	}
 	
 	
-	override View renderNative(Context a) {
-		return new android.widget.ImageView(a);
+	override getViewClass() {
+		return android.widget.ImageView;
 	}
 	
 	

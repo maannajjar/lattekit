@@ -7,15 +7,14 @@ import java.util.HashMap
 public class RelativeLayout extends NativeViewGroup {
 	
 	
-	override View renderNative(Context a) {
-		return new android.widget.RelativeLayout(a);
+	override getViewClass() {
+		return android.widget.RelativeLayout;
 	}
 
-	override android.widget.RelativeLayout.LayoutParams createLayoutParams() {
-		var lp = new android.widget.RelativeLayout.LayoutParams(0,0);
-		return lp
+	override getLayoutParamsClass() {
+		return android.widget.RelativeLayout.LayoutParams
 	}
-	
+
 	override onChildrenAdded() {
 		if (RENDER_TARGET == ANDROID) {
 			val viewMap = newHashMap()
