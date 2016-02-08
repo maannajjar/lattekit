@@ -1,0 +1,64 @@
+buildscript {
+  repositories {
+    jcenter()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:2.0.0-alpha6'
+    classpath "org.xtext:xtext-android-gradle-plugin:1.0.2"
+  }
+}
+
+// Apply the java plugin to add support for Java
+apply plugin: 'com.android.library'
+apply plugin: "org.xtext.android.xtend"
+apply plugin: 'maven'
+
+repositories {
+    jcenter()
+    maven {
+      url uri('/Users/maan/.m2/repository')
+    }
+}
+
+group='io.lattekit' 
+version='1.1-SNAPSHOT'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '23.0.2'
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 21
+    }
+    lintOptions {
+      abortOnError false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+}
+
+dependencies {
+    //compile files(System.getenv('ANDROID_HOME')+'/platforms/android-23/android.jar')
+    //compile files(System.getenv('ANDROID_HOME')+'/extras/android/support/v4/android-support-v4.jar')
+    provided "com.android.support:support-v4:21.0.+"
+    compile project(":active-annotations")
+    compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
+    compile 'com.sparkjava:spark-core:1.1.1'
+    compile 'com.github.bumptech.glide:glide:3.7.0'
+}
+
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('/Users/maan/.m2/repository'))
+        }
+    }
+}
+

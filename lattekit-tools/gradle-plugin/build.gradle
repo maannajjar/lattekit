@@ -1,0 +1,40 @@
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+      jcenter()
+  }
+  dependencies {
+    classpath "org.xtext:xtext-gradle-plugin:1.0.2"
+  }
+}
+
+apply plugin: 'java'
+apply plugin: "org.xtext.xtend"
+apply plugin: 'maven'
+
+group='io.lattekit.tools'
+version='1.1-SNAPSHOT'
+
+repositories {
+    jcenter()
+}
+
+
+dependencies {
+  compile gradleApi()
+  compile project(":transformer")
+	compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
+	compile 'com.android.tools.build:gradle:1.5.0'
+}
+
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('/Users/maan/.m2/repository'))
+        }
+    }
+}
+

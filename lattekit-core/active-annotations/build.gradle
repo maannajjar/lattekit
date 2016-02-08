@@ -1,0 +1,43 @@
+buildscript {
+  repositories {
+    jcenter()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:2.0.0-alpha6'
+    classpath "org.xtext:xtext-gradle-plugin:1.0.2"
+  }
+}
+
+
+// Apply the java plugin to add support for Java
+apply plugin: "java"
+apply plugin: "org.xtext.xtend"
+apply plugin: 'maven'
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+// In this section you declare where to find the dependencies of your project
+repositories {
+    jcenter()
+}
+
+group='io.lattekit' 
+version='1.1-SNAPSHOT'
+
+dependencies {
+    compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
+}
+
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('/Users/maan/.m2/repository'))
+        }
+    }
+}
+
