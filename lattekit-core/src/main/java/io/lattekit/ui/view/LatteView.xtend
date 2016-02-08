@@ -52,7 +52,8 @@ public class LatteView {
         "ListView"-> ListView,
         "LinearLayout" -> LinearLayout,
         "RelativeLayout" -> RelativeLayout,
-        "ViewPager" -> ViewPager
+        "ViewPager" -> ViewPager,
+        "WebView" -> android.webkit.WebView
     );
 
     def static getSavedObject(String id) {
@@ -80,7 +81,7 @@ public class LatteView {
     def View buildView(Context context,LayoutParams lp) {
         activity = context;
         this.renderTree()
-        this.buildAndroidViewTree(activity,lp); 
+        this.buildAndroidViewTree(activity,lp);
         return if (RENDER_TARGET == WEB) null else this.rootAndroidView;
     }
     
