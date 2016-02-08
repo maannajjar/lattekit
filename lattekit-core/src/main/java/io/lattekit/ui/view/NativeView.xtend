@@ -105,13 +105,11 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                 }
                 while (!found && !reachedEnd) {
                     try {
-                        log("Trying "+valueCls.name)
                         method = myCls.getMethod(setter, #[valueCls]);
                         method.invoke(androidView,value);
                         methodCache.put(methodKey,method)
                         found = true;
                     } catch(NoSuchMethodException ex) {
-                        android.util.Log.d("Latte",nativeViewClass+ ": Couldn't find "+setter+ " "+ex);
                     }
 
                     for (iface: valueCls.interfaces) {
@@ -121,7 +119,6 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                             methodCache.put(methodKey,method)
                             found = true;
                         } catch(NoSuchMethodException ex) {
-                            android.util.Log.d("Latte",nativeViewClass+ ": Couldn't find "+setter+ " "+ex);
                         }
                     }
                     if (valueCls == Object) {
