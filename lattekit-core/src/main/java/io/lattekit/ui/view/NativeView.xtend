@@ -28,6 +28,7 @@ import java.util.Set
 import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.util.Util.*
+import java.lang.reflect.Method
 
 class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	
@@ -60,14 +61,19 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
     public var List<Animator> pendingChildAnimations = newArrayList();
     public ShapeDrawable shapeDrawable;
     public LayerDrawable backgroundDrawable;
-     
+
+    @Accessors Class<? extends View> nativeViewClass;
+
+    static Map<String,Method> methodCache = newHashMap();
+
 	def getViewClass() {
-        return if (viewType.startsWith("android")) {
-            Class.forName(viewType);
+        return if (nativeViewClass != null) {
+            nativeViewClass
         } else {
             View
         }
     }
+
 	def View renderNative(Context context) {
 		return getViewClass().constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
 	}
@@ -77,19 +83,57 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	        if (this.androidView.id == -1 && this.id != null) {
 	            this.androidView.id = Util.makeResId("io.lattekit", "id", id);
 	        }
+            // Default clickable to false
+            this.androidView.clickable = false
 
             val myCls = getViewClass()
             props.keySet().forEach[
+                if (it == "cls") return;
                 val setter = "set"+it.substring(0,1).toUpperCase()+it.substring(1)
                 var value = props.get(it);
-                var cls = myCls;
+                var valueCls = value.class;
 
-                try {
-                    var method = myCls.getMethod(setter, value.class);
+                var found = false;
+                var reachedEnd = false;
+                var methodKey = myCls+":"+it+":"+value.class
+                var method = methodCache.get(methodKey);
+                if (method != null) {
                     method.invoke(androidView,value);
-                } catch (NoSuchMethodException ex) {
+                    found = true;
+                } else if (methodCache.containsKey(methodKey)) {
+                    reachedEnd = true;
+                }
+                while (!found && !reachedEnd) {
+                    try {
+                        log("Trying "+valueCls.name)
+                        method = myCls.getMethod(setter, #[valueCls]);
+                        method.invoke(androidView,value);
+                        methodCache.put(methodKey,method)
+                        found = true;
+                    } catch(NoSuchMethodException ex) {
+                        android.util.Log.d("Latte",nativeViewClass+ ": Couldn't find "+setter+ " "+ex);
+                    }
+
+                    for (iface: valueCls.interfaces) {
+                        try {
+                            method = myCls.getMethod(setter, iface);
+                            method.invoke(androidView,value);
+                            methodCache.put(methodKey,method)
+                            found = true;
+                        } catch(NoSuchMethodException ex) {
+                            android.util.Log.d("Latte",nativeViewClass+ ": Couldn't find "+setter+ " "+ex);
+                        }
+                    }
+                    if (valueCls == Object) {
+                        reachedEnd = true;
+                    }
+                    valueCls = valueCls.superclass
+                }
+                if (!found) {
+                    methodCache.put(methodKey,null);
                 }
             ]
+
 
         }
     }

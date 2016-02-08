@@ -42,7 +42,8 @@ public class LatteView {
     private boolean isMounted = false;
 
     private static Map<String,Class> LOOKUP_CACHE = newHashMap(
-        "TextView" -> TextView,
+        "View" -> android.view.View,
+        "TextView" -> android.widget.TextView,
         "ImageView"-> ImageView,
         "ListView"-> ListView,
         "LinearLayout" -> LinearLayout,
@@ -102,77 +103,35 @@ public class LatteView {
     	var LatteView layout = null;
     	var viewType = vT;
         var Class cachedCls;
-        if ( (cachedCls = LOOKUP_CACHE.get(vT)) != null ) {
-            layout = cachedCls.newInstance as LatteView;
-            viewType = cachedCls.name
+        var clazz = if ( (cachedCls = LOOKUP_CACHE.get(vT)) != null ) {
+            cachedCls
+        } else if (vT.contains(".")) {
+            var cls =  try {
+                Class.forName(vT+"Impl")
+            } catch (ClassNotFoundException ex){
+                Class.forName(vT)
+            }
+            LOOKUP_CACHE.put(vT,cls);
+            cls
         } else {
-            var cls = if(viewType.startsWith("android") || viewType == "View" ) {
-                if(viewType == "View") viewType = "andorid.view.View";
-                layout = new io.lattekit.ui.view.NativeView();
-                "io.lattekit.ui.view.NativeView"
-            } else {
-                viewType
-            }
-            if(layout == null) {
-                try {
-                    var layoutCls =  Class.forName(cls+"Impl")
-                    layout = layoutCls.newInstance as LatteView
-                    LOOKUP_CACHE.put(vT,layoutCls);
-                } catch(ClassNotFoundException e) {
-                    e.printStackTrace();
-                    for(String i: imports) {
-                        try {
-                            if(i.endsWith(".*")) {
-                                log("Trying "+(i.substring(0,i.length-1)+cls+"Impl"))
-                                layout = Class.forName(i.substring(0,i.length-1)+cls+"Impl").newInstance as LatteView
-                            } else if(i.endsWith("."+cls)) {
-                                log("Trying "+i+"Impl")
-                                layout = Class.forName(i+"Impl").newInstance as LatteView
-                            }
-                        } catch(ClassNotFoundException ce) {
-                            ce.printStackTrace();
-
-                        }
-                    }
-                }
-            }
-
-
-            if(layout == null) {
-                try {
-                    var layoutCls =  Class.forName(cls)
-                    layout = layoutCls.newInstance as LatteView
-                    LOOKUP_CACHE.put(vT,layoutCls);
-                } catch(ClassNotFoundException e) {
-                    e.printStackTrace();
-                    for(String i: imports) {
-                        try {
-                            if(i.endsWith(".*")) {
-                                log("Trying "+ (i.substring(0,i.length-1)+cls))
-                                layout = Class.forName(i.substring(0,i.length-1)+cls).newInstance as LatteView
-                            } else if(i.endsWith("."+cls)) {
-                                log("Trying "+ (i))
-                                layout = Class.forName(i).newInstance as LatteView
-                            }
-                        } catch(ClassNotFoundException ce) {
-                            ce.printStackTrace();
-                        }
-                    }
-                }
-            }
-
-
-            if(layout == null) {
-                try {
-                    Class.forName("android.widget."+viewType);
-                    viewType = "android.widget."+viewType
-                    layout = new io.lattekit.ui.view.NativeView();
-                    cls = "io.lattekit.ui.view.NativeView"
-                } catch(ClassNotFoundException ex) {
-
-                }
-            }
+            var cls = Class.forName("android.widget."+vT);
+            LOOKUP_CACHE.put(vT,cls);
+            cls
         }
+        log("Found class "+ clazz)
+        if (ViewGroup.isAssignableFrom(clazz)) {
+            layout = new NativeViewGroup();
+            (layout as NativeViewGroup).nativeViewClass = clazz
+            viewType = clazz.name
+        } else if (View.isAssignableFrom(clazz)) {
+            layout = new NativeView();
+            (layout as NativeView).nativeViewClass = clazz
+            viewType = clazz.name
+        } else {
+            layout = clazz.newInstance as LatteView;
+            viewType = clazz.name
+        }
+
     	layout.viewType = viewType;
     	layout.props = props;
     	layout.childrenProc = childrenProc;
