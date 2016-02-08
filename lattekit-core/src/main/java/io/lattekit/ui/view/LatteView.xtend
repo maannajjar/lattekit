@@ -47,7 +47,8 @@ public class LatteView {
         "ImageView"-> ImageView,
         "ListView"-> ListView,
         "LinearLayout" -> LinearLayout,
-        "RelativeLayout" -> RelativeLayout
+        "RelativeLayout" -> RelativeLayout,
+        "ViewPager" -> ViewPager
     );
 
     def static getSavedObject(String id) {

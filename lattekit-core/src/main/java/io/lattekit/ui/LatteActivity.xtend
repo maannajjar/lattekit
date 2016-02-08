@@ -7,8 +7,9 @@ import android.widget.FrameLayout
 import io.lattekit.ui.style.Stylesheet
 import io.lattekit.ui.view.LatteView
 import java.util.List
+import android.support.v4.app.FragmentActivity
 
-class LatteActivity extends Activity {
+class LatteActivity extends FragmentActivity {
 	
 	protected LatteView latteView;
 	protected View androidView;
