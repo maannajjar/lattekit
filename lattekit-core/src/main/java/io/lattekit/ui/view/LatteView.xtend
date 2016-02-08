@@ -13,6 +13,8 @@ import java.util.List
 import java.util.Map
 import android.util.Log
 import org.eclipse.xtend.lib.annotations.Accessors
+import io.lattekit.annotation.Prop
+import java.lang.reflect.Field
 
 public class LatteView {
     
@@ -40,6 +42,8 @@ public class LatteView {
     
     protected ChildrenProc childrenProc;
     private boolean isMounted = false;
+
+    Map<String,Field> propFields;
 
     private static Map<String,Class> LOOKUP_CACHE = newHashMap(
         "View" -> android.view.View,
@@ -140,9 +144,44 @@ public class LatteView {
     	return layout
     }
     
-    
+    def injectProps() {
+        if (propFields == null) {
+            propFields = newHashMap();
+            var Class cls = this.class
+            while (cls != Object) {
+                cls.declaredFields.filter[isAnnotationPresent(Prop)].forEach[
+                    var anno = it.getAnnotation(Prop);
+                    var name = if(anno.name != "") anno.name else it.name;
+                    it.setAccessible(true);
+                    propFields.put(name, it)
+                ]
+                cls = cls.superclass
+            }
+        }
+
+        propFields.keySet().filter[!this.props.keySet().contains(it)].forEach[
+            // Remove deleted property
+            var Field field = propFields.get(it)
+            field.set(this,null)
+        ]
+
+        this.props.keySet().forEach [
+            var Field field;
+            var value = this.props.get(it);
+            if ( (field = propFields.get(it)) != null) {
+                if (field.getType().isAssignableFrom(value.class)) {
+                    field.set(this,value)
+                } else {
+                    log("WARNING: Provided property "+it+" value with different type, it will be set to null")
+                }
+
+            }
+        ]
+    }
+
     def void renderTree() {
     	var List<LatteView> newRenderedViews = newArrayList()
+        injectProps()
     	var renderMe = this.render()
     	if (renderMe != null) {
     		renderMe.stylesheet = this.stylesheet
