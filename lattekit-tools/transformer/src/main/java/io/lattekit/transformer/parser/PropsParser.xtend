@@ -32,9 +32,15 @@ class LambdaProp extends Prop {
 	}	
 	def parseLambdaCode() {
 		var split = value.split('''\|''',2)
-		paramList = split.get(0).trim().split(",").map[trim]
-		paramTypes = paramList.map[ trim().split(" ").get(0).trim() ]
-		statements = new CodeParser().parse(split.get(1))
+		if (split.size > 1) {
+			paramList = split.get(0).trim().split(",").map[trim]
+			paramTypes = paramList.map[ trim().split(" ").get(0).trim() ]
+			statements = new CodeParser().parse(split.get(1))
+		} else {
+			paramList = #[];
+			paramTypes = #[]
+			statements = new CodeParser().parse(split.get(0))
+		}
 	}
 }
 
