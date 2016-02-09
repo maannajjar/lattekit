@@ -53,6 +53,7 @@ class NativeViewGroup extends NativeView {
 	}
 	
 	override onPropsUpdated(Map<String, Object> oldProps) {
+        super.onPropsUpdated(oldProps);
 		return true
 	}
 	
