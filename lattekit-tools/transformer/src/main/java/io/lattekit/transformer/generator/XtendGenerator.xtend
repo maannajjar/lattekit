@@ -30,27 +30,11 @@ class XtendGenerator extends BaseGenerator {
 			«prop.statements.compileStatements»
 		]'''
 
-	def compileStatements(List<CodeStatement> statements) {
-		if (statements.empty) {
-			// TOOD: Warn of no-op
-			return '''return null;'''
-		} else if (statements.last.text.trim().endsWith("}")) {
-			var i = statements.length
-			// TOOD: Warn of no-return
-			return '''«FOR x : i..<statements.length»
-			«statements.get(i).text»
-			«ENDFOR»
-			return null;
-			'''
-		} else {
-			var i = statements.length
-			return '''«FOR x : i..<statements.length-1»
-			«statements.get(i).text»
-			«ENDFOR»
-			return  «statements.last.text»«IF !statements.last.text.endsWith(";")»;«ENDIF»
-			'''
-		}
-	}
+	def compileStatements(List<CodeStatement> statements) '''
+	«FOR i : 0..<statements.length»
+		«statements.get(i).text»
+	«ENDFOR»
+	'''
 
 	def getFirstParams(Tag tag) {
 		if (findFQN(tag.name) !=
