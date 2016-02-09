@@ -173,6 +173,7 @@ public class LatteView {
                 if (field.getType().isAssignableFrom(value.class)) {
                     field.set(this,value)
                 } else {
+                    // TODO: Maybe need to throw exception ?
                     log("WARNING: Provided property "+it+" value with different type, it will be set to null")
                 }
 
@@ -215,8 +216,8 @@ public class LatteView {
 	    		newView.renderTree()			
 			}
 		}
-
 		this.renderedViews = newRenderedViews;
+        findRefs(this.renderedViews);
     }
     
 
@@ -240,7 +241,11 @@ public class LatteView {
     		return this.renderedViews.get(0).rootAndroidView;
     	}
     }
-    
+
+    def void notifyMounted() {
+        isMounted = true;
+        onViewMounted();
+    }
     def void onViewMounted() {
     }
    	
@@ -255,8 +260,7 @@ public class LatteView {
         		this.androidView.layoutParams = lp;
         	}
         	if (!isMounted) {
-            	isMounted = true;
-            	onViewMounted();
+            	notifyMounted();
         	}			
         	
 			if (this instanceof NativeViewGroup) {
@@ -267,8 +271,7 @@ public class LatteView {
             // If we don't have native android view, then we are virtual node
             var subAndroid =  this.renderedViews.get(0).buildAndroidViewTree(a, lp);
             if (!isMounted) {
-                isMounted = true;
-                onViewMounted();
+                notifyMounted();
             }
             return subAndroid;
         }
@@ -314,6 +317,27 @@ public class LatteView {
 
     def static void log(String message) {
         Log.d("Latte",message)
+    }
+
+    def findRefs(List<LatteView> subViews) {
+        subViews.forEach[
+            var String ref;
+            if ( (ref = it.props.get("ref") as String) != null ) {
+                val fieldName = ref;
+                var field = this.class.getDeclaredFields().findFirst[name == fieldName]
+                if (field != null) {
+                    field.setAccessible(true);
+                    if (field.getType().isAssignableFrom(it.class)) {
+                        field.set(this, it);
+                    } else if (it.androidView != null && field.getType().isAssignableFrom(it.androidView.class)) {
+                        field.set(this, it.androidView);
+                    }
+                } else {
+                    log("Couldn't find field "+fieldName)
+                }
+            }
+            findRefs(it.children)
+        ]
     }
 }
 

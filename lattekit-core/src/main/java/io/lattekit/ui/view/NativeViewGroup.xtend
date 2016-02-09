@@ -40,7 +40,7 @@ class NativeViewGroup extends NativeView {
                 v.androidView = childView
                 newViews += childView;
                 if(!v.isMounted) {
-                    v.onViewMounted()
+                    v.notifyMounted()
                 }
                 i++;
             }
