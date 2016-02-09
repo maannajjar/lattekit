@@ -29,6 +29,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 import static io.lattekit.util.Util.*
 import java.lang.reflect.Method
+import java.lang.reflect.TypeVariable
 
 class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	
@@ -78,6 +79,8 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 		return getViewClass().constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
 	}
 
+
+
 	def void applyProps() {
         if (androidView != null) {
 	        if (this.androidView.id == -1 && this.id != null) {
@@ -89,8 +92,10 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
             val myCls = getViewClass()
             props.keySet().forEach[
                 if (it == "cls") return;
-                val setter = "set"+it.substring(0,1).toUpperCase()+it.substring(1)
-                var value = props.get(it);
+                val value = props.get(it);
+                var isFn = value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0
+                           || value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0
+                val setter = "set"+it.substring(0,1).toUpperCase()+it.substring(1) + (if (isFn) "Listener" else "")
                 var valueCls = value.class;
 
                 var found = false;
@@ -103,30 +108,58 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                 } else if (methodCache.containsKey(methodKey)) {
                     reachedEnd = true;
                 }
+                var Class currentCls = myCls;
                 while (!found && !reachedEnd) {
-                    try {
-                        method = myCls.getMethod(setter, valueCls);
-                        method.invoke(androidView,value);
-                        methodCache.put(methodKey,method)
-                        found = true;
-                    } catch(NoSuchMethodException ex) {
-                    }
-                    try {
-                        var primitiveType = valueCls.getField("TYPE").get(null) as Class;
-                        method = myCls.getMethod(setter, primitiveType);
-                        method.invoke(androidView,value);
-                        methodCache.put(methodKey,method)
-                        found = true;
-                    } catch (NoSuchFieldException nsfe) {
-                    } catch (NoSuchMethodException ex){
-                    }
-                    for (iface: valueCls.interfaces) {
+                    if (isFn) {
+                        method = currentCls.declaredMethods.findFirst[name == setter];
+                        if (method != null && method.parameterTypes.size == 1) {
+                            var Class<?> listenerInterface = method.parameterTypes.get(0);
+                            if (listenerInterface.isInterface) {
+                                found = true;
+                                var instance = java.lang.reflect.Proxy.newProxyInstance(listenerInterface.getClassLoader(), #[listenerInterface],
+                                [ proxy, invokedMethod, args |
+                                    if (value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0) {
+                                        value.apply()
+                                    } else if (value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0) {
+                                        return value.apply()
+                                    }
+                                    return null;
+                                ])
+                                method.invoke(androidView,instance)
+                            }
+                        } else {
+                            currentCls = currentCls.superclass
+                            if (currentCls == Object) {
+                                reachedEnd = true;
+                            }
+                        }
+                    } else {
                         try {
-                            method = myCls.getMethod(setter, iface);
+                            method = myCls.getMethod(setter, valueCls);
                             method.invoke(androidView,value);
                             methodCache.put(methodKey,method)
                             found = true;
                         } catch(NoSuchMethodException ex) {
+                        }
+                        try {
+                            var primitiveType = valueCls.getField("TYPE").get(null) as Class;
+                            method = myCls.getMethod(setter, primitiveType);
+                            method.invoke(androidView,value);
+                            methodCache.put(methodKey,method)
+                            found = true;
+                        } catch(NoSuchFieldException nsfe) {
+                        } catch(NoSuchMethodException ex) {
+                        }
+                        for(iface: valueCls.interfaces) {
+                            if (!found) {
+                                try {
+                                    method = myCls.getMethod(setter, iface);
+                                    method.invoke(androidView,value);
+                                    methodCache.put(methodKey,method)
+                                    found = true;
+                                } catch(NoSuchMethodException ex) {
+                                }
+                            }
                         }
                     }
                     if (valueCls == Object) {
@@ -135,7 +168,6 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                     valueCls = valueCls.superclass
                 }
                 if (!found) {
-                    log(myCls+": Couldn't find setter "+ setter)
                     methodCache.put(methodKey,null);
                 }
             ]
