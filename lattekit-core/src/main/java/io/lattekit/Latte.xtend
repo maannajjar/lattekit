@@ -12,8 +12,6 @@ annotation Latte {
 class LatteProcessor extends AbstractMethodProcessor {
 	
 	override doTransform(MutableMethodDeclaration annotatedMethod, extension TransformationContext context) {
-		annotatedMethod.returnType = findTypeGlobally("io.lattekit.ui.view.LatteView").newTypeReference();
-		annotatedMethod.body = '''return null;'''
 	}
 	
 }

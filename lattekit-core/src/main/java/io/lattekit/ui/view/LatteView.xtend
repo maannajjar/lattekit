@@ -184,7 +184,7 @@ public class LatteView {
     def void renderTree() {
     	var List<LatteView> newRenderedViews = newArrayList()
         injectProps()
-    	var renderMe = this.render()
+    	var renderMe = this.renderImpl()
     	if (renderMe != null) {
     		renderMe.stylesheet = this.stylesheet
     		newRenderedViews += renderMe
@@ -224,9 +224,11 @@ public class LatteView {
     def boolean onPropsUpdated(Map<String,Object> props) {
     	return true;
     }
-    
 
-    def LatteView render() {
+    def String render() {
+
+    }
+    def LatteView renderImpl() {
        	return null;
     }
     
