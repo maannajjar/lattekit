@@ -13,12 +13,14 @@ import java.util.List
 import java.util.Map
 import io.lattekit.transformer.generator.JavaGenerator
 import io.lattekit.transformer.generator.XtendGenerator
+import io.lattekit.transformer.generator.KotlinGenerator
 
 class Transformer {
 
 
 	var compiler = new JavaGenerator();
 	var xtendCompiler = new XtendGenerator();
+	var kotlinCompiler = new KotlinGenerator();
 	var cssCompiler = new CssCompiler();
 	var Path rootDir;
 	var List<String> extensions;
@@ -32,12 +34,14 @@ class Transformer {
 			return;
 		}
 
-		if (file.absolutePath.endsWith(".java") || file.absolutePath.endsWith(".xtend")) {
+		if (file.absolutePath.endsWith(".java") || file.absolutePath.endsWith(".xtend")  || file.absolutePath.endsWith(".kt")) {
 
 			var code = new String(Files.readAllBytes(file.toPath));
-			val ext =  if (file.absolutePath.endsWith(".xtend")) ".xtend" else ".java";
+			val ext =  if (file.absolutePath.endsWith(".xtend")) ".xtend" else if (file.absolutePath.endsWith(".kt"))  ".kt" else  ".java";
 			var results = if (file.absolutePath.endsWith(".xtend")) {
 				xtendCompiler.transform(code)
+			} else if (file.absolutePath.endsWith(".kt")) {
+				kotlinCompiler.transform(code)
 			} else {
 				compiler.transform(code)
 			}
@@ -95,7 +99,7 @@ class Transformer {
 
 	def void transform(String source, String out, String... extensions) {
 		this.extensions = if (extensions.empty) {
-			#[".css",".xtend",".java"]
+			#[".css",".xtend",".kt", ".java"]
 		} else {
 			extensions
 		}

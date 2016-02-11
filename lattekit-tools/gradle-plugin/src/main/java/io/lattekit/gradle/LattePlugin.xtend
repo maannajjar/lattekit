@@ -132,7 +132,7 @@ public class LatteTransform extends DefaultTask {
 			var to = javaToSrc
 			if (project.file(src).exists) {
 				new Transformer().transform(project.file(src).absolutePath, project.file(to).absolutePath,
-					".java", ".xtend","css")			
+					".java",".kt", ".xtend","css")
 			}
 		]
 

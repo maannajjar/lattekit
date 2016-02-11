@@ -35,7 +35,7 @@ abstract class BaseGenerator {
 
 		return imports;
 	}
-
+	def extendsKeyword() {"extends"}
 	def List<TransformedClass> transform(String source) {
 		val sb = new StringBuffer();
 		var fileImports = getImports(source);
@@ -64,13 +64,13 @@ abstract class BaseGenerator {
 				bracesStack.push(matcher.group(1));
 				currentClass.imports = fileImports.toList;
 
-				if (matcher.group(3) == "extends") {
+				if (matcher.group(3) == extendsKeyword) {
 					if (!isInner) {
 						currentClass.name= matcher.group(2)+"Impl"
 					}
                     currentClass.packageName = packageName;
 
-					currentClass.append( "class "+matcher.group(2) + "Impl extends "+matcher.group(4)+ " {")
+					currentClass.append( "class "+matcher.group(2) + "Impl "+extendsKeyword+" "+matcher.group(4)+ " {")
 				} else {
 					if (!isInner) {
 						currentClass.name = matcher.group(2)+"Impl"

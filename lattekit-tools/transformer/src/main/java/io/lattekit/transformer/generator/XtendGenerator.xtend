@@ -12,7 +12,7 @@ import java.util.regex.Pattern
 
 class XtendGenerator extends BaseGenerator {
 
-	val static TOKENS_RE = Pattern.compile("(class\\s+([^\\s]*)\\s*(?:(extends|implements)\\s+([^ ]*)\\s*)\\{|(?:@Latte)\\s+(?:def|override)\\s+[^ ]+\\s+'''([^''']*)'''|('''|'|\")(?:(?=(\\\\?))\\7[\\S\\s])*?\\6|(\\/\\*)(?:(?=(\\\\?))\\9[\\S\\s])*?\\*\\/|\\/\\/.*|[\\S\\s])");
+	val static TOKENS_RE = Pattern.compile("(class\\s+([^\\s]*)\\s*(?:(extends|implements)\\s+([^ ]*)\\s*)\\{|\\s+(?:def|override)\\s+render\\(\\)+\\s+'''([^''']*)'''|('''|'|\")(?:(?=(\\\\?))\\7[\\S\\s])*?\\6|(\\/\\*)(?:(?=(\\\\?))\\9[\\S\\s])*?\\*\\/|\\/\\/.*|[\\S\\s])");
 
 	override getTokensPattern() {
 		return TOKENS_RE
@@ -47,7 +47,7 @@ class XtendGenerator extends BaseGenerator {
 
 	override String compile(Tag tag) '''
 	«IF tag.parentTag == null»
-	override render() { 
+	override renderImpl() {
 		return
 	«ENDIF»
 		LatteView.createLayout(«getFirstParams(tag)», LatteView.props(«tag.props.map[compile].join(",")»), new io.lattekit.ui.view.ChildrenProc() {
