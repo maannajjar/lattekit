@@ -12,7 +12,7 @@ import java.util.regex.Pattern
 
 class XtendGenerator extends BaseGenerator {
 
-	val static TOKENS_RE = Pattern.compile("(class\\s+([^\\s]*)\\s*(?:(extends|implements)\\s+([^ ]*)\\s*)\\{|\\s+(?:def|override)\\s+render\\(\\)+\\s+'''([^''']*)'''|('''|'|\")(?:(?=(\\\\?))\\7[\\S\\s])*?\\6|(\\/\\*)(?:(?=(\\\\?))\\9[\\S\\s])*?\\*\\/|\\/\\/.*|[\\S\\s])");
+	val static TOKENS_RE = Pattern.compile("(class\\s+([^\\s]*)\\s*(?:(extends|implements)\\s+([^ ]*)\\s*)\\{|(?:def|override)\\s+render\\(\\)+\\s+'''([^''']*)'''|('''|'|\")(?:(?=(\\\\?))\\7[\\S\\s])*?\\6|(\\/\\*)(?:(?=(\\\\?))\\9[\\S\\s])*?\\*\\/|\\/\\/.*|[\\S\\s])");
 
 	override getTokensPattern() {
 		return TOKENS_RE
