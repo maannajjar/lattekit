@@ -46,6 +46,7 @@ public class Util {
 		}
 		try {
 			Class.forName("kotlin.jvm.functions.Function0");
+			HAS_KOTLIN = true;
 		} catch (ClassNotFoundException cnfe) {
 			HAS_KOTLIN = false;
 		}
