@@ -152,7 +152,7 @@ public class LatteView {
             while (cls != Object) {
                 cls.declaredFields.filter[isAnnotationPresent(Prop)].forEach[
                     var anno = it.getAnnotation(Prop);
-                    var name = if(anno.name != "") anno.name else it.name;
+                    var name = if(anno.value != "") anno.value else it.name;
                     it.setAccessible(true);
                     propFields.put(name, it)
                 ]

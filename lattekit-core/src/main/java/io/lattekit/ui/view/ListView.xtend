@@ -88,12 +88,14 @@ class ListView extends NativeView implements OnItemClickListener {
 		if (testLambda == null) {
 			return false;
 		}
-
-		if (!(testLambda instanceof Function1) && !(testLambda instanceof Function2)) {
+		if ( (!(testLambda instanceof Function1) && !(testLambda instanceof Function2))
+			&& (!(testLambda instanceof kotlin.jvm.functions.Function1) && !(testLambda instanceof kotlin.jvm.functions.Function2)))
+		{
 			// TODO: Warn about wrong "when" variable
 			return false;
 		}
-		var isFn2 = testLambda instanceof Function2
+		var isFn2 = testLambda instanceof Function2 || testLambda instanceof kotlin.jvm.functions.Function2
+		var isKotlin = testLambda instanceof kotlin.jvm.functions.Function2 || testLambda instanceof kotlin.jvm.functions.Function1
 		var modelType = (testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
 
 		if (modelType.isAssignableFrom(item.class)) {
@@ -106,11 +108,11 @@ class ListView extends NativeView implements OnItemClickListener {
 				}
 			}
 			var isMatch = if (!isFn2) {
-				var m = testLambda.class.getMethod("apply",modelType);
+				var m = if (isKotlin) testLambda.class.getMethod("invoke",modelType) else testLambda.class.getMethod("apply",modelType);
 				m.setAccessible(true);
 				m.invoke(testLambda,item) as Boolean;
 			} else {
-				var m = testLambda.class.getMethod("apply",modelType,secondParamType)
+				var m = if (isKotlin) testLambda.class.getMethod("invoke",modelType,typeof(int)) else testLambda.class.getMethod("apply",modelType,secondParamType)
 				m.setAccessible(true);
 				m.invoke(testLambda,item,position) as Boolean;
 			}
@@ -175,8 +177,12 @@ class ListView extends NativeView implements OnItemClickListener {
 			handlerLambda.apply(obj, position);
 		} else if (handlerLambda instanceof Function1) {
 			handlerLambda.apply(obj);
-		}  else if (handlerLambda instanceof Function2) {
+		} else if (handlerLambda instanceof Function2) {
 			handlerLambda.apply(obj, position);
+		} else if (handlerLambda instanceof kotlin.jvm.functions.Function1) {
+			handlerLambda.invoke(obj);
+		} else if (handlerLambda instanceof kotlin.jvm.functions.Function2) {
+			handlerLambda.invoke(obj, position);
 		}  else {
 			log("Warning: onItemClick should have parameters ("+paramType+",(optional)int) ")
 			// TODO: Warn about wrong "onItemClick" variable
