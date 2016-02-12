@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.support.v4.app.FragmentActivity
 import io.lattekit.util.Util
+import android.widget.TextView
 
 /**
  * Created by maan on 2/7/16.
@@ -30,7 +31,7 @@ class ViewPager extends NativeView {
     override applyProps() {
         super.applyProps()
         if (RENDER_TARGET == ANDROID) {
-//            adapter.notifyDataSetChanged
+            adapter.notifyDataSetChanged
         } else {
             this.renderedViews = newArrayList();
             this.data.forEach([item, index |
@@ -45,6 +46,7 @@ class ViewPager extends NativeView {
 
     override onViewMounted() {
         androidView.id = Util.makeResId("io.lattekit","id","viewPager")
+
         adapter = new FragmentPagerAdapter((activity as FragmentActivity).getSupportFragmentManager()) {
             override getCount() { data.size }
             override getItem(int position) {
@@ -125,24 +127,26 @@ class ViewPager extends NativeView {
 
     static class PagerFragment extends Fragment {
         static Map<String,LatteView> SAVED_OBJECTS = newHashMap();
-        LatteView view;
+        LatteView templateView;
+
         def static newInstance(LatteView template) {
-            var myId = System.currentTimeMillis+"";
+            var myId = ""+Math.random()+System.currentTimeMillis()
             var args = new Bundle();
             args.putString("_LATTE_KIT_OBJ_ID",myId)
-            SAVED_OBJECTS.put(myId,template.copy())
+            SAVED_OBJECTS.put(myId,template)
             var instance = new PagerFragment();
             instance.setArguments(args);
             return instance;
         }
 
+
         override onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            view = SAVED_OBJECTS.get(getArguments().getString("_LATTE_KIT_OBJ_ID"));
+            templateView = SAVED_OBJECTS.get(getArguments().getString("_LATTE_KIT_OBJ_ID"));
         }
         override onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             var lp = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT);
-            return view.buildView(activity,lp);
+            return templateView.buildView(activity,lp);
         }
 
     }

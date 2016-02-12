@@ -295,7 +295,8 @@ public class LatteView {
     
     def LatteView copy() {
         val copy = this.class.newInstance
-        copy.props = props;
+        copy.props = newHashMap();
+        this.props.keySet().forEach[ copy.props.put(it, this.props.get(it)); ]
         copy.children = new ArrayList<LatteView>()
         children.forEach[ copy.children += it.copy() ]
         copy.viewType = viewType
