@@ -1,12 +1,15 @@
 package io.lattekit.util;
 
+import org.eclipse.xtext.xbase.lib.Inline;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.xtext.xbase.lib.Inline;
-
 public class Util {
+
+	private static Boolean HAS_KOTLIN = null;
+
 	@Inline("new int[$1][]")
 	public static int[][] intArray(int outerSize) {
 		throw new UnsupportedOperationException();
@@ -36,5 +39,18 @@ public class Util {
 		}
 		return map;
 	}
+
+	public static boolean hasKotlin() {
+		if (HAS_KOTLIN != null) {
+			return HAS_KOTLIN;
+		}
+		try {
+			Class.forName("kotlin.jvm.functions.Function0");
+		} catch (ClassNotFoundException cnfe) {
+			HAS_KOTLIN = false;
+		}
+		return HAS_KOTLIN;
+	}
+
 
 }

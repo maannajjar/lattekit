@@ -30,7 +30,6 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import static io.lattekit.util.Util.*
 import java.lang.reflect.Method
 import java.lang.reflect.TypeVariable
-import kotlin.jvm.functions.Function0
 
 class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	
@@ -96,7 +95,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                 val value = props.get(it);
                 var isFn = value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0
                            || value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0
-                           || value instanceof kotlin.jvm.functions.Function0
+                           || (Util.hasKotlin() && value instanceof kotlin.jvm.functions.Function0)
                 val setter = "set"+it.substring(0,1).toUpperCase()+it.substring(1) + (if (isFn) "Listener" else "")
                 if (value == null) {
                     log("Ignoring "+it+" because its value is null");
@@ -128,8 +127,8 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                                         value.apply()
                                     } else if (value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0) {
                                         return value.apply()
-                                    } else if (value instanceof kotlin.jvm.functions.Function0) {
-                                        return value.invoke()
+                                    } else if (Util.hasKotlin() && value instanceof kotlin.jvm.functions.Function0) {
+                                        return (value as kotlin.jvm.functions.Function0).invoke()
                                     }
                                     return null;
                                 ])

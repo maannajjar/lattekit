@@ -14,6 +14,7 @@ import org.eclipse.xtext.xbase.lib.Functions.Function2
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure2
 import android.app.Activity
+import io.lattekit.util.Util
 
 class ListView extends NativeView implements OnItemClickListener {
 		
@@ -89,13 +90,13 @@ class ListView extends NativeView implements OnItemClickListener {
 			return false;
 		}
 		if ( (!(testLambda instanceof Function1) && !(testLambda instanceof Function2))
-			&& (!(testLambda instanceof kotlin.jvm.functions.Function1) && !(testLambda instanceof kotlin.jvm.functions.Function2)))
+			&& (!(Util.hasKotlin() && testLambda instanceof kotlin.jvm.functions.Function1) && !(Util.hasKotlin() && testLambda instanceof kotlin.jvm.functions.Function2)))
 		{
 			// TODO: Warn about wrong "when" variable
 			return false;
 		}
 		var isFn2 = testLambda instanceof Function2 || testLambda instanceof kotlin.jvm.functions.Function2
-		var isKotlin = testLambda instanceof kotlin.jvm.functions.Function2 || testLambda instanceof kotlin.jvm.functions.Function1
+		var isKotlin = Util.hasKotlin() &&  (testLambda instanceof kotlin.jvm.functions.Function2 || testLambda instanceof kotlin.jvm.functions.Function1)
 		var modelType = (testLambda.getClass().genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class
 
 		if (modelType.isAssignableFrom(item.class)) {
