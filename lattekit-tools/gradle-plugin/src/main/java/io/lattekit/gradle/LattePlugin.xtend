@@ -68,7 +68,8 @@ class LattePlugin implements Plugin<Project> {
 						val Set<File> originalSources = newHashSet();
 						val newSources = newHashSet(target)
 						sourceSet.java.srcDirs.forEach[ originalSources += it; newSources += it ]
-						sourceSet.java.srcDirs += target;
+						sourceSet.java.srcDirs = newSources;
+						println("All sources are "+sourceSet.java.srcDirs)
 						var taskName = "latteGernateSourcesJava"+sourceSet.name.substring(0,1).toUpperCase()+sourceSet.name.substring(1)
 						var actualTask = project.tasks.create(taskName,LatteTransform) [
 							it.javaSrc = originalSources
