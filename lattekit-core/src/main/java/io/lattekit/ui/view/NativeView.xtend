@@ -92,6 +92,10 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
             val myCls = getViewClass()
             props.keySet().forEach[
                 if (it == "cls") return;
+                if (it == "id") {
+                    this.androidView.id = Util.makeResId("latte","id",this.props.get("id") as String)
+                    return;
+                }
                 val value = props.get(it);
                 var isFn = value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0
                            || value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0

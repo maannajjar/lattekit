@@ -112,7 +112,11 @@ public class LatteView {
             cachedCls
         } else if (vT.contains(".")) {
             var cls =  try {
-                Class.forName(vT+"Impl")
+                var cls = Class.forName(vT+"Impl")
+                if (!LatteView.isAssignableFrom(cls)) {
+                    cls = Class.forName(vT)
+                }
+                cls
             } catch (ClassNotFoundException ex){
                 Class.forName(vT)
             }
@@ -217,7 +221,6 @@ public class LatteView {
 			}
 		}
 		this.renderedViews = newRenderedViews;
-        findRefs(this.renderedViews);
     }
     
 
@@ -246,6 +249,7 @@ public class LatteView {
 
     def void notifyMounted() {
         isMounted = true;
+        findRefs(this.renderedViews);
         onViewMounted();
     }
     def void onViewMounted() {
@@ -339,7 +343,7 @@ public class LatteView {
                     log("Couldn't find field "+fieldName)
                 }
             }
-            findRefs(it.children)
+            this.findRefs(it.children)
         ]
     }
 }

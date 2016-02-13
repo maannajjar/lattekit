@@ -5,11 +5,18 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import java.util.Map
 import java.util.List
+import android.view.Gravity
 
 class NativeViewGroup extends NativeView {
 
     var List<View> managedViews = newArrayList();
     def Class<? extends ViewGroup.LayoutParams> getLayoutParamsClass() {
+        if (this.androidView != null) {
+            var Class<? extends ViewGroup.LayoutParams> cls = this.androidView.class.getDeclaredClasses.findFirst[name == this.androidView.class.name+"$LayoutParams"] as Class<? extends ViewGroup.LayoutParams>
+            if (cls != null ) {
+                return cls
+            }
+        }
         return ViewGroup.LayoutParams
     }
 	def LayoutParams createLayoutParams() {
@@ -19,7 +26,24 @@ class NativeViewGroup extends NativeView {
     }
 
     def void onChildrenAdded() {}
-	
+
+    def applyChildLayoutProps(LatteView child, LayoutParams params) {
+            child.props.keySet().filter[startsWith("layout_")].forEach[
+                // TODO: Be more dynamic
+                if (it == "layout_gravity") {
+                    var value = child.props.get(it);
+                    var field = params.class.getField("gravity");
+                    field.setAccessible(true);
+                    if (value instanceof String) {
+                        var realVal = Gravity.getField(value.toUpperCase).get(null)
+                        field.set(params,realVal)
+                    } else if (value instanceof Integer) {
+                        field.set(params, value)
+                    }
+                }
+            ]
+    }
+
 	def mountChildren() {
 		log(this+" Here about to add my children "+this.renderedViews.size)
         if (LatteView.RENDER_TARGET == ANDROID) {
@@ -29,6 +53,7 @@ class NativeViewGroup extends NativeView {
             for(LatteView v : renderedViews) {
                 var childLP = createLayoutParams();
                 var View childView = v.buildAndroidViewTree(this.activity, childLP);
+                applyChildLayoutProps(v,childLP)
                 if(i >= myContainer.childCount) {
                     myContainer.addView(childView, i, childLP)
                 } else if(myContainer.getChildAt(i) == childView) {
