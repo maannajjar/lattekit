@@ -32,11 +32,6 @@ class ViewPager extends NativeView {
         super.applyProps()
         if (RENDER_TARGET == ANDROID) {
             adapter.notifyDataSetChanged
-        } else {
-            this.renderedViews = newArrayList();
-            this.data.forEach([item, index |
-//                this.renderedViews += getLatteView(index);
-            ])
         }
     }
 
@@ -84,6 +79,7 @@ class ViewPager extends NativeView {
         var view = androidView as android.support.v4.view.ViewPager;
         view.adapter = adapter;
         adapter.notifyDataSetChanged
+        super.onViewMounted()
     }
 
 

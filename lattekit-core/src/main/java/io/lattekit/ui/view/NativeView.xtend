@@ -52,7 +52,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
     Map<String,Style> computedStyles = newHashMap(); 
     
     var Set<String> currentSelectedPseudos = newHashSet("normal"); 
-    
+    var boolean isAttached = false;
 
     @Accessors public Style normalStyle = new Style();
     @Accessors public Style touchedStyle = new Style() => [ parentStyle = normalStyle ];
@@ -80,8 +80,11 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	}
 
 
+    def void applyProps() {
+        applyProps(false);
+    }
 
-	def void applyProps() {
+	def void applyProps(boolean onlyDelayed) {
         if (androidView != null) {
 	        if (this.androidView.id == -1 && this.id != null) {
 	            this.androidView.id = Util.makeResId("io.lattekit", "id", id);
@@ -90,26 +93,36 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
             this.androidView.clickable = false
 
             val myCls = getViewClass()
+
             props.keySet().forEach[
                 if (it == "cls") return;
                 if (it == "id") {
                     this.androidView.id = Util.makeResId("latte","id",this.props.get("id") as String)
                     return;
                 }
+                if (it.startsWith("@") && !isAttached) {
+                    return
+                }
+                if (onlyDelayed && !it.startsWith("@")) {
+                    return
+                }
                 val value = props.get(it);
+                var field = if (it.startsWith("@")) {
+                    it.substring(1)
+                } else it;
                 var isFn = value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0
                            || value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0
                            || (Util.hasKotlin() && value instanceof kotlin.jvm.functions.Function0)
-                val setter = "set"+it.substring(0,1).toUpperCase()+it.substring(1) + (if (isFn) "Listener" else "")
+                val setter = "set"+field.substring(0,1).toUpperCase()+field.substring(1) + (if (isFn) "Listener" else "")
                 if (value == null) {
-                    log("Ignoring "+it+" because its value is null");
+                    log("Ignoring "+field+" because its value is null");
                     return
                 }
                 var valueCls = value.class;
 
                 var found = false;
                 var reachedEnd = false;
-                var methodKey = myCls+":"+it+":"+value.class
+                var methodKey = myCls+":"+field+":"+value.class
                 var method = methodCache.get(methodKey);
                 if (method != null) {
                     method.invoke(androidView,value);
@@ -179,6 +192,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                     valueCls = valueCls.superclass
                 }
                 if (!found) {
+                    log(this.viewClass+": Couldn't find setter for "+methodKey)
                     methodCache.put(methodKey,null);
                 }
             ]
@@ -211,7 +225,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 	            androidView.onClickListener = this;
 	        }
 	        androidView.onTouchListener = this;
-	        
+
 	        if (normalStyle._computedX == null) {
 	            watchTree();
 	        }
@@ -221,9 +235,11 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
     
 	def void watchTree() {
         androidView.viewTreeObserver.addOnGlobalLayoutListener([
+            isAttached = true;
             normalStyle._computedX = androidView.x
             normalStyle._computedY = androidView.y
             androidView.viewTreeObserver.removeOnGlobalLayoutListener(self)
+            applyProps(true);
         ])
     }
 

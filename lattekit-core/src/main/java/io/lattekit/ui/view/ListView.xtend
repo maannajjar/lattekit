@@ -180,10 +180,10 @@ class ListView extends NativeView implements OnItemClickListener {
 			handlerLambda.apply(obj);
 		} else if (handlerLambda instanceof Function2) {
 			handlerLambda.apply(obj, position);
-		} else if (handlerLambda instanceof kotlin.jvm.functions.Function1) {
-			handlerLambda.invoke(obj);
 		} else if (handlerLambda instanceof kotlin.jvm.functions.Function2) {
 			handlerLambda.invoke(obj, position);
+		} else if (handlerLambda instanceof kotlin.jvm.functions.Function1) {
+			handlerLambda.invoke(obj);
 		}  else {
 			log("Warning: onItemClick should have parameters ("+paramType+",(optional)int) ")
 			// TODO: Warn about wrong "onItemClick" variable
