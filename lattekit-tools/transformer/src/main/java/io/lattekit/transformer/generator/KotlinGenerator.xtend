@@ -120,6 +120,6 @@ class KotlinHomeFeedImpl : LatteView() {
     """
 }
 
-		'''))
+        '''))
     }
 }

@@ -25,68 +25,68 @@ import org.gradle.api.plugins.JavaPluginConvention
 
 class LattePlugin implements Plugin<Project> {
 
-	FileResolver fileResolver
-	Project project
-	BaseExtension android
-	DomainObjectSet<? extends BaseVariant> variants
-	var Map<String,File> generatedSourceDir = newHashMap()
-	
-	@Inject
-	new(FileResolver fileResolver) {
-		this.fileResolver = fileResolver
-	}
+    FileResolver fileResolver
+    Project project
+    BaseExtension android
+    DomainObjectSet<? extends BaseVariant> variants
+    var Map<String,File> generatedSourceDir = newHashMap()
+
+    @Inject
+    new(FileResolver fileResolver) {
+        this.fileResolver = fileResolver
+    }
 
 
-	override apply(Project project) {
-		this.project = project
-			
-		project.gradle.buildFinished(new Closure(this) {
-			def doCall() {
-				android.sourceSets.forEach [ sourceSet |
-					if (generatedSourceDir.containsKey(sourceSet.name)) {
+    override apply(Project project) {
+        this.project = project
+
+        project.gradle.buildFinished(new Closure(this) {
+            def doCall() {
+                android.sourceSets.forEach [ sourceSet |
+                    if (generatedSourceDir.containsKey(sourceSet.name)) {
 //						sourceSet.java.srcDirs.remove(generatedSourceDir.get(sourceSet.name))
-					}
-				]
-			}
-		});
-		
-		project.afterEvaluate [
-			try {
-				android = project.extensions.getByName("android") as BaseExtension
-				variants = switch android {
-					AppExtension: android.applicationVariants as DomainObjectSet<? extends BaseVariant>
-					LibraryExtension: android.libraryVariants
-					default: throw new GradleException('''Unknown packaging type «android.class.simpleName»''')
-				}
-				android.sourceSets.forEach [ sourceSet |
-					var manifestFile = sourceSet.manifest.srcFile;
-					if(manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
-						var files = sourceSet.java.srcDirs.map[it.absoluteFile]
-						val target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/")
-						target.mkdirs()
-						generatedSourceDir.put(sourceSet.name, target)
-						val Set<File> originalSources = newHashSet();
-						val newSources = newHashSet(target)
-						sourceSet.java.srcDirs.forEach[ originalSources += it; newSources += it ]
-						sourceSet.java.srcDirs = newSources;
-						println("All sources are "+sourceSet.java.srcDirs)
-						var taskName = "latteGernateSourcesJava"+sourceSet.name.substring(0,1).toUpperCase()+sourceSet.name.substring(1)
-						var actualTask = project.tasks.create(taskName,LatteTransform) [
-							it.javaSrc = originalSources
-							it.javaToSrc = target
-							it.project = project;
+                    }
+                ]
+            }
+        });
 
-						]
-						project.tasks.findByName("preBuild").dependsOn(actualTask)
-						project.tasks.findByName("clean").finalizedBy(actualTask)
+        project.afterEvaluate [
+            try {
+                android = project.extensions.getByName("android") as BaseExtension
+                variants = switch android {
+                    AppExtension: android.applicationVariants as DomainObjectSet<? extends BaseVariant>
+                    LibraryExtension: android.libraryVariants
+                    default: throw new GradleException('''Unknown packaging type «android.class.simpleName»''')
+                }
+                android.sourceSets.forEach [ sourceSet |
+                    var manifestFile = sourceSet.manifest.srcFile;
+                    if(manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
+                        var files = sourceSet.java.srcDirs.map[it.absoluteFile]
+                        val target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/")
+                        target.mkdirs()
+                        generatedSourceDir.put(sourceSet.name, target)
+                        val Set<File> originalSources = newHashSet();
+                        val newSources = newHashSet(target)
+                        sourceSet.java.srcDirs.forEach[ originalSources += it; newSources += it ]
+                        sourceSet.java.srcDirs = newSources;
+                        println("All sources are "+sourceSet.java.srcDirs)
+                        var taskName = "latteGernateSourcesJava"+sourceSet.name.substring(0,1).toUpperCase()+sourceSet.name.substring(1)
+                        var actualTask = project.tasks.create(taskName,LatteTransform) [
+                            it.javaSrc = originalSources
+                            it.javaToSrc = target
+                            it.project = project;
 
-					}
-				]
-			} catch (Exception ex) {
-				// Java mode
+                        ]
+                        project.tasks.findByName("preBuild").dependsOn(actualTask)
+                        project.tasks.findByName("clean").finalizedBy(actualTask)
+
+                    }
+                ]
+            } catch (Exception ex) {
+                // Java mode
                 val java = project.convention.findPlugin(JavaPluginConvention)
 
-				// TODO: Create as gradle task
+                // TODO: Create as gradle task
                 java.sourceSets.all [ sourceSet |
                     if (!sourceSet.allJava.empty) {
 
@@ -105,38 +105,38 @@ class LattePlugin implements Plugin<Project> {
                     }
                 ]
 
-			}
-		]
-	}
+            }
+        ]
+    }
 
 }
 
 @Accessors
 public class LatteTransform extends DefaultTask {
-	
-	var Set<File> javaSrc;
-	var File javaToSrc;
 
-	def copy(Set<File> from, Set<File> to) {
-		from.forEach [ file, i |
-			project.copy [
-				from(file)
-				into(to.get(i))
-			]
-		]
-	}
+    var Set<File> javaSrc;
+    var File javaToSrc;
 
-	@TaskAction
-	def executeTask() {
-		println("Generating source dir" +javaToSrc);
-		javaSrc.forEach [ src, i |
-			var to = javaToSrc
-			if (project.file(src).exists) {
-				new Transformer().transform(project.file(src).absolutePath, project.file(to).absolutePath,
-					".java",".kt", ".xtend","css")
-			}
-		]
+    def copy(Set<File> from, Set<File> to) {
+        from.forEach [ file, i |
+            project.copy [
+                from(file)
+                into(to.get(i))
+            ]
+        ]
+    }
 
-	}
+    @TaskAction
+    def executeTask() {
+        println("Generating source dir" +javaToSrc);
+        javaSrc.forEach [ src, i |
+            var to = javaToSrc
+            if (project.file(src).exists) {
+                new Transformer().transform(project.file(src).absolutePath, project.file(to).absolutePath,
+                    ".java",".kt", ".xtend","css")
+            }
+        ]
+
+    }
 
 }
