@@ -14,10 +14,12 @@ class JavaGenerator extends BaseGenerator {
 
     val static TOKENS_RE = Pattern.compile('''(class\s+([^\s]*)\s*(?:(extends|implements)\s+([^ ]*)\s*)\{|\$\(\/\*((?:(?!\*\/\))[\s\S])*)\*\/\)|(['"])(?:(?=(\\?))\7[\S\s])*?\6|(\/\*)(?:(?=(\\?))\9[\S\s])*?\*\/|\/\/.*|[\S\s])''')
 
+
     def  String compile(Prop prop) { prop.compileProp }
     override getTokensPattern() {
         return TOKENS_RE;
     }
+
 
     def dispatch String compileProp(Prop prop) ''' "«prop.name»",«prop.value» '''
     def dispatch String compileProp(CodeProp prop) ''' "«prop.name»",(«prop.value») '''
@@ -73,7 +75,7 @@ class JavaGenerator extends BaseGenerator {
     '''
 
     def static void main(String... args) {
-        println(new JavaGenerator().transform('''
+        println(new JavaGenerator().transform("com.diggreader", '''
             package hello.test;
 
             public class Test extends LatteView {

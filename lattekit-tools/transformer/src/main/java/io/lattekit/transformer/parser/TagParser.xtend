@@ -7,7 +7,7 @@ import java.util.regex.Pattern
 
 class TagParser {
 
-    var tagPattern = Pattern.compile('''<(\/?)((?:\w|\.)*)(\s*\w+=(?:([\[{"'])(?:(?=(\\?))\5.*)?(?:\4|}|])))?(\s*\/?)>|([\s\S])''')
+    var tagPattern = Pattern.compile('''<(\/?)((?:\w|\.)*)(\s*\w+=(?:([\[{"'])(?:(?=(\\?))\5.*)?(?:\4|}|]|")))?(\s*\/?)>|([\s\S])''')
     var Stack<Tag> stack = new Stack<Tag>()
 
     def Tag parse(String code) {

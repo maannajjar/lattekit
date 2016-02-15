@@ -10,7 +10,10 @@ import java.util.List
 abstract class BaseGenerator {
 
     var IMPORTS_RE = Pattern.compile('''(import|package)\s+([^;\s\n]*);?''')
+    var static ANDROID_RES_RE = Pattern.compile('''@(?:([^:\/]+):)?\+?([^:\/]+)\/(.*)''')
 
+
+    @Accessors var String androidPackageName;
     var String packageName;
     protected Iterable<String> imports;
     def String compile(Tag code);
@@ -20,6 +23,26 @@ abstract class BaseGenerator {
     }
 
     def abstract Pattern getTokensPattern();
+
+    def compilePropStringValue(String value) {
+
+        if (value.trim().startsWith('"') && value.trim().endsWith('"')) {
+            var strContent = value.trim().substring(1,value.trim().length-1)
+            if(strContent.startsWith("@")) {
+                var matcher = ANDROID_RES_RE.matcher(strContent)
+                if(matcher.find()) {
+                    val resPackageName = if(matcher.group(1) != null && matcher.group(1) != "") {
+                        matcher.group(1)
+                    } else { androidPackageName }
+                    if(matcher.group(2) == "id" && resPackageName == androidPackageName) {
+                        return '''io.lattekit.util.Util.makeResId("«resPackageName»", "id","«matcher.group(3)»")'''
+                    }
+                    return '''«resPackageName».R.«matcher.group(2)».«matcher.group(3)»'''
+                }
+            }
+        }
+        return value;
+    }
 
     def List<String> getImports(String source) {
         var List<String> imports = newArrayList();
@@ -36,7 +59,8 @@ abstract class BaseGenerator {
         return imports;
     }
     def extendsKeyword() {"extends"}
-    def List<TransformedClass> transform(String source) {
+    def List<TransformedClass> transform(String androidPackage, String source) {
+        androidPackageName = androidPackage;
         val sb = new StringBuffer();
         var fileImports = getImports(source);
         imports = #[

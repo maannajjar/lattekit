@@ -29,7 +29,7 @@ class Transformer {
     var Map<WatchKey, File> keysOut = newHashMap()
 
 
-    def void transformFile(File file, File outDir) {
+    def void transformFile(String androidPackageName, File file, File outDir) {
         if (extensions.filter[file.absolutePath.endsWith(it)].empty) {
             return;
         }
@@ -39,11 +39,11 @@ class Transformer {
             var code = new String(Files.readAllBytes(file.toPath));
             val ext =  if (file.absolutePath.endsWith(".xtend")) ".xtend" else if (file.absolutePath.endsWith(".kt"))  ".kt" else  ".java";
             var results = if (file.absolutePath.endsWith(".xtend")) {
-                xtendCompiler.transform(code)
+                xtendCompiler.transform(androidPackageName, code)
             } else if (file.absolutePath.endsWith(".kt")) {
-                kotlinCompiler.transform(code)
+                kotlinCompiler.transform(androidPackageName,code)
             } else {
-                compiler.transform(code)
+                compiler.transform(androidPackageName,code)
             }
             results.forEach[
                 if (!outDir.exists()) {
@@ -74,7 +74,7 @@ class Transformer {
         }
     }
 
-    def void transformDir(String dir, String out, WatchService watcher) {
+    def void transformDir(String androidPackageName, String dir, String out, WatchService watcher) {
         val outDir = new File(out+File.separator);
         var sourceDir = new File(dir);
         var dirPath = sourceDir.toPath
@@ -84,9 +84,9 @@ class Transformer {
         keysOut.put(key, outDir)
         sourceDir.listFiles().forEach [
             if (isDirectory) {
-                transformDir(it.absolutePath, out + File.separator + it.name, watcher)
+                transformDir(androidPackageName,it.absolutePath, out + File.separator + it.name, watcher)
             } else {
-                transformFile(it.absoluteFile, outDir)
+                transformFile(androidPackageName,it.absoluteFile, outDir)
             }
         ]
 
@@ -97,7 +97,7 @@ class Transformer {
     }
 
 
-    def void transform(String source, String out, String... extensions) {
+    def void transform(String androidPackageName, String source, String out, String... extensions) {
         this.extensions = if (extensions.empty) {
             #[".css",".xtend",".kt", ".java"]
         } else {
@@ -109,7 +109,7 @@ class Transformer {
         var sourceDir = new File(source).toPath();
         rootDir = sourceDir;
         var WatchService watcher = sourceDir.getFileSystem().newWatchService();
-        transformDir(source, out, watcher)
+        transformDir(androidPackageName,source, out, watcher)
 
     }
 

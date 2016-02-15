@@ -13,11 +13,27 @@ class Prop extends Node {
     new(Matcher m) {
         super(m)
     }
+    String modifier;
+    String namespace;
     String name
     String value
     int start;
     int end
     String type;
+
+    def setName(String value) {
+        if (value.contains(":")) {
+            this.namespace = value.split(":",2).get(0)
+            this.name = value.split(":",2).get(1)
+        } else {
+            this.name = value;
+        }
+        if (this.name.startsWith("@")) {
+            modifier = "@";
+            name = name.substring(1)
+        }
+
+    }
 }
 
 @Accessors

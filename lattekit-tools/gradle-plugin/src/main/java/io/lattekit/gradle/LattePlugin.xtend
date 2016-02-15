@@ -22,6 +22,8 @@ import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.TaskAction
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import org.gradle.api.plugins.JavaPluginConvention
+import org.apache.commons.io.FileUtils
+import java.util.regex.Pattern
 
 class LattePlugin implements Plugin<Project> {
 
@@ -59,7 +61,7 @@ class LattePlugin implements Plugin<Project> {
                     default: throw new GradleException('''Unknown packaging type «android.class.simpleName»''')
                 }
                 android.sourceSets.forEach [ sourceSet |
-                    var manifestFile = sourceSet.manifest.srcFile;
+                    val manifestFile = sourceSet.manifest.srcFile;
                     if(manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
                         var files = sourceSet.java.srcDirs.map[it.absoluteFile]
                         val target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/")
@@ -72,10 +74,10 @@ class LattePlugin implements Plugin<Project> {
                         println("All sources are "+sourceSet.java.srcDirs)
                         var taskName = "latteGernateSourcesJava"+sourceSet.name.substring(0,1).toUpperCase()+sourceSet.name.substring(1)
                         var actualTask = project.tasks.create(taskName,LatteTransform) [
-                            it.javaSrc = originalSources
-                            it.javaToSrc = target
+                            it.from = originalSources
+                            it.into = target
                             it.project = project;
-
+                            it.manifestFile = manifestFile
                         ]
                         project.tasks.findByName("preBuild").dependsOn(actualTask)
                         project.tasks.findByName("clean").finalizedBy(actualTask)
@@ -96,9 +98,9 @@ class LattePlugin implements Plugin<Project> {
                         sourceSet.java.srcDirs = javaDirs
 
                         var task = new LatteTransform()
-                        task.javaSrc = sourceSet.java.srcDirs
+                        task.from = sourceSet.java.srcDirs
                         println("New source dirs =" +javaDirs);
-                        task.javaToSrc = target
+                        task.into = target
                         task.project = project;
                         task.execute
 
@@ -114,8 +116,11 @@ class LattePlugin implements Plugin<Project> {
 @Accessors
 public class LatteTransform extends DefaultTask {
 
-    var Set<File> javaSrc;
-    var File javaToSrc;
+    val PACKAGE_PATTERN = Pattern.compile('''package="([^"]+)"''')
+
+    var Set<File> from;
+    var File into;
+    var File manifestFile;
 
     def copy(Set<File> from, Set<File> to) {
         from.forEach [ file, i |
@@ -128,11 +133,18 @@ public class LatteTransform extends DefaultTask {
 
     @TaskAction
     def executeTask() {
-        println("Generating source dir" +javaToSrc);
-        javaSrc.forEach [ src, i |
-            var to = javaToSrc
+        var manifestText = FileUtils.readLines(manifestFile).join("\n")
+        var matcher = PACKAGE_PATTERN.matcher(manifestText);
+        var String packageName = null;
+        if (matcher.find) {
+            packageName = matcher.group(1)
+        }
+        val androidPackage = packageName;
+        println("Generating source dir" +from);
+        from.forEach [ src, i |
+            var to = into
             if (project.file(src).exists) {
-                new Transformer().transform(project.file(src).absolutePath, project.file(to).absolutePath,
+                new Transformer().transform(androidPackage,project.file(src).absolutePath, project.file(to).absolutePath,
                     ".java",".kt", ".xtend","css")
             }
         ]

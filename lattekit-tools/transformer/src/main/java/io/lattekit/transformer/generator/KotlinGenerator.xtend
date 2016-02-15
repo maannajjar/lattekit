@@ -21,7 +21,7 @@ class KotlinGenerator extends BaseGenerator {
 
     def String compile(Prop prop) { prop.compileProp }
 
-    def dispatch String compileProp(Prop prop) ''' "«prop.name»",«prop.value» '''
+    def dispatch String compileProp(Prop prop) ''' "«prop.name»",«compilePropStringValue(prop.value)» '''
 
     def dispatch String compileProp(CodeProp prop) ''' "«prop.name»",«prop.value» '''
 
@@ -61,7 +61,7 @@ class KotlinGenerator extends BaseGenerator {
 
 
     def static void main(String... args) {
-        println(new KotlinGenerator().transform('''
+        println(new KotlinGenerator().transform("com.diggreader", '''
 class KotlinHomeFeedImpl : LatteView() {
 
     internal var items: List<Story> = ArrayList();
