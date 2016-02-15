@@ -14,6 +14,7 @@ import java.util.Map
 import io.lattekit.transformer.generator.JavaGenerator
 import io.lattekit.transformer.generator.XtendGenerator
 import io.lattekit.transformer.generator.KotlinGenerator
+import java.util.Set
 
 class Transformer {
 
@@ -96,6 +97,14 @@ class Transformer {
         return event as WatchEvent<T>
     }
 
+    def getIdsXml(Iterable<String> ids) '''
+    <?xml version="1.0" encoding="utf-8"?>
+    <resources>
+        «FOR res: ids»
+        <item name="«res»" type="id" />
+        «ENDFOR»
+    </resources>
+    '''
 
     def void transform(String androidPackageName, String source, String out, String... extensions) {
         this.extensions = if (extensions.empty) {
@@ -104,12 +113,20 @@ class Transformer {
             extensions
         }
 
-        var outDir = new File(out);
+        var outDir = new File(out+"/java");
         outDir.delete
         var sourceDir = new File(source).toPath();
         rootDir = sourceDir;
         var WatchService watcher = sourceDir.getFileSystem().newWatchService();
-        transformDir(androidPackageName,source, out, watcher)
+        transformDir(androidPackageName,source, out+"/java", watcher)
+
+        val allIds = compiler.resourceIds + xtendCompiler.resourceIds + kotlinCompiler.resourceIds
+        var valuesOut = new File(out+"/res/values");
+        valuesOut.mkdirs();
+        var writer = new PrintWriter(new File(out+"/res/values/latte_ids.xml"), "UTF-8");
+        writer.print(getIdsXml(allIds));
+        writer.close();
+
 
     }
 

@@ -41,17 +41,7 @@ class LattePlugin implements Plugin<Project> {
 
     override apply(Project project) {
         this.project = project
-
-        project.gradle.buildFinished(new Closure(this) {
-            def doCall() {
-                android.sourceSets.forEach [ sourceSet |
-                    if (generatedSourceDir.containsKey(sourceSet.name)) {
-//						sourceSet.java.srcDirs.remove(generatedSourceDir.get(sourceSet.name))
-                    }
-                ]
-            }
-        });
-
+        
         project.afterEvaluate [
             try {
                 android = project.extensions.getByName("android") as BaseExtension
@@ -64,18 +54,27 @@ class LattePlugin implements Plugin<Project> {
                     val manifestFile = sourceSet.manifest.srcFile;
                     if(manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
                         var files = sourceSet.java.srcDirs.map[it.absoluteFile]
-                        val target = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/")
-                        target.mkdirs()
-                        generatedSourceDir.put(sourceSet.name, target)
-                        val Set<File> originalSources = newHashSet();
-                        val newSources = newHashSet(target)
-                        sourceSet.java.srcDirs.forEach[ originalSources += it; newSources += it ]
-                        sourceSet.java.srcDirs = newSources;
-                        println("All sources are "+sourceSet.java.srcDirs)
-                        var taskName = "latteGernateSourcesJava"+sourceSet.name.substring(0,1).toUpperCase()+sourceSet.name.substring(1)
+                        val latteTargetRoot = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name)
+                        val javaTarget = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/java/")
+                        val resTarget = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/res")
+                        javaTarget.mkdirs()
+                        resTarget.mkdirs()
+
+                        val Set<File> originalJavaSet = newHashSet();
+                        val updatedJavaFolderSet = newHashSet(javaTarget)
+                        val updatedResFolderSet = newHashSet(resTarget)
+
+                        sourceSet.java.srcDirs.forEach[ originalJavaSet += it; updatedJavaFolderSet += it ]
+                        sourceSet.res.srcDirs.forEach[ updatedResFolderSet += it ]
+                        sourceSet.java.srcDirs = updatedJavaFolderSet;
+                        sourceSet.res.srcDirs = updatedResFolderSet;
+
+                        println("All java sources are "+sourceSet.java.srcDirs)
+                        println("All res sources are "+sourceSet.res.srcDirs)
+                        var taskName = "latteGenerateSourcesJava"+sourceSet.name.substring(0,1).toUpperCase()+sourceSet.name.substring(1)
                         var actualTask = project.tasks.create(taskName,LatteTransform) [
-                            it.from = originalSources
-                            it.into = target
+                            it.from = originalJavaSet
+                            it.into = latteTargetRoot
                             it.project = project;
                             it.manifestFile = manifestFile
                         ]

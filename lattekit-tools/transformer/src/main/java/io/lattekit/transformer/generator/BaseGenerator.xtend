@@ -2,10 +2,11 @@ package io.lattekit.transformer.generator
 
 import io.lattekit.transformer.parser.TagParser
 import io.lattekit.transformer.tree.Tag
+import java.util.List
+import java.util.Stack
 import java.util.regex.Pattern
 import org.eclipse.xtend.lib.annotations.Accessors
-import java.util.Stack
-import java.util.List
+import java.util.Set
 
 abstract class BaseGenerator {
 
@@ -15,6 +16,8 @@ abstract class BaseGenerator {
 
     @Accessors var String androidPackageName;
     var String packageName;
+    @Accessors Set<String> resourceIds = newHashSet();
+
     protected Iterable<String> imports;
     def String compile(Tag code);
 
@@ -23,6 +26,10 @@ abstract class BaseGenerator {
     }
 
     def abstract Pattern getTokensPattern();
+
+    def emitId(String generatedId) {
+        resourceIds += generatedId;
+    }
 
     def compilePropStringValue(String value) {
 
@@ -35,7 +42,7 @@ abstract class BaseGenerator {
                         matcher.group(1)
                     } else { androidPackageName }
                     if(matcher.group(2) == "id" && resPackageName == androidPackageName) {
-                        return '''io.lattekit.util.Util.makeResId("«resPackageName»", "id","«matcher.group(3)»")'''
+                        emitId(matcher.group(3))
                     }
                     return '''«resPackageName».R.«matcher.group(2)».«matcher.group(3)»'''
                 }
