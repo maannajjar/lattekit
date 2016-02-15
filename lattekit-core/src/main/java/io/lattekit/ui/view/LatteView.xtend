@@ -308,8 +308,8 @@ public class LatteView {
         return copy;
     }
     
-    def String getId() {
-    	return props.get("id") as String
+    def Integer getId() {
+    	return props.get("id") as Integer
     }
     def LatteView $() {
     	return null

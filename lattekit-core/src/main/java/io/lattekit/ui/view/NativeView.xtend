@@ -149,9 +149,6 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
 
 	def void applyProps(boolean onlyDelayed) {
         if (androidView != null) {
-            if (this.androidView.id == -1 && this.id != null) {
-                this.androidView.id = Util.makeResId("io.lattekit", "id", id);
-            }
             // Default clickable to false
             this.androidView.clickable = false
 
@@ -160,7 +157,7 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
             props.keySet().forEach[
                 if (it == "cls") return;
                 if (it == "id") {
-                    this.androidView.id = Util.makeResId("latte","id",this.props.get("id") as String)
+                    this.androidView.id = if (this.props.get("id") instanceof String) Util.makeResId("latte","id",this.props.get("id") as String) else this.props.get("id") as Integer
                     return;
                 }
                 if (it.startsWith("@") && !isAttached) {

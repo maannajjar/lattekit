@@ -17,14 +17,8 @@ public class RelativeLayout extends NativeViewGroup {
 
 	override onChildrenAdded() {
 		if (RENDER_TARGET == ANDROID) {
-			val viewMap = newHashMap()
-			renderedViews.forEach[
-				if(it.id != null) {
-					viewMap.put(it.id, it.rootAndroidView.id);
-				}
-			]
-			renderedViews.forEach[ clearRules ]
-			renderedViews.forEach[ applyLayoutRules(viewMap) ]
+			renderedViews.forEach[ clearRules applyLayoutRules ]
+			this.androidView.requestLayout
 		}
 	}
 	
@@ -32,26 +26,26 @@ public class RelativeLayout extends NativeViewGroup {
 		for (i:0..21) (virtualView.rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams).removeRule(i);
 	}
 	
-	def applyLayoutRules(LatteView virtualView, HashMap<String,Integer> viewIds) {
+	def applyLayoutRules(LatteView virtualView) {
 		var rootAndroidView = virtualView.rootAndroidView
 		val params = rootAndroidView.layoutParams as android.widget.RelativeLayout.LayoutParams; 
 		virtualView.props.forEach[key, value|
 			if (key == "below") {
-				params.addRule(android.widget.RelativeLayout.BELOW, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.BELOW, value as Integer);
 			} else if (key == "above") {
-				params.addRule(android.widget.RelativeLayout.ABOVE, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ABOVE, value as Integer);
 			} else if (key == "toStartOf") {
-				params.addRule(android.widget.RelativeLayout.START_OF, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.START_OF, value as Integer);
 			} else if (key == "toEndOf") {
-				params.addRule(android.widget.RelativeLayout.END_OF, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.END_OF,value as Integer);
 			} else if (key == "alignStart") {
-				params.addRule(android.widget.RelativeLayout.ALIGN_START, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ALIGN_START, value as Integer);
 			} else if (key == "alignEnd") {
-				 params.addRule(android.widget.RelativeLayout.ALIGN_END, viewIds.get(value));
+				 params.addRule(android.widget.RelativeLayout.ALIGN_END, value as Integer);
 			} else if (key == "alignTop") {
-				params.addRule(android.widget.RelativeLayout.ALIGN_TOP, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ALIGN_TOP, value as Integer);
 			} else if (key == "alignBottom") {
-				params.addRule(android.widget.RelativeLayout.ALIGN_BOTTOM, viewIds.get(value));
+				params.addRule(android.widget.RelativeLayout.ALIGN_BOTTOM, value as Integer);
 			} else if (key == "alignParentStart" ) {
 				if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_START);
 			} else if (key == "alignParentEnd") {
