@@ -75,20 +75,83 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
         }
     }
 
-	def View renderNative(Context context) {
-		return getViewClass().constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
-	}
+    def View renderNative(Context context) {
+        return getViewClass().constructors.findFirst[parameterTypes.size == 1].newInstance(context) as View
+    }
 
 
     def void applyProps() {
         applyProps(false);
     }
 
+    def findSetter(String setter, Class valueType, boolean isFnValue ){
+        var Class myCls = getViewClass();
+        var Class currentCls = myCls;
+        var Class valueCls = valueType;
+        var reachedEnd = false;
+        var Method method;
+        while (!reachedEnd) {
+            if (isFnValue) {
+                method = currentCls.declaredMethods.findFirst[name == setter];
+                if (method != null && method.parameterTypes.size == 1) {
+                    var Class<?> listenerInterface = method.parameterTypes.get(0);
+                    if (listenerInterface.isInterface) {
+                        return method;
+                    }
+                } else {
+                    currentCls = currentCls.superclass
+                    if (currentCls == Object) {
+                        reachedEnd = true;
+                    }
+                }
+            } else {
+                try {
+                    method = myCls.getMethod(setter, valueCls);
+                    return method;
+                } catch(NoSuchMethodException ex) {
+                }
+                try {
+                    var primitiveType = valueCls.getField("TYPE").get(null) as Class;
+                    method = myCls.getMethod(setter, primitiveType);
+                    return method;
+                } catch(NoSuchFieldException nsfe) {
+                } catch(NoSuchMethodException ex) {
+                }
+                for(iface: valueCls.interfaces) {
+                    try {
+                        method = myCls.getMethod(setter, iface);
+                        return method;
+                    } catch(NoSuchMethodException ex) {
+                    }
+                }
+            }
+            if (valueCls == Object) {
+                reachedEnd = true;
+            }
+            valueCls = valueCls.superclass
+        }
+    }
+
+    def createLambdaProxyInstance(Class receiverClass, Object value) {
+        var instance = java.lang.reflect.Proxy.newProxyInstance(receiverClass.getClassLoader(), #[receiverClass],
+        [ proxy, invokedMethod, args |
+            if (value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0) {
+                value.apply()
+            } else if (value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0) {
+                return value.apply()
+            } else if (Util.hasKotlin() && value instanceof kotlin.jvm.functions.Function0) {
+                return (value as kotlin.jvm.functions.Function0).invoke()
+            }
+            return null;
+        ])
+        return instance;
+    }
+
 	def void applyProps(boolean onlyDelayed) {
         if (androidView != null) {
-	        if (this.androidView.id == -1 && this.id != null) {
-	            this.androidView.id = Util.makeResId("io.lattekit", "id", id);
-	        }
+            if (this.androidView.id == -1 && this.id != null) {
+                this.androidView.id = Util.makeResId("io.lattekit", "id", id);
+            }
             // Default clickable to false
             this.androidView.clickable = false
 
@@ -113,88 +176,29 @@ class NativeView extends LatteView implements OnTouchListener,OnClickListener {
                 var isFn = value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0
                            || value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0
                            || (Util.hasKotlin() && value instanceof kotlin.jvm.functions.Function0)
-                val setter = "set"+field.substring(0,1).toUpperCase()+field.substring(1) + (if (isFn) "Listener" else "")
+                var setter = "set"+field.substring(0,1).toUpperCase()+field.substring(1) + (if (isFn) "Listener" else "")
                 if (value == null) {
                     log("Ignoring "+field+" because its value is null");
                     return
                 }
                 var valueCls = value.class;
 
-                var found = false;
-                var reachedEnd = false;
                 var methodKey = myCls+":"+field+":"+value.class
                 var method = methodCache.get(methodKey);
+                if (!methodCache.containsKey(methodKey)) {
+                    // This is the first time we look
+                    method = findSetter(setter,valueCls,isFn)
+                    if (method == null) {
+                        setter = field;
+                        method = findSetter(setter,valueCls,isFn)
+                        log("LOOOKING FOR SETTER "+setter+". RESULT IS "+method);
+                    }
+                    methodCache.put(methodKey,method);
+                }
                 if (method != null) {
-                    method.invoke(androidView,value);
-                    found = true;
-                } else if (methodCache.containsKey(methodKey)) {
-                    reachedEnd = true;
+                    method.invoke(androidView,if(isFn) createLambdaProxyInstance(method.parameterTypes.get(0),value) else value);
                 }
-                var Class currentCls = myCls;
-                while (!found && !reachedEnd) {
-                    if (isFn) {
-                        method = currentCls.declaredMethods.findFirst[name == setter];
-                        if (method != null && method.parameterTypes.size == 1) {
-                            var Class<?> listenerInterface = method.parameterTypes.get(0);
-                            if (listenerInterface.isInterface) {
-                                found = true;
-                                var instance = java.lang.reflect.Proxy.newProxyInstance(listenerInterface.getClassLoader(), #[listenerInterface],
-                                [ proxy, invokedMethod, args |
-                                    if (value instanceof org.eclipse.xtext.xbase.lib.Procedures.Procedure0) {
-                                        value.apply()
-                                    } else if (value instanceof org.eclipse.xtext.xbase.lib.Functions.Function0) {
-                                        return value.apply()
-                                    } else if (Util.hasKotlin() && value instanceof kotlin.jvm.functions.Function0) {
-                                        return (value as kotlin.jvm.functions.Function0).invoke()
-                                    }
-                                    return null;
-                                ])
-                                method.invoke(androidView,instance)
-                            }
-                        } else {
-                            currentCls = currentCls.superclass
-                            if (currentCls == Object) {
-                                reachedEnd = true;
-                            }
-                        }
-                    } else {
-                        try {
-                            method = myCls.getMethod(setter, valueCls);
-                            method.invoke(androidView,value);
-                            methodCache.put(methodKey,method)
-                            found = true;
-                        } catch(NoSuchMethodException ex) {
-                        }
-                        try {
-                            var primitiveType = valueCls.getField("TYPE").get(null) as Class;
-                            method = myCls.getMethod(setter, primitiveType);
-                            method.invoke(androidView,value);
-                            methodCache.put(methodKey,method)
-                            found = true;
-                        } catch(NoSuchFieldException nsfe) {
-                        } catch(NoSuchMethodException ex) {
-                        }
-                        for(iface: valueCls.interfaces) {
-                            if (!found) {
-                                try {
-                                    method = myCls.getMethod(setter, iface);
-                                    method.invoke(androidView,value);
-                                    methodCache.put(methodKey,method)
-                                    found = true;
-                                } catch(NoSuchMethodException ex) {
-                                }
-                            }
-                        }
-                    }
-                    if (valueCls == Object) {
-                        reachedEnd = true;
-                    }
-                    valueCls = valueCls.superclass
-                }
-                if (!found) {
-                    log(this.viewClass+": Couldn't find setter for "+methodKey)
-                    methodCache.put(methodKey,null);
-                }
+
             ]
 
 
