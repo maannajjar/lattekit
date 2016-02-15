@@ -19,7 +19,7 @@ class NativeViewGroup extends NativeView {
         }
         return ViewGroup.LayoutParams
     }
-	def LayoutParams createLayoutParams() {
+    def LayoutParams createLayoutParams() {
         return getLayoutParamsClass().constructors.findFirst[ parameterTypes.size == 2 &&
                                             parameterTypes.get(0) == typeof(int) &&
                                             parameterTypes.get(1) == typeof(int)].newInstance(-1,-1) as LayoutParams
@@ -44,8 +44,8 @@ class NativeViewGroup extends NativeView {
             ]
     }
 
-	def mountChildren() {
-		log(this+" Here about to add my children "+this.renderedViews.size)
+    def mountChildren() {
+        log(this+" Here about to add my children "+this.renderedViews.size)
         if (LatteView.RENDER_TARGET == ANDROID) {
             var List<View> newViews = newArrayList();
             var myContainer = this.androidView as ViewGroup;
@@ -75,11 +75,11 @@ class NativeViewGroup extends NativeView {
             managedViews = newViews
         }
         onChildrenAdded()
-	}
-	
-	override onPropsUpdated(Map<String, Object> oldProps) {
+    }
+
+    override onPropsUpdated(Map<String, Object> oldProps) {
         super.onPropsUpdated(oldProps);
-		return true
-	}
-	
+        return true
+    }
+
 }

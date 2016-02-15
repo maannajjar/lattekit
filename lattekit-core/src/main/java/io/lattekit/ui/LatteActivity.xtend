@@ -10,31 +10,31 @@ import java.util.List
 import android.support.v4.app.FragmentActivity
 
 class LatteActivity extends FragmentActivity {
-	
-	protected LatteView latteView;
-	protected View androidView;
-	
-	
-	override protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		var myId = intent.getStringExtra("_LATTE_KIT_OBJ_ID");
-		
-		if (myId != null) {
-			latteView = LatteView.getSavedObject(myId)
-			androidView = latteView.buildView(this, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
-			setContentView(androidView);			
-		}
-	}
-	
-	def onStateChanged() {
-		latteView.onStateChanged();		
-	}
-	
-	def onViewMounted() {
-			
-	}	
-	
-	def List<Stylesheet> getCssFiles() {
-		return #[]		
-	}
+
+    protected LatteView latteView;
+    protected View androidView;
+
+
+    override protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        var myId = intent.getStringExtra("_LATTE_KIT_OBJ_ID");
+
+        if (myId != null) {
+            latteView = LatteView.getSavedObject(myId)
+            androidView = latteView.buildView(this, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
+            setContentView(androidView);
+        }
+    }
+
+    def onStateChanged() {
+        latteView.onStateChanged();
+    }
+
+    def onViewMounted() {
+
+    }
+
+    def List<Stylesheet> getCssFiles() {
+        return #[]
+    }
 }

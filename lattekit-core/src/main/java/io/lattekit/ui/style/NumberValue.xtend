@@ -44,9 +44,9 @@ class NumberValue {
     }
     
     override equals(Object other) {
-    	if (other instanceof NumberValue) {
-    		return other.type == type && other.value == value;
-    	}
-    	return super.equals(other);
+        if (other instanceof NumberValue) {
+            return other.type == type && other.value == value;
+        }
+        return super.equals(other);
     }
 } 

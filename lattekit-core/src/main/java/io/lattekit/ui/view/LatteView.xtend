@@ -86,8 +86,8 @@ public class LatteView {
     }
     
     def void handleStateChanged() {
-		this.renderTree() 
-		this.buildAndroidViewTree(activity, if (RENDER_TARGET == ANDROID) rootAndroidView.layoutParams else null);
+        this.renderTree()
+        this.buildAndroidViewTree(activity, if (RENDER_TARGET == ANDROID) rootAndroidView.layoutParams else null);
     }
         
     def static sameView(LatteView leftView, LatteView rightView) {
@@ -102,11 +102,11 @@ public class LatteView {
         ])
     }    
     def static createLayout(String viewType, Map<String,Object> props, ChildrenProc childrenProc) {
-    	return createLayout(#[], viewType,props,childrenProc)
+        return createLayout(#[], viewType,props,childrenProc)
     }
     def static createLayout(List<String> imports, String vT, Map<String,Object> props, ChildrenProc childrenProc) {
-    	var LatteView layout = null;
-    	var viewType = vT;
+        var LatteView layout = null;
+        var viewType = vT;
         var Class cachedCls;
         var clazz = if ( (cachedCls = LOOKUP_CACHE.get(vT)) != null ) {
             cachedCls
@@ -141,12 +141,12 @@ public class LatteView {
             viewType = clazz.name
         }
 
-    	layout.viewType = viewType;
-    	layout.props = props;
-    	layout.childrenProc = childrenProc;
-    	layout.children = layout.childrenProc.apply()
-    	
-    	return layout
+        layout.viewType = viewType;
+        layout.props = props;
+        layout.childrenProc = childrenProc;
+        layout.children = layout.childrenProc.apply()
+
+        return layout
     }
     
     def injectProps() {
@@ -186,65 +186,65 @@ public class LatteView {
     }
 
     def void renderTree() {
-    	var List<LatteView> newRenderedViews = newArrayList()
+        var List<LatteView> newRenderedViews = newArrayList()
         injectProps()
-    	var renderMe = this.renderImpl()
-    	if (renderMe != null) {
-    		renderMe.stylesheet = this.stylesheet
-    		newRenderedViews += renderMe
-    	} 
-    	if (this instanceof NativeViewGroup) {
-	    	for (child: children) {
-	    		newRenderedViews += child
-	    	}
-	    }
-	    
-		for (var i =0;i<newRenderedViews.length;i++) {
-			var newView = newRenderedViews.get(i);
-			if (i < renderedViews.length) {
-				var oldView = renderedViews.get(i)
-				if (sameView(oldView, newView)) {
-					var oldProps = oldView.props
-					oldView.children = newView.children
-					oldView.props = newView.props
-					if (oldView.onPropsUpdated(oldProps)) {
-						oldView.renderTree()	
-					}
-					newRenderedViews.set(i, oldView)
-				} else {
-					newView.renderTree()
-				}
-			} else {
-	    		newView.parentView = this
-	    		newView.stylesheet = this.stylesheet
-	    		newView.renderTree()			
-			}
-		}
-		this.renderedViews = newRenderedViews;
+        var renderMe = this.renderImpl()
+        if (renderMe != null) {
+            renderMe.stylesheet = this.stylesheet
+            newRenderedViews += renderMe
+        }
+        if (this instanceof NativeViewGroup) {
+            for (child: children) {
+                newRenderedViews += child
+            }
+        }
+
+        for (var i =0;i<newRenderedViews.length;i++) {
+            var newView = newRenderedViews.get(i);
+            if (i < renderedViews.length) {
+                var oldView = renderedViews.get(i)
+                if (sameView(oldView, newView)) {
+                    var oldProps = oldView.props
+                    oldView.children = newView.children
+                    oldView.props = newView.props
+                    if (oldView.onPropsUpdated(oldProps)) {
+                        oldView.renderTree()
+                    }
+                    newRenderedViews.set(i, oldView)
+                } else {
+                    newView.renderTree()
+                }
+            } else {
+                newView.parentView = this
+                newView.stylesheet = this.stylesheet
+                newView.renderTree()
+            }
+        }
+        this.renderedViews = newRenderedViews;
     }
     
 
     def boolean onPropsUpdated(Map<String,Object> props) {
-    	return true;
+        return true;
     }
 
     def String render() {
 
     }
     def LatteView renderImpl() {
-       	return null;
+        return null;
     }
     
-	def void loadStylesheet(Stylesheet... stylesheets) {
-		stylesheets.forEach[ it.apply(this.stylesheet) ];
-	}
+    def void loadStylesheet(Stylesheet... stylesheets) {
+        stylesheets.forEach[ it.apply(this.stylesheet) ];
+    }
     
     def View getRootAndroidView() {
         if (this.androidView != null) {
-        	 return this.androidView
+             return this.androidView
         } else if (this.renderedViews.get(0) != null) {
-    		return this.renderedViews.get(0).rootAndroidView;
-    	}
+            return this.renderedViews.get(0).rootAndroidView;
+        }
     }
 
     def void notifyMounted() {
@@ -254,24 +254,24 @@ public class LatteView {
     }
     def void onViewMounted() {
     }
-   	
+
     def View buildAndroidViewTree(Context a, ViewGroup.LayoutParams lp) {
         // First build my view
         this.activity = a;
         if (this instanceof NativeView) {
             if (RENDER_TARGET == ANDROID && this.androidView == null) {
-            	this.androidView = (this as NativeView).renderNative(a);
+                this.androidView = (this as NativeView).renderNative(a);
             } 
-        	if (RENDER_TARGET == ANDROID && this.androidView.layoutParams == null) {
-        		this.androidView.layoutParams = lp;
-        	}
-        	if (!isMounted) {
-            	notifyMounted();
-        	}			
-        	
-			if (this instanceof NativeViewGroup) {
-				(this as NativeViewGroup).mountChildren()
-			}
+            if (RENDER_TARGET == ANDROID && this.androidView.layoutParams == null) {
+                this.androidView.layoutParams = lp;
+            }
+            if (!isMounted) {
+                notifyMounted();
+            }
+
+            if (this instanceof NativeViewGroup) {
+                (this as NativeViewGroup).mountChildren()
+            }
             return this.androidView
         } else {
             // If we don't have native android view, then we are virtual node
@@ -309,18 +309,18 @@ public class LatteView {
     }
     
     def Integer getId() {
-    	return props.get("id") as Integer
+        return props.get("id") as Integer
     }
     def LatteView $() {
-    	return null
+        return null
     }
-	def static Map<String,Object> props(Object...objects) {
-		var HashMap<String,Object> map = new HashMap<String,Object>(objects.length/2);
-		for (var i = 0; i< objects.length;i+=2) {
-			map.put(objects.get(i) as String, objects.get(i+1));
-		}
-		return map;
-	}
+    def static Map<String,Object> props(Object...objects) {
+        var HashMap<String,Object> map = new HashMap<String,Object>(objects.length/2);
+        for (var i = 0; i< objects.length;i+=2) {
+            map.put(objects.get(i) as String, objects.get(i+1));
+        }
+        return map;
+    }
 
     def static void log(String message) {
         Log.d("Latte",message)
@@ -349,5 +349,5 @@ public class LatteView {
 }
 
 interface ChildrenProc {
-	def List<LatteView> apply();
+    def List<LatteView> apply();
 }
