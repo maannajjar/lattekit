@@ -1,6 +1,5 @@
-ext.kotlin_version = '1.0.0-rc-1036'
-
 buildscript {
+  ext.kotlin_version = '1.0.0'
   repositories {
     jcenter()
     maven {
@@ -10,12 +9,13 @@ buildscript {
   dependencies {
     classpath 'com.android.tools.build:gradle:2.0.0-alpha6'
     classpath "org.xtext:xtext-android-gradle-plugin:1.0.2"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
 }
 
 // Apply the java plugin to add support for Java
 apply plugin: 'com.android.library'
-apply plugin: "org.xtext.android.xtend"
+apply plugin: 'kotlin-android'
 apply plugin: 'maven'
 
 repositories {
