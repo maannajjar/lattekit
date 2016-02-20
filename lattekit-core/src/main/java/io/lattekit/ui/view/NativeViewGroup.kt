@@ -57,30 +57,26 @@ open class NativeViewGroup : NativeView() {
         log("${this.androidView} Here about to add my children " + this.renderedViews.size)
         var newViews = ArrayList<View>();
         var myContainer = this.androidView as ViewGroup;
-        var i = 0;
-        for(v in renderedViews) {
-            var childLP = createLayoutParams();
-            log("${this.androidView} Adding child with params ${childLP}")
-            var childView = v.buildAndroidViewTree(this.activity as Context, childLP);
-            log("${this.androidView} Added child ${childView}")
-            applyChildLayoutProps(v,childLP)
-            if(i >= myContainer.childCount) {
-                myContainer.addView(childView, i, childLP)
-            } else if(myContainer.getChildAt(i) == childView) {
-                // childView.layoutParams = childLP;
-            } else {
-                childView.layoutParams = childLP;
-                myContainer.addView(childView,i, childLP);
+
+        for(i in 0..Math.max(managedViews.size,renderedViews.size)-1) {
+            if (i < renderedViews.size) {
+                var v = renderedViews[i]
+
+                var childLP = createLayoutParams();
+                var childView = v.buildAndroidViewTree(this.activity as Context, childLP);
+                applyChildLayoutProps(v, childView.layoutParams)
+                if (i >= managedViews.size) {
+                    myContainer.addView(childView);
+                }
+
+                v.androidView = childView
+                newViews.add(childView);
+                if (!v.isMounted) {
+                    v.notifyMounted()
+                }
+            } else if (i < managedViews.size) {
+                myContainer.removeViewInLayout(managedViews.get(i))
             }
-            v.androidView = childView
-            newViews.add(childView);
-            if(!v.isMounted) {
-                v.notifyMounted()
-            }
-            i++;
-        }
-        for(z in i..myContainer.childCount-1) {
-            if (managedViews.contains(myContainer.getChildAt(z))) myContainer.removeViewAt(z);
         }
         managedViews = newViews
 

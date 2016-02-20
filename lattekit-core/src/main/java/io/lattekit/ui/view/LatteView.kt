@@ -19,6 +19,7 @@ open class LatteView {
     companion object {
         var SAVED_OBJECTS = mutableMapOf<String,LatteView>();
         var PROP_FILEDS = mutableMapOf<String, MutableMap<String,Field>>()
+        var RECYCLED_VIEWS = mutableMapOf<String, MutableList<LatteView>>()
 
         @JvmStatic
         var LOOKUP_CACHE : MutableMap<String,Class<out Any>>  = mutableMapOf(
@@ -31,6 +32,42 @@ open class LatteView {
                 "ViewPager" to ViewPager::class.java,
                 "WebView" to android.webkit.WebView::class.java
         )
+
+        fun recycleView(view : LatteView) {
+            if (view is NativeView) {
+                var recycleKey = view.props.get("recycle")
+                if (recycleKey != null) {
+                    var list = RECYCLED_VIEWS.get(view.getViewClass().name + ":" + recycleKey);
+                    if (list == null) {
+                        list = mutableListOf()
+                        RECYCLED_VIEWS.put(view.getViewClass().name + ":" + recycleKey, list)
+                    }
+                    view.isMounted = false
+                    list.add(view)
+                }
+            }
+        }
+
+        fun getRecycledView(forView : LatteView) : LatteView? {
+            if (forView is NativeView) {
+                var recycleKey = forView.props.get("recycle")
+                if (recycleKey != null) {
+
+                    var list = RECYCLED_VIEWS.get(forView.getViewClass().name+":"+recycleKey);
+                    if (list == null) {
+                        list = mutableListOf()
+                        RECYCLED_VIEWS.put(forView.getViewClass().name + ":" + recycleKey, list)
+                    }
+                    var view = list.getOrNull(0)
+                    if (view != null) {
+                        list.removeAt(0);
+                        log("Recycler", "Re-used View ${view}")
+                    }
+                    return view
+                }
+            }
+            return null;
+        }
 
         @JvmStatic
         fun props(vararg objects : Any?) : MutableMap<String,Any?> {
@@ -50,6 +87,12 @@ open class LatteView {
         fun log(message : String) {
             Log.d("Latte",message)
         }
+
+        @JvmStatic
+        fun log(tag : String, message : String) {
+            Log.d(tag,message)
+        }
+
 
         @JvmStatic
         fun createLayout( viewType : String , props: MutableMap<String,Any?> ) : LatteView {
@@ -322,7 +365,6 @@ open class LatteView {
             if (i < renderedViews.size) {
                 var oldView : LatteView = renderedViews.get(i)
                 if (sameView(oldView, newView)) {
-                    log("${oldView} is the same as ${newView}")
                     var oldProps = oldView.props
                     oldView.children = newView.children
                     oldView.props = newView.props
@@ -331,14 +373,45 @@ open class LatteView {
                     }
                     newRenderedViews[i] = oldView
                 } else {
-                    newView.renderTree()
+                    // Try find recycled view
+                    var recycledOldView = getRecycledView(newView)
+                    if (recycledOldView != null) {
+                        recycledOldView.parentView = this
+                        recycledOldView.stylesheet = this.stylesheet
+                        recycledOldView.children = newView.children
+                        recycledOldView.props = newView.props
+                        recycledOldView.isMounted = false
+                        recycledOldView.renderTree()
+                        newRenderedViews[i] = recycledOldView
+                    } else {
+                        newView.parentView = this
+                        newView.stylesheet = this.stylesheet
+                        newView.renderTree()
+                    }
                 }
             } else {
-                newView.parentView = this
-                newView.stylesheet = this.stylesheet
-                newView.renderTree()
+                var recycledOldView = getRecycledView(newView)
+                if (recycledOldView != null) {
+                    recycledOldView.parentView = this
+                    recycledOldView.stylesheet = this.stylesheet
+                    recycledOldView.children = newView.children
+                    recycledOldView.props = newView.props
+                    recycledOldView.isMounted = false
+                    recycledOldView.renderTree()
+                    newRenderedViews[i] = recycledOldView
+                } else {
+                    newView.parentView = this
+                    newView.stylesheet = this.stylesheet
+                    newView.renderTree()
+                }
             }
         }
+        this.renderedViews.forEach {
+            if (!newRenderedViews.contains(it)) {
+                recycleView(it)
+            }
+        }
+
         this.renderedViews = newRenderedViews;
     }
 
