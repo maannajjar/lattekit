@@ -163,9 +163,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         if (androidView != null) {
             // Default clickable to false
             this.androidView?.isClickable = false
-
             val myCls = getViewClass()
-            log("${myCls.simpleName} Setting props to ${props.map { "${it.key}=${it.value}" }.joinToString(",")}")
             props.forEach { entry ->
                 var it = entry.key
                 if (it == "id") {
@@ -187,7 +185,6 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
                         var methodKey = myCls.toString() + ":" + field + ":" + value.javaClass
                         var method = methodCache.get(methodKey);
-                        log("Setter= ${setter}")
                         if (!methodCache.containsKey(methodKey)) {
                             // This is the first time we look
                             method = findSetter(setter, valueCls, isFn)
@@ -197,7 +194,6 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
                             }
                             methodCache.put(methodKey, method);
                         }
-                        log("Method for ${methodKey} is ${method}");
                         if (method != null) {
                             method.invoke(androidView, if (isFn) createLambdaProxyInstance(method.parameterTypes.get(0), value as Object) else value);
                         }
@@ -212,7 +208,8 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 //
     override fun onPropsUpdated(oldProps :Map<String, Any?>) : Boolean {
         if (props.get("cls") != oldProps.get("cls")) {
-            updateStyles(true, true)
+            // TODO: UPDATING STYLES IS BUGGY
+//            updateStyles(true, true)
         }
         applyProps();
         return false

@@ -62,7 +62,6 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
                 template = convertView.getTag() as LatteView;
                 template.props.put("model", getItem(position));
                 template.props.put("modelIndex", position);
-                log("Triggering state changed")
                 template.onStateChanged();
                 return convertView;
             }
@@ -72,7 +71,6 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
             template.props.put("model", getItem(position));
             template.parentView = this@ListView
             template.stylesheet = this@ListView.stylesheet
-            log("Template props ${template.props.map { "${it.key}=${it.value}" }.joinToString(",")} ")
             var lp = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
             var v = template.buildView(activity!!, lp)
             v.setTag(template)
