@@ -238,9 +238,21 @@ open class LatteView {
         return dataValues.get(key)
     }
 
-    fun data(key : String, value : Any?) {
+    fun data(key : String, value : Any?) : Any? {
         dataValues.put(key,value)
+        return value
     }
+
+    fun dataOrPut(key : String, defaultValue : Any?) : Any? {
+        var originalValue = dataValues.get(key)
+        if (originalValue == null) {
+            dataValues.put(key,defaultValue)
+            return defaultValue
+        }
+        return originalValue
+    }
+
+
     fun show(caller : LatteView) {
         var myId = "${System.currentTimeMillis()}";
         var intent = Intent(caller.rootAndroidView?.context, LatteActivity::class.java);
