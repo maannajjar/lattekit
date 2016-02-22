@@ -7,7 +7,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import io.lattekit.annotation.Prop
-import io.lattekit.plugin.CssPlugin
+import io.lattekit.plugin.css.CssPlugin
 import io.lattekit.ui.LatteActivity
 import io.lattekit.ui.style.Stylesheet
 import java.lang.ref.WeakReference
@@ -171,7 +171,7 @@ open class LatteView {
     var childrenProc : ChildrenProc? = null
     var isMounted : Boolean = false;
 
-    var data  = mutableMapOf<String,Object>()
+    var dataValues  = mutableMapOf<String,Any?>()
 
     val propFields : MutableMap<String,Field>
         get() {
@@ -234,7 +234,13 @@ open class LatteView {
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
     }
 
+    fun data(key : String) : Any? {
+        return dataValues.get(key)
+    }
 
+    fun data(key : String, value : Any?) {
+        dataValues.put(key,value)
+    }
     fun show(caller : LatteView) {
         var myId = "${System.currentTimeMillis()}";
         var intent = Intent(caller.rootAndroidView?.context, LatteActivity::class.java);

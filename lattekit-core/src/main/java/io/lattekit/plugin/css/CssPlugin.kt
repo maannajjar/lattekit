@@ -1,10 +1,10 @@
-package io.lattekit.plugin
+package io.lattekit.plugin.css
 
-import android.content.Context
 import android.content.res.Resources
 import android.util.Log
-import android.util.TypedValue
-import android.widget.TextView
+import io.lattekit.plugin.LattePlugin
+import io.lattekit.plugin.css.property.CssProperty
+import io.lattekit.plugin.css.property.FontSizeCssProperty
 import io.lattekit.ui.view.LatteView
 import io.lattekit.ui.view.NativeView
 import io.lattekit.ui.view.NativeViewGroup
@@ -151,94 +151,13 @@ class Stylesheet {
     }
 }
 
-open abstract class CssProperty {
-    open val SHORTHAND_PROPERTIES: List<String> = mutableListOf()
-    open val PROPERTY_NAME: String = ""
-    open val INHERITED: Boolean = false;
-    open val INITIAL_VALUE: String? = null;
-    var specifiedValue: String? = null
 
-    open abstract fun apply(view: NativeView);
-    open abstract fun read(propertyName: String, propertyValue: List<String>);
-    open abstract fun computeValue(context : Context, view : LatteView);
-}
-
-class FontSizeCss : CssProperty() {
-
-    companion object {
-        val SIZE_PATTERN = Regex("""(\d+(?:\.\d+)?)([^\d ]+)""")
-        val PREDEFINED = mapOf(
-                "xx-small" to 10,
-                "x-small" to 12,
-                "small" to 14,
-                "medium" to 18,
-                "large" to 22,
-                "x-large" to 24,
-                "xx-large" to 26
-        )
-
-        fun parseValue(size: String, context: Context): Float {
-           if (PREDEFINED[size.toLowerCase()] != null) {
-               return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, PREDEFINED.get(size.toLowerCase())!!.toFloat(), context.resources.displayMetrics);
-           } else {
-                var match = SIZE_PATTERN.matchEntire(size)
-                Log.d("LatteCss", "Parsing ${size}")
-                if (match != null) {
-                    var value = match.groupValues.get(1).toFloat();
-                    var unit = match.groupValues.get(2)
-                    Log.d("LatteCss", "Parsed to ${value} $unit")
-                    return when (unit) {
-                        "dp" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, context.resources.displayMetrics);
-                        "dip" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, context.resources.displayMetrics);
-                        "sp" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value, context.resources.displayMetrics);
-                        else -> value;
-                    }
-                }
-            }
-            throw Exception("Invalid value ${size}")
-        }
-
-    }
-
-    override val PROPERTY_NAME = "font-size"
-    override val SHORTHAND_PROPERTIES = listOf("font")
-    override val INHERITED = true
-    override val INITIAL_VALUE: String? = "medium"
-
-    var computedValue : Float? = null
-
-    override fun computeValue(context : Context, view : LatteView) {
-        computedValue = if (specifiedValue != null) {
-            Log.d("LatteCss","COMPUTED VALUE $specifiedValue FOR $view")
-            parseValue(specifiedValue!!, context)
-        } else {
-            parseValue(INITIAL_VALUE!!, context)
-        }
-    }
-
-    override fun read(propertyName: String, propertyValue: List<String>) {
-        Log.d("LatteCss", "TESTING $propertyName")
-        if (propertyName == "font-size") {
-            Log.d("LatteCss","READ VALUE $propertyValue")
-            specifiedValue = propertyValue[0]
-        }
-
-    }
-
-    override fun apply(view: NativeView) {
-        if (view.androidView is TextView) {
-            (view.androidView as TextView).setTextSize(TypedValue.COMPLEX_UNIT_PX,computedValue!!)
-        }
-    }
-
-
-}
 
 class NodeStyle {
     var properties = mutableListOf<CssProperty>()
     var declarations = mutableMapOf<String,List<String>>()
     init {
-        properties.add(FontSizeCss())
+        properties.add(FontSizeCssProperty())
     }
 
     fun read() {
@@ -261,17 +180,17 @@ class NodeStyle {
 class CssPlugin : LattePlugin() {
 
     companion object {
-        var STYLES = mutableMapOf<LatteView,NodeStyle>();
         var PROCESSED = mutableSetOf<LatteView>();
 
-
         fun getStyleFor(view : LatteView) : NodeStyle {
-            var style = STYLES.get(view)
-            if (style == null) {
+            var style = view.data("latteCssStyle")
+            if (style != null) {
+                return style as NodeStyle
+            } else {
                 style = NodeStyle()
-                STYLES.put(view, style)
+                view.data("latteCssStyle", style)
+                return style;
             }
-            return style;
         }
     }
 
