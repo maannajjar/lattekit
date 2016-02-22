@@ -1,6 +1,7 @@
 package io.lattekit.ui.view
 
 import android.content.Context
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,32 @@ import java.util.*
  */
 open class NativeViewGroup : NativeView() {
 
+
+    companion object {
+        var SIZE_PATTERN  = Regex("""(\d+(?:\.\d+)?)([^\d ]+)""")
+
+        fun parseSize(size : String, fallBack: Int, context : Context) : Int {
+            if (size.toLowerCase() == "match_parent" || size.toLowerCase() == "fill_container") {
+                return ViewGroup.LayoutParams.MATCH_PARENT
+            } else if (size.toLowerCase() == "wrap_content") {
+                return ViewGroup.LayoutParams.WRAP_CONTENT
+            } else {
+                var match = SIZE_PATTERN.matchEntire(size)
+                if (match != null) {
+                    var value = match.groupValues.get(1).toFloat();
+                    var unit = match.groupValues.get(2)
+                    return when (unit) {
+                        "dp" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,value,context.resources.displayMetrics).toInt();
+                        "dip" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,value,context.resources.displayMetrics).toInt();
+                        "sp" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,value,context.resources.displayMetrics).toInt();
+                        else -> value.toInt();
+                    }
+                }
+            }
+            return fallBack
+        }
+
+    }
     var managedViews = ArrayList<View>();
 
     open fun getLayoutParamsClass() : Class<out ViewGroup.LayoutParams> {
@@ -31,14 +58,15 @@ open class NativeViewGroup : NativeView() {
             }?.newInstance(-1,-1) as ViewGroup.LayoutParams
     }
 
+
     open fun onChildrenAdded() {}
 
     fun applyChildLayoutProps(child: LatteView, params: ViewGroup.LayoutParams) {
         child.props.forEach {
             var keyName = it.key
-            if (keyName.startsWith("layout_")) {
-                // TODO: Be more dynamic
-                if (keyName == "layout_gravity") {
+            when (keyName) {
+
+                "layout_gravity" -> {
                     var value = child.props.get(keyName);
                     var field = params.javaClass.getField("gravity");
                     field.setAccessible(true);
@@ -49,7 +77,31 @@ open class NativeViewGroup : NativeView() {
                         field.set(params, value)
                     }
                 }
+
+                "layout_width" -> {
+                    var value = child.props.get(keyName) as String;
+                    params.width = parseSize(value,ViewGroup.LayoutParams.MATCH_PARENT, child.activity!!)
+                }
+
+                "layout_height" -> {
+                    var value = child.props.get(keyName) as String;
+                    params.height = parseSize(value,ViewGroup.LayoutParams.WRAP_CONTENT,child.activity!!)
+                }
+
+                "layout_weight" -> {
+                    var value = child.props.get(keyName);
+                    if (value is String) {
+                        (params as android.widget.LinearLayout.LayoutParams).weight = value.toFloat()
+                    } else if (value is Float) {
+                        (params as android.widget.LinearLayout.LayoutParams).weight = value
+                    } else if (value is Int) {
+                        (params as android.widget.LinearLayout.LayoutParams).weight = value.toFloat()
+                    }
+
+                }
+
             }
+
         }
     }
 

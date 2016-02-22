@@ -7,8 +7,10 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import io.lattekit.annotation.Prop
+import io.lattekit.plugin.CssPlugin
 import io.lattekit.ui.LatteActivity
 import io.lattekit.ui.style.Stylesheet
+import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 
 /**
@@ -17,9 +19,10 @@ import java.lang.reflect.Field
 open class LatteView {
 
     companion object {
+        var PLUGINS  = mutableListOf(CssPlugin())
         var SAVED_OBJECTS = mutableMapOf<String,LatteView>();
         var PROP_FILEDS = mutableMapOf<String, MutableMap<String,Field>>()
-        var RECYCLED_VIEWS = mutableMapOf<String, MutableList<LatteView>>()
+        var RECYCLED_VIEWS = mutableMapOf<String, MutableList<WeakReference<LatteView>>>()
 
         @JvmStatic
         var LOOKUP_CACHE : MutableMap<String,Class<out Any>>  = mutableMapOf(
@@ -43,7 +46,7 @@ open class LatteView {
                         RECYCLED_VIEWS.put(view.getViewClass().name + ":" + recycleKey, list)
                     }
                     view.isMounted = false
-                    list.add(view)
+                    list.add(WeakReference(view))
                 }
             }
         }
@@ -63,7 +66,7 @@ open class LatteView {
                         list.removeAt(0);
                         log("Recycler", "Re-used View ${view}")
                     }
-                    return view
+                    return view?.get()
                 }
             }
             return null;
@@ -168,6 +171,8 @@ open class LatteView {
     var childrenProc : ChildrenProc? = null
     var isMounted : Boolean = false;
 
+    var data  = mutableMapOf<String,Object>()
+
     val propFields : MutableMap<String,Field>
         get() {
             var map = PROP_FILEDS[this.javaClass.name]
@@ -216,6 +221,7 @@ open class LatteView {
     fun notifyMounted() {
         isMounted = true;
         findRefs(this.renderedViews);
+        PLUGINS.forEach { it.onViewMounted(this) }
         onViewMounted();
     }
 
@@ -239,10 +245,16 @@ open class LatteView {
 
     open fun onViewMounted() {
     }
+    open fun onViewWillMount() {
 
+    }
     fun buildAndroidViewTree(a: Context, lp: ViewGroup.LayoutParams) : View {
         // First build my view
         this.activity = a as Activity;
+        if (!isMounted) {
+            PLUGINS.forEach { it.onViewWillMount(this) }
+            this.onViewWillMount()
+        }
         if (this is NativeView) {
             if (this.androidView == null) {
                 this.androidView = this.renderNative(a);
@@ -367,6 +379,7 @@ open class LatteView {
                 if (sameView(oldView, newView)) {
                     var oldProps = oldView.props
                     oldView.children = newView.children
+                    PLUGINS.forEach { it.onPropsUpdated(oldView,oldView.props) }
                     oldView.props = newView.props
                     if (oldView.onPropsUpdated(oldProps)) {
                         oldView.renderTree()
@@ -427,5 +440,6 @@ open class LatteView {
     fun loadStylesheet(vararg stylesheets : Stylesheet) {
         stylesheets.forEach{ it -> it.apply(this.stylesheet) };
     }
+
 
 }

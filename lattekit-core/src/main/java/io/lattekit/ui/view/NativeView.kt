@@ -1,6 +1,5 @@
 package io.lattekit.ui.view
 
-import android.R
 import android.animation.Animator
 import android.content.Context
 import android.content.res.ColorStateList
@@ -13,14 +12,11 @@ import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.AdapterView
-import android.widget.TextView
 import io.lattekit.ui.style.Style
 import io.lattekit.util.Util
 import org.eclipse.xtext.xbase.lib.CollectionLiterals
 import org.eclipse.xtext.xbase.lib.Functions
-import org.eclipse.xtext.xbase.lib.ObjectExtensions
 import org.eclipse.xtext.xbase.lib.Procedures
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -35,24 +31,24 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     val match_parent = ViewGroup.LayoutParams.MATCH_PARENT
     val wrap_content = ViewGroup.LayoutParams.WRAP_CONTENT
 
-    private val _style = Style()
+//    private val _style = Style()
 
-    private val allStyles = mutableMapOf<String, MutableList<Style>>()
-    private val pseudoStyles = mutableMapOf< String, List<Style>>()
+//    private val allStyles = mutableMapOf<String, MutableList<Style>>()
+//    private val pseudoStyles = mutableMapOf< String, List<Style>>()
     private val computedStyles = mutableMapOf<String, Style>()
-    private val currentSelectedPseudos = mutableSetOf("normal")
+//    private val currentSelectedPseudos = mutableSetOf("normal")
 
     private var isAttached = false
 
-    var normalStyle = Style()
+//    var normalStyle = Style()
 
-    var touchedStyle = ObjectExtensions.operator_doubleArrow(Style(), Procedures.Procedure1<Style> { it -> it.parentStyle = this@NativeView.normalStyle })
+//    var touchedStyle = ObjectExtensions.operator_doubleArrow(Style(), Procedures.Procedure1<Style> { it -> it.parentStyle = this@NativeView.normalStyle })
 
-    var disabledStyle = ObjectExtensions.operator_doubleArrow<Style>(Style(), object : Procedures.Procedure1<Style> {
-        public override fun apply(it: Style) {
-            it.setParentStyle(this@NativeView.normalStyle)
-        }
-    })
+//    var disabledStyle = ObjectExtensions.operator_doubleArrow<Style>(Style(), object : Procedures.Procedure1<Style> {
+//        public override fun apply(it: Style) {
+//            it.setParentStyle(this@NativeView.normalStyle)
+//        }
+//    })
     var currentAnimation: Animator? = null
 
     public var pendingChildAnimations: List<Animator> = CollectionLiterals.newArrayList<Animator>()
@@ -64,15 +60,15 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
     val methodCache = mutableMapOf<String, Method?>()
 
-    var activeStyle : Style? = null
-        get() {
-            if (androidView != null && !androidView?.isEnabled!! && disabledStyle != null) {
-                return disabledStyle
-            } else if (currentSelectedPseudos.contains("touched") && touchedStyle != null) {
-                return computedStyles.get("touched");
-            }
-            return computedStyles.get("normal");
-        }
+//    var activeStyle : Style? = null
+//        get() {
+//            if (androidView != null && !androidView?.isEnabled!! && disabledStyle != null) {
+//                return disabledStyle
+//            } else if (currentSelectedPseudos.contains("touched") && touchedStyle != null) {
+//                return computedStyles.get("touched");
+//            }
+//            return computedStyles.get("normal");
+//        }
 
     open fun getViewClass() : Class<out View> {
         return if (nativeViewClass != null) {
@@ -217,40 +213,20 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
     override fun onViewMounted() {
         if (androidView != null) {
-            computeAllStyles();
-            createBackgroundDrawable();
-            updateTextColorDrawable();
+//            computeAllStyles();
+//            createBackgroundDrawable();
+//            updateTextColorDrawable();
 
-            _style.cloneFrom(activeStyle);
-            //TODO FIX STYLE
-            _style.applyToView(this);
-
-            androidView?.layoutParams?.width = _style.width.inPixelsInt(androidView?.context);
-            androidView?.layoutParams?.height = _style.height.inPixelsInt(androidView?.context)
 
             if (!(androidView is AdapterView<*>)) {
                 androidView?.setOnClickListener(this)
             }
             androidView?.setOnTouchListener(this);
 
-            if (normalStyle._computedX == null) {
-                watchTree();
-            }
             applyProps()
         }
     }
 
-    fun watchTree() {
-        androidView?.viewTreeObserver?.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                isAttached = true;
-                normalStyle._computedX = androidView?.x
-                normalStyle._computedY = androidView?.y
-                androidView?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
-                applyProps(true);
-            }
-        })
-    }
 
     fun getMeasuredSize() : Point {
         return getMeasuredSize(computedStyles?.get("normal")!!);
@@ -314,29 +290,29 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 
     fun updateTextColorDrawable() {
-        var colorStates : MutableList<IntArray> = mutableListOf()
-        var colorList : MutableList<Int>  = mutableListOf()
-        if (touchedStyle != null) {
-            colorStates.add(intArrayOf( R.attr.state_enabled, R.attr.state_pressed))
-            colorList.add(Style.asColor(touchedStyle?.textColor))
-        }
-        colorStates.add(intArrayOf(R.attr.state_enabled, -R.attr.state_pressed ))
-        colorList.add(Style.asColor(normalStyle.textColor))
-
-        if (disabledStyle != null) {
-            colorStates.add(intArrayOf( -R.attr.state_enabled))
-            colorList.add(Style.asColor(disabledStyle.textColor))
-        }
-        if (androidView is TextView) {
-            (androidView as TextView).setTextColor(ColorStateList(colorStates.toTypedArray(), colorList.toIntArray()))
-        }
+//        var colorStates : MutableList<IntArray> = mutableListOf()
+//        var colorList : MutableList<Int>  = mutableListOf()
+//        if (touchedStyle != null) {
+//            colorStates.add(intArrayOf( R.attr.state_enabled, R.attr.state_pressed))
+//            colorList.add(Style.asColor(touchedStyle?.textColor))
+//        }
+//        colorStates.add(intArrayOf(R.attr.state_enabled, -R.attr.state_pressed ))
+//        colorList.add(Style.asColor(normalStyle.textColor))
+//
+//        if (disabledStyle != null) {
+//            colorStates.add(intArrayOf( -R.attr.state_enabled))
+//            colorList.add(Style.asColor(disabledStyle.textColor))
+//        }
+//        if (androidView is TextView) {
+//            (androidView as TextView).setTextColor(ColorStateList(colorStates.toTypedArray(), colorList.toIntArray()))
+//        }
     }
 //
     override fun onTouch(v : View, e : MotionEvent) : Boolean {
-        if (pseudoStyles.get("touched")?.isEmpty()!! /*&& onTouch == null  */) {
-            // No need to handle touch here
-            return false;
-        }
+//        if (pseudoStyles.get("touched")?.isEmpty()!! /*&& onTouch == null  */) {
+//            // No need to handle touch here
+//            return false;
+//        }
 
         var handled = false;
         if (/*onTouch != null && */e.action == MotionEvent.ACTION_DOWN) {
@@ -344,13 +320,13 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         }
         if (v.isEnabled) {
             if (e.action == MotionEvent.ACTION_DOWN) {
-                currentSelectedPseudos += "touched";
-                updateStyles(true,true);
+//                currentSelectedPseudos += "touched";
+//                updateStyles(true,true);
             } else if (e.action == MotionEvent.ACTION_UP) {
                 //TODO: THIS IS DONE TO TEMPORARILY WORK AROUND ONCLICK EXECUTING AFTER THIS
                 // PLEASE FIND BETTER WAY
-                currentSelectedPseudos -= "touched";
-                updateStyles(true,true)
+//                currentSelectedPseudos -= "touched";
+//                updateStyles(true,true)
             }
         }
         if (/*onTouch != null && */ e.action == MotionEvent.ACTION_UP) {
@@ -362,80 +338,80 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     fun applySubviewStyles() {
         children.forEach { it : LatteView ->
             //TODO FIX STYLE
-            (it as NativeView).activeStyle?.applyToView(it as NativeView);
+//            (it as NativeView).activeStyle?.applyToView(it as NativeView);
         }
     }
 //
 //
-    fun getSelectedStyles() : List<Style>{
-        return  allStyles.filter {e -> currentSelectedPseudos?.contains(e.key) }.flatMap { allStyles.get(it.key)!! }
-    }
+//    fun getSelectedStyles() : List<Style>{
+//        return  allStyles.filter {e -> currentSelectedPseudos?.contains(e.key) }.flatMap { allStyles.get(it.key)!! }
+//    }
 //
     fun findDirectChildrenStyles(selectors : List<String>, outList : MutableList<Style>) {
-        getSelectedStyles().forEach { style ->
-             selectors.forEach {  selector ->
-                 if (style.directChildrenStyles.containsKey(selector)) {
-                     outList.add(style.directChildrenStyles.get(selector)!!);
-                 }
-             }
-        }
+//        getSelectedStyles().forEach { style ->
+//             selectors.forEach {  selector ->
+//                 if (style.directChildrenStyles.containsKey(selector)) {
+//                     outList.add(style.directChildrenStyles.get(selector)!!);
+//                 }
+//             }
+//        }
     }
 //
     fun findDesecendantStyles(selectors: List<String> , outList: MutableList<Style> ) {
-        if (getNonVirtualParent() != null) {
-            getNonVirtualParent()?.findDesecendantStyles(selectors,outList);
-        }
-
-        getSelectedStyles().forEach { style ->
-            selectors.forEach { selector ->
-                if (style.descendantStyles.containsKey(selector)) {
-                    outList.add(style.descendantStyles.get(selector)!!);
-                }
-            }
-        }
+//        if (getNonVirtualParent() != null) {
+//            getNonVirtualParent()?.findDesecendantStyles(selectors,outList);
+//        }
+//
+//        getSelectedStyles().forEach { style ->
+//            selectors.forEach { selector ->
+//                if (style.descendantStyles.containsKey(selector)) {
+//                    outList.add(style.descendantStyles.get(selector)!!);
+//                }
+//            }
+//        }
     }
     fun getCls() : String? {
         return props.get("cls") as String?
     }
 //
     fun computeStyle(pseudo : String ) : List<Style> {
-        // TODO: re-use previous computed style and just reset it
-        val targetStyle = Style();
-        val mySelectors = mutableListOf("View");
-        if (getCls() != null) {
-            getCls()?.split(" ")?.forEach {
-                mySelectors += "." + it;
-            }
-        }
-        var selectedStyles = mutableListOf<Style>();
-        if (pseudo != "normal") {
-            mySelectors += mySelectors.map {it+":"+pseudo};
-        }
-        selectedStyles.addAll(mySelectors.map{ stylesheet.getStyle(it) }.filter { it != null })
-        if (getNonVirtualParent() != null) {
-            getNonVirtualParent()?.findDesecendantStyles(mySelectors, selectedStyles)
-            getNonVirtualParent()?.findDirectChildrenStyles(mySelectors, selectedStyles);
-        }
-        selectedStyles.forEach {
-            targetStyle.overrideWithStyle(it);
-        }
-        targetStyle.overrideWithStyle(normalStyle);
-        if ( pseudo == "touched") {
-            targetStyle.overrideWithStyle(touchedStyle);
-        }
-
-        if (pseudo == "normal") {
-            allStyles.put("normal", selectedStyles);
-            pseudoStyles.put("normal", selectedStyles);
-        } else {
-            allStyles.put(pseudo, selectedStyles);
-            // In order for this to work properly, computeStyle for normal should be called always before
-            pseudoStyles.put(pseudo, selectedStyles.filter { !allStyles.get("normal")?.contains(it)!! }.toList());
-        }
-        computedStyles.put(pseudo, targetStyle);
-
-        return selectedStyles
-
+//        // TODO: re-use previous computed style and just reset it
+//        val targetStyle = Style();
+//        val mySelectors = mutableListOf("View");
+//        if (getCls() != null) {
+//            getCls()?.split(" ")?.forEach {
+//                mySelectors += "." + it;
+//            }
+//        }
+//        var selectedStyles = mutableListOf<Style>();
+//        if (pseudo != "normal") {
+//            mySelectors += mySelectors.map {it+":"+pseudo};
+//        }
+//        selectedStyles.addAll(mySelectors.map{ stylesheet.getStyle(it) }.filter { it != null })
+//        if (getNonVirtualParent() != null) {
+//            getNonVirtualParent()?.findDesecendantStyles(mySelectors, selectedStyles)
+//            getNonVirtualParent()?.findDirectChildrenStyles(mySelectors, selectedStyles);
+//        }
+//        selectedStyles.forEach {
+//            targetStyle.overrideWithStyle(it);
+//        }
+//        targetStyle.overrideWithStyle(normalStyle);
+//        if ( pseudo == "touched") {
+//            targetStyle.overrideWithStyle(touchedStyle);
+//        }
+//
+//        if (pseudo == "normal") {
+//            allStyles.put("normal", selectedStyles);
+//            pseudoStyles.put("normal", selectedStyles);
+//        } else {
+//            allStyles.put(pseudo, selectedStyles);
+//            // In order for this to work properly, computeStyle for normal should be called always before
+//            pseudoStyles.put(pseudo, selectedStyles.filter { !allStyles.get("normal")?.contains(it)!! }.toList());
+//        }
+//        computedStyles.put(pseudo, targetStyle);
+//
+//        return selectedStyles
+        return emptyList()
     }
 //
     fun computeAllStyles() {
@@ -444,7 +420,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 //
     fun computeActiveStyles() {
-        currentSelectedPseudos.forEach { pseudo -> computeStyle(pseudo)  }
+//        currentSelectedPseudos.forEach { pseudo -> computeStyle(pseudo)  }
     }
 //
     fun updateStyles(shouldTransition : Boolean, shouldUpdateChildren : Boolean) {
@@ -460,13 +436,13 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 //
     fun transitionStyle() {
         if (androidView != null) {
-            var oldAnim = currentAnimation;
-            //TODO FIX STYLE
-            currentAnimation = activeStyle?.createAnimatorFrom(_style, this, false)
-            if (oldAnim != null) {
-                oldAnim.cancel();
-            }
-            currentAnimation?.start()
+//            var oldAnim = currentAnimation;
+//            //TODO FIX STYLE
+//            currentAnimation = activeStyle?.createAnimatorFrom(_style, this, false)
+//            if (oldAnim != null) {
+//                oldAnim.cancel();
+//            }
+//            currentAnimation?.start()
         }
     }
 
