@@ -3,7 +3,6 @@ package io.lattekit.plugin.css.property
 import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Typeface
-import android.util.Log
 import android.util.TypedValue
 import android.widget.TextView
 import io.lattekit.ui.view.LatteView
@@ -43,6 +42,7 @@ class FontFamilyCssProperty : CssProperty() {
     override fun computeValue(context: Context, view: LatteView) {
         initFonts(view.activity!!)
         if (specifiedValue != null) {
+            // TODO: split by , for fallback
             typeface = allFonts?.getOrElse(specifiedValue!!.toLowerCase(), { Typeface.DEFAULT })
         }
     }
@@ -70,7 +70,6 @@ class FontFamilyCssProperty : CssProperty() {
                     loadFontsInAssetPath(assets, fullPath)
                 } else {
                     if (it.endsWith(".ttf") || it.endsWith(".otf")) {
-                        Log.d("LatteCss", "Loading font " + fullPath)
                         val font = Typeface.createFromAsset(assets, fullPath)
                         allFonts?.put(it.substring(0, it.length-4).toLowerCase(), font)
                     }

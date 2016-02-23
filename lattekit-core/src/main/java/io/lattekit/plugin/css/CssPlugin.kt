@@ -9,25 +9,29 @@ import io.lattekit.ui.view.NativeView
  * Created by maan on 2/20/16.
  */
 
-var testStyle: Map<String, Map<String, List<String>>> = mapOf(
-        ".kicker" to mapOf(
-            "font-family" to listOf("Chalk"),
-            "font-size" to listOf("20sp"),
-            "font-style" to listOf("bold"),
-            "width" to listOf("match_parent"),
-            "height" to listOf("wrap_content"),
-            "text-color" to listOf("#777777"),
-            "background-color" to listOf("#ffffff"),
-            "padding-top" to listOf("30dp"),
-            "border-bottom-width" to listOf("1dp"),
-            "border-left-width" to listOf("1dp"),
-            "border-right-width" to listOf("1dp"),
-            "border-top-width" to listOf("1dp")
+var testStyle: Map<String, Map<String, String>> = mapOf(
+    ".kicker" to mapOf(
+        "font-family" to "Chalk",
+        "font-size" to "x-small",
+        "font-style" to "bold",
+        "width" to "match_parent",
+        "height" to "wrap_content",
+        "text-color" to "#777777",
+        "background-color" to "#ffffff",
+        "border-bottom-width" to "1dp",
+        "border-left-width" to "1dp",
+        "border-right-width" to "1dp",
+        "border-top-width" to "1dp",
+        "border-top-left-radius" to "10dp",
+        "border-top-right-radius" to "5dp 10dp",
+        "border-bottom-left-radius" to "5dp",
+        "border-bottom-right-radius" to "20dp",
+        "margin-top" to "10dp",
+        "margin-bottom" to "10dp",
+        "margin-right" to "10dp",
+        "margin-left" to "10dp"
 
-        ),
-        ".story" to mapOf(
-            "padding-left" to listOf("20dp")
-        )
+    )
 )
 
 

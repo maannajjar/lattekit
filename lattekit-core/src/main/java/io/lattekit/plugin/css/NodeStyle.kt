@@ -9,22 +9,29 @@ import io.lattekit.ui.view.NativeView
  */
 class NodeStyle {
     var properties = mutableListOf<CssProperty>()
-    var declarations = mutableMapOf<String,List<String>>()
+    var declarations = mutableMapOf<String,String>()
 
     companion object {
         val PROPERTY_CLASSES = listOf(
-                FontSizeCssProperty::class.java,
-                FontFamilyCssProperty::class.java,
-                BackgroundColorCssProperty::class.java,
-                PaddingTopCssProperty::class.java,
-                PaddingLeftCssProperty::class.java,
-                PaddingRightCssProperty::class.java,
-                PaddingBottomCssProperty::class.java,
-                BorderTopWidthCssProperty::class.java,
-                BorderLeftWidthCssProperty::class.java,
-                BorderRightWidthCssProperty::class.java,
-                BorderBottomWidthCssProperty::class.java
-
+            FontSizeCssProperty::class.java,
+            FontFamilyCssProperty::class.java,
+            BackgroundColorCssProperty::class.java,
+            PaddingLeftCssProperty::class.java,
+            PaddingTopCssProperty::class.java,
+            PaddingRightCssProperty::class.java,
+            PaddingBottomCssProperty::class.java,
+            BorderLeftWidthCssProperty::class.java,
+            BorderTopWidthCssProperty::class.java,
+            BorderRightWidthCssProperty::class.java,
+            BorderBottomWidthCssProperty::class.java,
+            MarginLeftCssProperty::class.java,
+            MarginTopCssProperty::class.java,
+            MarginRightCssProperty::class.java,
+            MarginBottomCssProperty::class.java,
+            BorderRadiusTopLeftCssProperty::class.java,
+            BorderRadiusTopRightCssProperty::class.java,
+            BorderRadiusBottomLeftCssProperty::class.java,
+            BorderRadiusBottomRightCssProperty::class.java
         )
     }
 
