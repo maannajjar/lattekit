@@ -74,7 +74,6 @@ open abstract class ColorProperty : CssProperty() {
         throw Exception("Invalid $PROPERTY_NAME value ${colorHex}")
     }
 
-
     override fun computeValue(context : Context, view : LatteView) {
         computedValue = if (specifiedValue != null) {
             parseValue(specifiedValue!!, context)

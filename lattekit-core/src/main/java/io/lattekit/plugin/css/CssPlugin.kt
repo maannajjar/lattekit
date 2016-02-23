@@ -18,7 +18,12 @@ var testStyle: Map<String, Map<String, List<String>>> = mapOf(
             "height" to listOf("wrap_content"),
             "text-color" to listOf("#777777"),
             "background-color" to listOf("#ffffff"),
-            "padding-top" to listOf("30dp")
+            "padding-top" to listOf("30dp"),
+            "border-bottom-width" to listOf("1dp"),
+            "border-left-width" to listOf("1dp"),
+            "border-right-width" to listOf("1dp"),
+            "border-top-width" to listOf("1dp")
+
         ),
         ".story" to mapOf(
             "padding-left" to listOf("20dp")

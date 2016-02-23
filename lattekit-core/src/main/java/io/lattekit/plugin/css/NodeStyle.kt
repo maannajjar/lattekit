@@ -19,7 +19,11 @@ class NodeStyle {
                 PaddingTopCssProperty::class.java,
                 PaddingLeftCssProperty::class.java,
                 PaddingRightCssProperty::class.java,
-                PaddingBottomCssProperty::class.java
+                PaddingBottomCssProperty::class.java,
+                BorderTopWidthCssProperty::class.java,
+                BorderLeftWidthCssProperty::class.java,
+                BorderRightWidthCssProperty::class.java,
+                BorderBottomWidthCssProperty::class.java
 
         )
     }

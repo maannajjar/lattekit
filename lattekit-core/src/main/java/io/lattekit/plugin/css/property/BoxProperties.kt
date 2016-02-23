@@ -4,7 +4,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color.TRANSPARENT
 import android.graphics.drawable.*
 import android.os.Build
-import android.util.Log
+import io.lattekit.ui.drawable.BorderDrawable
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -81,3 +81,33 @@ class PaddingTopCssProperty : SinglePaddingCssProperty("padding-top") {}
 class PaddingLeftCssProperty : SinglePaddingCssProperty("padding-left") {}
 class PaddingRightCssProperty : SinglePaddingCssProperty("padding-right") {}
 class PaddingBottomCssProperty : SinglePaddingCssProperty("padding-bottom") {}
+
+
+open class SingleBorderWidthCssProperty(property: String) : NumberProperty() {
+    var propertyName : String = ""
+    override val PROPERTY_NAME: String
+        get() = propertyName
+    override val INHERITED = true
+    override val INITIAL_VALUE: String? = "0px"
+
+    init {
+        this.propertyName = property
+    }
+    override fun apply(view: NativeView) {
+        var borderDrawable = view.dataOrPut("css:borderDrawable",BorderDrawable()) as BorderDrawable
+        getBackgroundLayerDrawable(view).setDrawableByLayerId(2, borderDrawable)
+
+
+        when (PROPERTY_NAME) {
+            "border-top-width" -> borderDrawable.topBorderWidth = computedValue!!
+            "border-bottom-width" -> borderDrawable.bottomBorderWidth = computedValue!!
+            "border-left-width" -> borderDrawable.leftBorderWidth = computedValue!!
+            "border-right-width" -> borderDrawable.rightBorderWidth = computedValue!!
+        }
+    }
+}
+
+class BorderTopWidthCssProperty : SingleBorderWidthCssProperty("border-top-width") {}
+class BorderLeftWidthCssProperty : SingleBorderWidthCssProperty("border-left-width") {}
+class BorderRightWidthCssProperty : SingleBorderWidthCssProperty("border-right-width") {}
+class BorderBottomWidthCssProperty : SingleBorderWidthCssProperty("border-bottom-width") {}
