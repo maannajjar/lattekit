@@ -13,16 +13,10 @@ import io.lattekit.util.regex
 
 
 
-open class SingleBorderWidthCssProperty(property: String) : NumberProperty() {
-    var propertyName : String = ""
-    override val PROPERTY_NAME: String
-        get() = propertyName
+open class SingleBorderWidthCssProperty(property: String) : NumberProperty(property) {
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px"
 
-    init {
-        this.propertyName = property
-    }
     override fun apply(view: NativeView) {
         var borderDrawable = view.dataOrPut("css:borderDrawable",BorderDrawable()) as BorderDrawable
         getBackgroundLayerDrawable(view).setDrawableByLayerId(2, borderDrawable)
@@ -44,10 +38,7 @@ class BorderBottomWidthCssProperty : SingleBorderWidthCssProperty("border-bottom
 
 
 
-open class SingleBorderRadiusCssProperty(property: String) : CustomProperty() {
-    var propertyName : String = ""
-    override val PROPERTY_NAME: String
-        get() = propertyName
+open class SingleBorderRadiusCssProperty(property: String) : CustomProperty(property) {
 
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px 0px"
@@ -64,10 +55,6 @@ open class SingleBorderRadiusCssProperty(property: String) : CustomProperty() {
     var semiMajor : Float = 0f;
     var semiMinor : Float = 0f;
 
-    init {
-        this.propertyName = property
-    }
-
     override fun computeValue(parsedValues: Map<String, String?>, context: Context) {
         semiMajor = inPixels(parsedValues.get("major_decimal"), parsedValues.get("major_unit"),context)
         if (parsedValues.get("minor_decimal") != null) {
@@ -75,7 +62,6 @@ open class SingleBorderRadiusCssProperty(property: String) : CustomProperty() {
         } else {
             semiMinor = semiMajor;
         }
-        Log.d("LatteCss", "Values are $semiMajor $semiMinor ${parsedValues.get("major_decimal")} ${parsedValues.get("major_unit")}")
     }
     override fun apply(view: NativeView) {
         var borderDrawable = view.dataOrPut("css:borderDrawable", BorderDrawable()) as BorderDrawable

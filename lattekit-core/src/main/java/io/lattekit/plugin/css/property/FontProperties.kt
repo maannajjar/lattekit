@@ -11,7 +11,7 @@ import io.lattekit.ui.view.NativeView
 /**
  * Created by maan on 2/21/16.
  */
-class FontSizeCssProperty : NumberProperty() {
+class FontSizeCssProperty : NumberProperty("font-size") {
 
     override val PREDEFINED_VALUES = mapOf(
         "xx-small" to 10,
@@ -23,7 +23,6 @@ class FontSizeCssProperty : NumberProperty() {
         "xx-large" to 26
     )
 
-    override val PROPERTY_NAME = "font-size"
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "medium"
 
@@ -35,10 +34,10 @@ class FontSizeCssProperty : NumberProperty() {
 }
 
 
-class FontFamilyCssProperty : CssProperty() {
+class FontFamilyCssProperty : CssProperty("font-family") {
 
     var typeface : Typeface? = Typeface.DEFAULT
-    override val PROPERTY_NAME: String = "font-family"
+
     override fun computeValue(context: Context, view: LatteView) {
         initFonts(view.activity!!)
         if (specifiedValue != null) {

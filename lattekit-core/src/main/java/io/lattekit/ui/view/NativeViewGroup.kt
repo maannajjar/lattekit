@@ -47,7 +47,7 @@ open class NativeViewGroup : NativeView() {
                 return cls
             }
         }
-        return ViewGroup.LayoutParams::class.java
+        return ViewGroup.MarginLayoutParams::class.java
     }
 
     fun createLayoutParams() : ViewGroup.LayoutParams {

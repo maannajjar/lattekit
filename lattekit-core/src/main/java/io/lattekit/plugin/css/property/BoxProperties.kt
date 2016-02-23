@@ -32,9 +32,8 @@ fun getBackgroundLayerDrawable(view: NativeView): LayerDrawable {
     return backgroundDrawable as LayerDrawable
 }
 
-class BackgroundColorCssProperty : ColorProperty() {
+class BackgroundColorCssProperty : ColorProperty("background-color") {
 
-    override val PROPERTY_NAME = "background-color"
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "white"
 

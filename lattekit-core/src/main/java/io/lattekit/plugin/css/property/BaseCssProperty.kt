@@ -12,8 +12,15 @@ import io.lattekit.util.regex
 /**
  * Created by maan on 2/21/16.
  */
-open abstract class CssProperty {
-    open val PROPERTY_NAME: String = ""
+open abstract class CssProperty(property : String) {
+    var propertyName : String = ""
+    val PROPERTY_NAME: String
+        get() = propertyName
+
+    init {
+        this.propertyName = property
+    }
+
     open val INHERITED: Boolean = false;
     open val INITIAL_VALUE: String? = null;
     var specifiedValue: String? = null
@@ -28,7 +35,7 @@ open abstract class CssProperty {
 }
 
 
-open abstract class NumberProperty : CssProperty() {
+open abstract class NumberProperty(property : String) : CssProperty(property) {
 
     open val PREDEFINED_VALUES = mapOf<String,Int>()
     var computedValue : Float? = null
@@ -73,7 +80,7 @@ open abstract class NumberProperty : CssProperty() {
     }
 }
 
-open abstract class ColorProperty : CssProperty() {
+open abstract class ColorProperty(property: String) : CssProperty(property) {
 
     open val PREDEFINED_VALUES = mapOf(
         "white" to "#ffffff"
@@ -102,7 +109,7 @@ open abstract class ColorProperty : CssProperty() {
 }
 
 
-open abstract class CustomProperty : CssProperty() {
+open abstract class CustomProperty(property : String) : CssProperty(property) {
 
     open var PATTERN : RegexBuilder = regex {  }
     var parsedValues : Map<String,String?> = emptyMap()

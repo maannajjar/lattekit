@@ -5,10 +5,8 @@ import io.lattekit.ui.view.NativeView
 /**
  * Created by maan on 2/23/16.
  */
-open class SinglePaddingCssProperty(property: String) : NumberProperty() {
-    var propertyName : String = ""
-    override val PROPERTY_NAME: String
-        get() = propertyName
+open class SinglePaddingCssProperty(property: String) : NumberProperty(property) {
+
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px"
 

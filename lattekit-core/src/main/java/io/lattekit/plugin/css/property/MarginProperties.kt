@@ -8,10 +8,7 @@ import io.lattekit.ui.view.NativeView
  */
 
 
-open class SingleMarginCssProperty(property: String) : NumberProperty() {
-    var propertyName : String = ""
-    override val PROPERTY_NAME: String
-        get() = propertyName
+open class SingleMarginCssProperty(property: String) : NumberProperty(property) {
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px"
 
