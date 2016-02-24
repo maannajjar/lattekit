@@ -26,16 +26,16 @@ public class BorderDrawable extends Drawable {
     private int bottomBorderColor = Color.BLACK;
 
     @Accessors
-    private float topBorderWidth = 10;
+    private float topBorderWidth = 0;
 
     @Accessors
-    private float leftBorderWidth = 10;
+    private float leftBorderWidth = 0;
 
     @Accessors
-    private float rightBorderWidth = 10;
+    private float rightBorderWidth = 0;
 
     @Accessors
-    private float bottomBorderWidth = 10;
+    private float bottomBorderWidth = 0;
 
     @Accessors
     private float topLeftRadiusV = 0;

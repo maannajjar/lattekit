@@ -1,7 +1,5 @@
 package io.lattekit.util
 
-import android.util.Log
-
 /**
  * Created by maan on 2/23/16.
  */
@@ -63,6 +61,7 @@ class RegexBuilder() {
     }
     fun build() : String {
         var buffer = StringBuilder()
+        this.groups.clear()
         build( buffer, this.groups)
         return buffer.toString()
     }

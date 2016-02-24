@@ -2,6 +2,7 @@ package io.lattekit.plugin.css.property
 
 import android.content.Context
 import android.graphics.Color
+import android.util.Log
 import android.util.TypedValue
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.ui.view.LatteView
@@ -146,6 +147,8 @@ open abstract class CustomProperty(property : String) : CssProperty(property) {
 
     fun parseValue(size: String)  {
         var match = PATTERN.match(size)
+        Log.d("LatteCss","PARSING "+size + ": "+PATTERN.build())
+
         parsedValues = match.getGroupValues()
     }
 

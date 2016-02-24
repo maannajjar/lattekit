@@ -35,8 +35,11 @@ class NodeStyle {
             BorderRadiusBottomRightCssProperty::class.java,
             ColorCssProperty::class.java,
             TextAlignCssProperty::class.java,
-            FontWeightCssProperty::class.java
-
+            FontWeightCssProperty::class.java,
+            BorderLeftCssProperty::class.java,
+            BorderTopCssProperty::class.java,
+            BorderRightCssProperty::class.java,
+            BorderBottomCssProperty::class.java
         )
     }
 
