@@ -1,6 +1,7 @@
 package io.lattekit.plugin.css.property
 
 import android.view.ViewGroup
+import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -15,7 +16,7 @@ open class SingleMarginCssProperty(property: String) : NumberProperty(property) 
     init {
         this.propertyName = property
     }
-    override fun apply(view: NativeView) {
+    override fun apply(view: NativeView, style: NodeStyle) {
         var marginLayoutParams = view.androidView?.layoutParams
         if (marginLayoutParams is ViewGroup.MarginLayoutParams) {
             when (PROPERTY_NAME) {

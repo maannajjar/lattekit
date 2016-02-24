@@ -95,14 +95,7 @@ class CssCompiler {
             @Override
             public void apply(Stylesheet stylesheet) {
                 Style _style;
-                «FOR definition: definitions»
 
-                    _style = new Style();
-                    «FOR child: definition.childNodes»
-                        «compile(child)»
-                    «ENDFOR»
-                    stylesheet.registerStyle("«definition.selector»",_style);
-                «ENDFOR»
 
             }
         }

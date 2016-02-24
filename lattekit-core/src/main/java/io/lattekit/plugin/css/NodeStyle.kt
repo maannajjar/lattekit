@@ -8,7 +8,7 @@ import io.lattekit.ui.view.NativeView
  * Created by maan on 2/22/16.
  */
 class NodeStyle {
-    var properties = mutableListOf<CssProperty>()
+    var properties = mutableMapOf<String,CssProperty>()
     var declarations = mutableMapOf<String,String>()
 
     companion object {
@@ -31,18 +31,24 @@ class NodeStyle {
             BorderRadiusTopLeftCssProperty::class.java,
             BorderRadiusTopRightCssProperty::class.java,
             BorderRadiusBottomLeftCssProperty::class.java,
-            BorderRadiusBottomRightCssProperty::class.java
+            BorderRadiusBottomRightCssProperty::class.java,
+            BorderRadiusBottomRightCssProperty::class.java,
+            ColorCssProperty::class.java,
+            TextAlignCssProperty::class.java,
+            FontWeightCssProperty::class.java
+
         )
     }
 
     init {
         PROPERTY_CLASSES.forEach { cls ->
-            properties.add(cls.newInstance())
+            var prop = cls.newInstance()
+            properties.put(prop.PROPERTY_NAME,prop)
         }
     }
 
     fun read() {
-        properties.forEach {
+        properties.values.forEach {
             Log.d("LatteCss", "Applying ${it.PROPERTY_NAME}")
             var declaredValue = declarations.get(it.PROPERTY_NAME)
             if (declaredValue != null) {
@@ -52,9 +58,9 @@ class NodeStyle {
     }
 
     fun apply(view : NativeView) {
-        properties.forEach{
+        properties.values.forEach{
             it.computeValue(view.activity!!, view)
-            it.apply(view)
+            it.apply(view, this)
         }
 
     }

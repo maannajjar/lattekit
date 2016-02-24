@@ -1,5 +1,6 @@
 package io.lattekit.plugin.css.property
 
+import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -13,7 +14,7 @@ open class SinglePaddingCssProperty(property: String) : NumberProperty(property)
     init {
         this.propertyName = property
     }
-    override fun apply(view: NativeView) {
+    override fun apply(view: NativeView, style: NodeStyle) {
         when (PROPERTY_NAME) {
             "padding-top" -> view.androidView?.setPadding(view.androidView!!.paddingLeft, computedValue!!.toInt(), view.androidView!!.paddingRight, view.androidView!!.paddingBottom)
             "padding-left" -> view.androidView?.setPadding(computedValue!!.toInt(), view.androidView!!.paddingTop, view.androidView!!.paddingRight, view.androidView!!.paddingBottom)

@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Typeface
 import android.util.TypedValue
+import android.view.Gravity
 import android.widget.TextView
+import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.ui.view.LatteView
 import io.lattekit.ui.view.NativeView
 
@@ -26,7 +28,7 @@ class FontSizeCssProperty : NumberProperty("font-size") {
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "medium"
 
-    override fun apply(view: NativeView) {
+    override fun apply(view: NativeView,style: NodeStyle) {
         if (view.androidView is TextView) {
             (view.androidView as TextView).setTextSize(TypedValue.COMPLEX_UNIT_PX,computedValue!!)
         }
@@ -45,9 +47,10 @@ class FontFamilyCssProperty : CssProperty("font-family") {
             typeface = allFonts?.getOrElse(specifiedValue!!.toLowerCase(), { Typeface.DEFAULT })
         }
     }
-    override fun apply(view: NativeView) {
+    override fun apply(view: NativeView, style: NodeStyle) {
         if (view.androidView is TextView) {
-            (view.androidView as TextView).typeface = typeface
+            var textView = view.androidView as TextView
+            textView.setTypeface(typeface,textView.typeface.style)
         }
     }
 
@@ -77,4 +80,44 @@ class FontFamilyCssProperty : CssProperty("font-family") {
         }
     }
 
+}
+
+
+class TextAlignCssProperty : StaticProperty<Int>("text-align") {
+
+    override val PREDEFINED_VALUES = mapOf(
+        "center" to Gravity.CENTER_HORIZONTAL,
+        "start" to  Gravity.START,
+        "end" to  Gravity.END,
+        "left" to  Gravity.LEFT,
+        "right" to  Gravity.RIGHT
+    )
+
+    override val INHERITED = true
+    override val INITIAL_VALUE: String? = "start"
+
+    override fun apply(view: NativeView, style: NodeStyle) {
+        if (view.androidView is TextView) {
+            (view.androidView as TextView).gravity = computedValue!!.toInt()
+        }
+    }
+}
+
+class FontWeightCssProperty : StaticProperty<Int>("font-weight") {
+
+    override val PREDEFINED_VALUES = mapOf(
+        "bold" to Typeface.BOLD,
+        "normal" to  Typeface.NORMAL
+    )
+
+    override val INHERITED = true
+    override val INITIAL_VALUE: String? = "normal"
+
+    override fun apply(view: NativeView, style: NodeStyle) {
+        if (view.androidView is TextView) {
+            var textView = view.androidView as TextView
+            textView.setTypeface(textView.typeface, textView.typeface.style or computedValue!!)
+            textView.gravity = computedValue!!.toInt()
+        }
+    }
 }

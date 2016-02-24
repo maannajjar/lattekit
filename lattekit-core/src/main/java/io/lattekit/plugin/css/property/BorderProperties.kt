@@ -1,7 +1,7 @@
 package io.lattekit.plugin.css.property
 
 import android.content.Context
-import android.util.Log
+import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.ui.drawable.BorderDrawable
 import io.lattekit.ui.view.NativeView
 import io.lattekit.util.RegexBuilder
@@ -17,7 +17,7 @@ open class SingleBorderWidthCssProperty(property: String) : NumberProperty(prope
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px"
 
-    override fun apply(view: NativeView) {
+    override fun apply(view: NativeView, style: NodeStyle) {
         var borderDrawable = view.dataOrPut("css:borderDrawable",BorderDrawable()) as BorderDrawable
         getBackgroundLayerDrawable(view).setDrawableByLayerId(2, borderDrawable)
 
@@ -63,7 +63,7 @@ open class SingleBorderRadiusCssProperty(property: String) : CustomProperty(prop
             semiMinor = semiMajor;
         }
     }
-    override fun apply(view: NativeView) {
+    override fun apply(view: NativeView, style: NodeStyle) {
         var borderDrawable = view.dataOrPut("css:borderDrawable", BorderDrawable()) as BorderDrawable
         getBackgroundLayerDrawable(view).setDrawableByLayerId(2, borderDrawable)
         when (PROPERTY_NAME) {

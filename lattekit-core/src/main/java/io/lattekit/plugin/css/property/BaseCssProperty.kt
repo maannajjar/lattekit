@@ -2,8 +2,8 @@ package io.lattekit.plugin.css.property
 
 import android.content.Context
 import android.graphics.Color
-import android.util.Log
 import android.util.TypedValue
+import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.ui.view.LatteView
 import io.lattekit.ui.view.NativeView
 import io.lattekit.util.RegexBuilder
@@ -25,7 +25,7 @@ open abstract class CssProperty(property : String) {
     open val INITIAL_VALUE: String? = null;
     var specifiedValue: String? = null
 
-    open abstract fun apply(view: NativeView);
+    open abstract fun apply(view: NativeView, style: NodeStyle);
     open fun computeValue(context : Context, view : LatteView) {}
 
     open fun read(propertyValue: String) {
@@ -34,6 +34,29 @@ open abstract class CssProperty(property : String) {
 
 }
 
+
+open abstract class StaticProperty<T>(property : String) : CssProperty(property) {
+
+    open val PREDEFINED_VALUES = mapOf<String,T>()
+    var computedValue : T? = null
+
+    fun parseValue(strValue: String, context: Context): T {
+        if (PREDEFINED_VALUES[strValue.toLowerCase()] != null) {
+            return PREDEFINED_VALUES.get(strValue.toLowerCase())!!;
+        }
+
+        throw Exception("Invalid $PROPERTY_NAME value ${strValue}")
+    }
+
+
+    override fun computeValue(context : Context, view : LatteView) {
+        computedValue = if (specifiedValue != null) {
+            parseValue(specifiedValue!!, context)
+        } else {
+            parseValue(INITIAL_VALUE!!, context)
+        }
+    }
+}
 
 open abstract class NumberProperty(property : String) : CssProperty(property) {
 
@@ -60,7 +83,6 @@ open abstract class NumberProperty(property : String) : CssProperty(property) {
     }
 
     fun parseValue(size: String, context: Context): Float {
-        Log.d("LatteCss","REGEX IS "+ """(\d+(?:\.\d+)?)([^\d%]+)${if (PREDEFINED_VALUES.isNotEmpty()) PREDEFINED_VALUES.keys.joinToString(separator="|",prefix="|") else ""}""")
         var match = PATTERN.matchEntire(size)
         if (match != null) {
             var value = match.groupValues.get(1);
@@ -83,7 +105,8 @@ open abstract class NumberProperty(property : String) : CssProperty(property) {
 open abstract class ColorProperty(property: String) : CssProperty(property) {
 
     open val PREDEFINED_VALUES = mapOf(
-        "white" to "#ffffff"
+        "white" to "#ffffff",
+        "black" to "#000000"
     )
 
     var computedValue : Int? = null

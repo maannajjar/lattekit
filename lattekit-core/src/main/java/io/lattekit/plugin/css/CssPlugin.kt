@@ -75,7 +75,6 @@ class CssPlugin : LattePlugin() {
         if (view is NativeView) {
             if (!PROCESSED.contains(view)) {
                 PROCESSED.add(view)
-                Log.d("LatteCss","STYLESHEETS ARE ${getStylesheetsFor(view)}")
                 getStylesheetsFor(view).forEach{ it.assignStyles(view) }
             }
             onPropsUpdated(view, view.props)

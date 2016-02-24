@@ -4,6 +4,9 @@ import android.content.res.ColorStateList
 import android.graphics.Color.TRANSPARENT
 import android.graphics.drawable.*
 import android.os.Build
+import android.util.TypedValue
+import android.widget.TextView
+import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -39,7 +42,7 @@ class BackgroundColorCssProperty : ColorProperty("background-color") {
 
     var backgroundGradientDrawable: GradientDrawable? = null
 
-    override fun apply(view: NativeView) {
+    override fun apply(view: NativeView,style: NodeStyle) {
 
         if (backgroundGradientDrawable == null) {
             backgroundGradientDrawable = GradientDrawable()
@@ -47,6 +50,22 @@ class BackgroundColorCssProperty : ColorProperty("background-color") {
         backgroundGradientDrawable?.setColors(listOf(computedValue!!, computedValue!!).toIntArray())
 
         getBackgroundLayerDrawable(view).setDrawableByLayerId(0, backgroundGradientDrawable)
+
+    }
+}
+
+
+class ColorCssProperty : ColorProperty("color") {
+
+    override val INHERITED = true
+    override val INITIAL_VALUE: String? = "black"
+
+
+    override fun apply(view: NativeView,style: NodeStyle) {
+
+        if (view.androidView is TextView) {
+            (view.androidView as TextView).setTextColor(computedValue!!)
+        }
 
     }
 }
