@@ -62,6 +62,8 @@ class CssCompiler {
         import io.lattekit.ui.style.Style;
         import android.graphics.Color;
         import java.util.ArrayList;
+        import java.util.Map;
+        import java.util.HashMap;
         import java.util.List;
         import java.util.Arrays;
         import io.lattekit.ui.style.Stylesheet;
@@ -74,6 +76,20 @@ class CssCompiler {
 
             public «fileName.toClass»() {
                 Stylesheet.registerStylesheet("«fileName»",this);
+            }
+
+            @Override
+            public Map<String,Map<String,String>> getRuleSets() {
+                Map<String,Map<String,String>> ruleSets = new HashMap<>();
+                Map<String,String> ruleSet;
+                «FOR definition: definitions»
+                    ruleSet = new HashMap<>();
+                    «FOR child: definition.childNodes»
+                        ruleSet.put("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»);
+                    «ENDFOR»
+                    ruleSets.put("«definition.selector»",ruleSet);
+                «ENDFOR»
+                return ruleSets;
             }
 
             @Override

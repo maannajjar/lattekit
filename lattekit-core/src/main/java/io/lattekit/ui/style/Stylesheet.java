@@ -2,17 +2,17 @@ package io.lattekit.ui.style;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
-import io.lattekit.ui.style.NumberValue;
-import io.lattekit.ui.style.Style;
-import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
+
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("all")
 public class Stylesheet {
@@ -22,6 +22,10 @@ public class Stylesheet {
 
     public static void registerStylesheet(final String fileName, final Stylesheet stylesheet) {
         Stylesheet.styleSheets.put(fileName, stylesheet);
+    }
+
+    public Map<String, Map<String,String>> getRuleSets() {
+        return new HashMap<>();
     }
 
     public static Stylesheet getStylesheet(final String fileName) {

@@ -9,31 +9,6 @@ import io.lattekit.ui.view.NativeView
  * Created by maan on 2/20/16.
  */
 
-var testStyle: Map<String, Map<String, String>> = mapOf(
-    ".kicker" to mapOf(
-        "font-family" to "Chalk",
-        "font-size" to "x-small",
-        "font-style" to "bold",
-        "width" to "match_parent",
-        "height" to "wrap_content",
-        "text-color" to "#777777",
-        "background-color" to "#ffffff",
-        "border-bottom-width" to "1dp",
-        "border-left-width" to "1dp",
-        "border-right-width" to "1dp",
-        "border-top-width" to "1dp",
-        "border-top-left-radius" to "10dp",
-        "border-top-right-radius" to "5dp 10dp",
-        "border-bottom-left-radius" to "5dp",
-        "border-bottom-right-radius" to "20dp",
-        "margin-top" to "10dp",
-        "margin-bottom" to "10dp",
-        "margin-right" to "10dp",
-        "margin-left" to "10dp"
-
-    )
-)
-
 
 class CssPlugin : LattePlugin() {
 
@@ -52,8 +27,42 @@ class CssPlugin : LattePlugin() {
         }
     }
 
-    var testStylesheet = Stylesheet()
+    fun getRoot(view : LatteView) : LatteView {
+        if (view.parentView == null) {
+            return view
+        } else {
+            return getRoot(view.parentView!!)
+        }
+    }
 
+    fun getStylesheetsFor(view : LatteView) : List<Stylesheet> {
+        var rootView = getRoot(view)
+        Log.d("LatteCss","ROOT VIEW IS $rootView")
+        var stylesheetList = rootView.data("css:stylesheet")
+        if (stylesheetList != null && stylesheetList is List<*>) {
+            return stylesheetList as List<Stylesheet>;
+        } else {
+            var stylesheets = mutableListOf<Stylesheet>()
+            var cssFiles = rootView.data("css")
+            Log.d("LatteCss","CSS FILE IS $cssFiles")
+            if (cssFiles != null) {
+                var files = if (cssFiles is String) { // Single CSS file
+                    listOf(cssFiles)
+                } else if (cssFiles is List<*>) {
+                    cssFiles as List<String>
+                } else { emptyList<String>() }
+                files.forEach {
+                    Log.d("LatteCss","Loading $it")
+                    var newStylesheet = Stylesheet()
+                    var legacyStylesheet = io.lattekit.ui.style.Stylesheet.getStylesheet(it)
+                    newStylesheet.processCss(legacyStylesheet.ruleSets)
+                    stylesheets.add(newStylesheet)
+                }
+                rootView.data("css:stylesheet",stylesheets)
+            }
+            return stylesheets
+        }
+    }
     override fun onPropsUpdated(view: LatteView, oldProps: MutableMap<String,Any?>) {
         if (view is NativeView) {
             var style = getStyleFor(view)
@@ -66,19 +75,16 @@ class CssPlugin : LattePlugin() {
         if (view is NativeView) {
             if (!PROCESSED.contains(view)) {
                 PROCESSED.add(view)
-                testStylesheet.assignStyles(view)
+                Log.d("LatteCss","STYLESHEETS ARE ${getStylesheetsFor(view)}")
+                getStylesheetsFor(view).forEach{ it.assignStyles(view) }
             }
             onPropsUpdated(view, view.props)
         }
     }
 
     override fun onViewWillMount(view: LatteView) {
-        if (view.parentView == null) {
-            Log.d("LatteCss", "About to assign styles to $view")
-            testStylesheet.processCss(testStyle)
-        }
-
     }
+
 }
 
 

@@ -124,7 +124,6 @@ class Stylesheet {
                         selectorElements.add(el)
                     }
                 }
-                Log.d("LatteCss","Processed selectors $selectorElements => $declarations")
                 allSelectors.put(selectorElements,declarations)
             }
         }
