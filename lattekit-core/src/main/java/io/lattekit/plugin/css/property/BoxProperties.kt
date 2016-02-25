@@ -1,12 +1,14 @@
 package io.lattekit.plugin.css.property
 
+import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Color.TRANSPARENT
 import android.graphics.drawable.*
 import android.os.Build
-import android.util.TypedValue
 import android.widget.TextView
 import io.lattekit.plugin.css.NodeStyle
+import io.lattekit.plugin.css.declaration.ColorValue
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -35,22 +37,31 @@ fun getBackgroundLayerDrawable(view: NativeView): LayerDrawable {
     return backgroundDrawable as LayerDrawable
 }
 
-class BackgroundColorCssProperty : ColorProperty("background-color") {
+class BackgroundCssProperty : ColorProperty("background") {
 
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "white"
 
     var backgroundGradientDrawable: GradientDrawable? = null
 
-    override fun apply(view: NativeView,style: NodeStyle) {
+    var backgroundColor : Int = Color.WHITE;
 
+    override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
+        var declarations = style.getDeclarations("background-color")
+        declarations.forEach {
+            if (it.value is ColorValue) {
+                backgroundColor = it.value.color
+            }
+        }
+    }
+
+    override fun apply(view: NativeView,style: NodeStyle) {
         if (backgroundGradientDrawable == null) {
             backgroundGradientDrawable = GradientDrawable()
         }
-        backgroundGradientDrawable?.setColors(listOf(computedValue!!, computedValue!!).toIntArray())
+        backgroundGradientDrawable?.setColors(listOf(backgroundColor, backgroundColor).toIntArray())
 
         getBackgroundLayerDrawable(view).setDrawableByLayerId(0, backgroundGradientDrawable)
-
     }
 }
 

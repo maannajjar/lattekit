@@ -10,14 +10,60 @@ import java.util.regex.Pattern
  * Created by maan on 2/24/16.
  */
 
-data class LengthValue(val valueString : String) {
+
+fun getCssValue(propertyName : String, valueString : String) : CssValue = when(propertyName) {
+    "margin" -> MarginValue(valueString)
+    "margin-left" -> MarginValue(valueString)
+    "margin-top" -> MarginValue(valueString)
+    "margin-right" -> MarginValue(valueString)
+    "margin-bottom" -> MarginValue(valueString)
+    "padding" -> PaddingValue(valueString)
+    "padding-left" -> PaddingValue(valueString)
+    "padding-top" -> PaddingValue(valueString)
+    "padding-right" -> PaddingValue(valueString)
+    "padding-bottom" -> PaddingValue(valueString)
+    "border" -> BorderValue(valueString)
+    "border-left" -> BorderValue(valueString)
+    "border-top" -> BorderValue(valueString)
+    "border-right" -> BorderValue(valueString)
+    "border-bottom" -> BorderValue(valueString)
+    "border-width" -> LengthValue(valueString)
+    "border-left-width" -> LengthValue(valueString)
+    "border-top-width" -> LengthValue(valueString)
+    "border-right-width" -> LengthValue(valueString)
+    "border-bottom-width" -> LengthValue(valueString)
+    "border-radius" -> BorderRadius(valueString)
+    "border-top-left-radius" -> SingleCornerBorderRadius(valueString)
+    "border-top-right-radius" -> SingleCornerBorderRadius(valueString)
+    "border-bottom-right-radius" -> SingleCornerBorderRadius(valueString)
+    "border-bottom-left-radius" -> SingleCornerBorderRadius(valueString)
+    "font-size" -> FontSizeValue(valueString)
+    "font-family" -> FontFamilyValue(valueString)
+    "color" -> ColorValue(valueString)
+    "background-color" -> ColorValue(valueString)
+    else -> StringValue(valueString)
+}
+
+interface CssValue {}
+
+data class StringValue(val valueString : String) : CssValue {
+}
+
+data class FontFamilyValue(val valueString : String) : CssValue {
+    var fontList : List<String>;
+    init {
+        fontList = valueString.split(",")
+    }
+}
+
+data class LengthValue(val valueString : String) : CssValue {
     var number : Float
     var unit : String? = null
     val PREDEFINED_VALUES = mapOf("match_parent" to ViewGroup.LayoutParams.MATCH_PARENT,"wrap_content" to ViewGroup.LayoutParams.WRAP_CONTENT)
     companion object {
         val PATTERN : Regex = Regex("""(\d+(?:\.\d+)?)(?<unit>[^\d%]+)""")
     }
-   
+
     init {
         if (PREDEFINED_VALUES[valueString.toLowerCase()] != null) {
             number = PREDEFINED_VALUES[valueString.toLowerCase()]?.toFloat()!!;
@@ -43,7 +89,51 @@ data class LengthValue(val valueString : String) {
     }
 }
 
-data class ColorValue(val valueString : String) {
+
+data class FontSizeValue(val valueString : String) : CssValue {
+
+    var number : Float
+    var unit : String? = null
+    val PREDEFINED_VALUES = mapOf(
+        "xx-small" to 10,
+        "x-small" to 12,
+        "small" to 14,
+        "medium" to 18,
+        "large" to 22,
+        "x-large" to 24,
+        "xx-large" to 26
+    )
+    companion object {
+        val PATTERN : Regex = Regex("""(\d+(?:\.\d+)?)(?<unit>[^\d%]+)""")
+    }
+
+    init {
+        if (PREDEFINED_VALUES[valueString.toLowerCase()] != null) {
+            number = PREDEFINED_VALUES[valueString.toLowerCase()]?.toFloat()!!;
+            unit = "sp"
+        } else {
+            var match = PATTERN.matchEntire(valueString)
+            if (match != null) {
+                number = match.groupValues.get(1).toFloat()
+                unit = match.groupValues.get(2)
+            } else {
+                number = 18f
+                unit = "sp"
+            }
+        }
+    }
+
+    fun inPixels(context:Context) : Float {
+        return when (unit) {
+            "dp" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, number, context.resources.displayMetrics);
+            "dip" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, number, context.resources.displayMetrics);
+            "sp" -> TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, number, context.resources.displayMetrics);
+            else -> number!!;
+        }
+    }
+}
+
+data class ColorValue(val valueString : String) : CssValue {
     var color : Int;
     companion object {
         val PREDEFINED_VALUES = mapOf(
@@ -60,7 +150,7 @@ data class ColorValue(val valueString : String) {
     }
 }
 
-data class SingleCornerBorderRadius(val valueString : String) {
+data class SingleCornerBorderRadius(val valueString : String) : CssValue {
     var hLength : LengthValue? = null;
     var vLength : LengthValue? = null
 
@@ -71,7 +161,7 @@ data class SingleCornerBorderRadius(val valueString : String) {
     }
 }
 
-data class BorderRadius(val valueString : String) {
+data class BorderRadius(val valueString : String) : CssValue  {
     val hRadius : MutableList<LengthValue?> = mutableListOf()
     val vRadius : MutableList<LengthValue?> = mutableListOf()
 
@@ -91,7 +181,7 @@ data class BorderRadius(val valueString : String) {
 
 }
 
-data class MarginValue(val valueString : String) {
+data class MarginValue(val valueString : String) : CssValue  {
     var marginValues: MutableList<LengthValue> = mutableListOf()
     init {
         valueString.trim().split(" ").forEach {
@@ -99,7 +189,7 @@ data class MarginValue(val valueString : String) {
         }
     }
 }
-data class PaddingValue(val valueString : String) {
+data class PaddingValue(val valueString : String) : CssValue  {
     var paddingValues: MutableList<LengthValue> = mutableListOf()
     init {
         valueString.trim().split(" ").forEach {
@@ -108,7 +198,7 @@ data class PaddingValue(val valueString : String) {
     }
 }
 
-data class BorderValue(val valueString : String) {
+data class BorderValue(val valueString : String) : CssValue  {
     var borderWidth: LengthValue? = null
     var borderStyle : String? = null
     var borderColor: ColorValue? = null

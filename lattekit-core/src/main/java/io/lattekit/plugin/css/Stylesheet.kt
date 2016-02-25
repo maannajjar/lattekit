@@ -1,7 +1,7 @@
 package io.lattekit.plugin.css
 
 import android.content.res.Resources
-import android.util.Log
+import io.lattekit.plugin.css.declaration.CssValue
 import io.lattekit.ui.view.LatteView
 import io.lattekit.ui.view.NativeView
 import io.lattekit.ui.view.NativeViewGroup
@@ -15,9 +15,9 @@ class Stylesheet {
         val TOKENS_RE = Pattern.compile("""((?:\.|#)?[^>\s\.#:]+|:|\s*>\s*|\s+)""")
     }
 
-    var classesSelectors = mutableMapOf<String,Pair<MutableList<String>,Map<String,String>>>()
-    var idsSelectors = mutableMapOf<String,Pair<MutableList<String>,Map<String,String>>>()
-    var allSelectors = mutableMapOf<MutableList<String>,Map<String,String>>()
+    var classesSelectors = mutableMapOf<String,Pair<MutableList<String>,Map<String,CssValue>>>()
+    var idsSelectors = mutableMapOf<String,Pair<MutableList<String>,Map<String,CssValue>>>()
+    var allSelectors = mutableMapOf<MutableList<String>,Map<String,CssValue>>()
 
 
     fun elMatches(elName : String, view : LatteView) : Boolean {
@@ -67,8 +67,7 @@ class Stylesheet {
             matched.forEach {
                 var style = CssPlugin.getStyleFor(it)
                 for ((key,values) in declarations) {
-                    // TODO: determine specificity
-                    style?.declarations?.put(key,values)
+                    style?.addDeclaration(CssDeclaration(selector,key,values))
                 }
             }
         }
@@ -103,7 +102,7 @@ class Stylesheet {
     }
 
 
-    fun processCss(ruleSets : Map<String, Map<String,String>>) {
+    fun processCss(ruleSets : Map<String, Map<String,CssValue>>) {
         for ((selectorGroup, declarations) in ruleSets) {
             selectorGroup.split(",").forEach { selector ->
 

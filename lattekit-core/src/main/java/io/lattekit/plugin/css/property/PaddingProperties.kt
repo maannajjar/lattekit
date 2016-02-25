@@ -1,30 +1,63 @@
 package io.lattekit.plugin.css.property
 
+import android.content.Context
 import io.lattekit.plugin.css.NodeStyle
+import io.lattekit.plugin.css.declaration.LengthValue
+import io.lattekit.plugin.css.declaration.PaddingValue
 import io.lattekit.ui.view.NativeView
 
 /**
  * Created by maan on 2/23/16.
  */
-open class SinglePaddingCssProperty(property: String) : NumberProperty(property) {
+open class PaddingCssProperty : CssProperty("padding") {
 
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px"
 
-    init {
-        this.propertyName = property
-    }
-    override fun apply(view: NativeView, style: NodeStyle) {
-        when (PROPERTY_NAME) {
-            "padding-top" -> view.androidView?.setPadding(view.androidView!!.paddingLeft, computedValue!!.toInt(), view.androidView!!.paddingRight, view.androidView!!.paddingBottom)
-            "padding-left" -> view.androidView?.setPadding(computedValue!!.toInt(), view.androidView!!.paddingTop, view.androidView!!.paddingRight, view.androidView!!.paddingBottom)
-            "padding-right" -> view.androidView?.setPadding(view.androidView!!.paddingLeft, view.androidView!!.paddingTop, computedValue!!.toInt(), view.androidView!!.paddingBottom)
-            "padding-bottom" -> view.androidView?.setPadding(view.androidView!!.paddingLeft, view.androidView!!.paddingTop, view.androidView!!.paddingRight, computedValue!!.toInt())
+    var paddingLeft : Int = 0
+    var paddingTop : Int = 0
+    var paddingRight : Int = 0
+    var paddingBottom : Int = 0
+
+    fun readShorthand(values : List<LengthValue>, context : Context) {
+        if (values.size == 1) {
+            paddingTop = values[0].inPixels(context).toInt()
+            paddingRight = values[0].inPixels(context).toInt()
+            paddingBottom = values[0].inPixels(context).toInt()
+            paddingLeft = values[0].inPixels(context).toInt()
+        } else if (values.size == 2) {
+            paddingTop = values[0].inPixels(context).toInt()
+            paddingRight = values[1].inPixels(context).toInt()
+            paddingBottom = values[0].inPixels(context).toInt()
+            paddingLeft = values[1].inPixels(context).toInt()
+        } else if (values.size == 3) {
+            paddingTop = values[0].inPixels(context).toInt()
+            paddingRight = values[1].inPixels(context).toInt()
+            paddingBottom = values[2].inPixels(context).toInt()
+            paddingLeft = values[1].inPixels(context).toInt()
+        } else if (values.size == 3) {
+            paddingTop = values[0].inPixels(context).toInt()
+            paddingRight = values[1].inPixels(context).toInt()
+            paddingBottom = values[2].inPixels(context).toInt()
+            paddingLeft = values[3].inPixels(context).toInt()
         }
     }
-}
 
-class PaddingLeftCssProperty : SinglePaddingCssProperty("padding-left") {}
-class PaddingTopCssProperty : SinglePaddingCssProperty("padding-top") {}
-class PaddingRightCssProperty : SinglePaddingCssProperty("padding-right") {}
-class PaddingBottomCssProperty : SinglePaddingCssProperty("padding-bottom") {}
+    override fun computeValue(context: Context, view: NativeView, style : NodeStyle) {
+        var declarations = style.getDeclarations("padding", "padding-top", "padding-right", "padding-bottom", "padding-left")
+        declarations.forEach {
+            var values = (it.value as PaddingValue).paddingValues
+            if (it.propertyName == "padding") {
+                readShorthand(values, context)
+            } else when (it.propertyName) {
+                "padding-top" -> paddingTop = values[0].inPixels(context).toInt()
+                "padding-right" -> paddingRight = values[0].inPixels(context).toInt()
+                "padding-bottom" -> paddingBottom = values[0].inPixels(context).toInt()
+                "padding-left" -> paddingLeft = values[0].inPixels(context).toInt()
+            }
+        }
+    }
+    override fun apply(view: NativeView, style: NodeStyle) {
+        view.androidView?.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
+    }
+}

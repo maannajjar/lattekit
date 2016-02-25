@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import io.lattekit.plugin.css.declaration.CssValue;
+
 @SuppressWarnings("all")
 public class Stylesheet {
     private static Map<String, Stylesheet> styleSheets = new HashMap<String, Stylesheet>();
@@ -24,7 +26,7 @@ public class Stylesheet {
         Stylesheet.styleSheets.put(fileName, stylesheet);
     }
 
-    public Map<String, Map<String,String>> getRuleSets() {
+    public Map<String, Map<String,CssValue>> getRuleSets() {
         return new HashMap<>();
     }
 

@@ -9,6 +9,8 @@ class CssCompiler {
     var STRING_RE = Pattern.compile('''^(["'])(?:(?=(\\?))\2.)*?\1$''')
     var NUM_RE = Pattern.compile('''^(\d+(?:\.\d+)?)(ms|px|dp|dip|pt|sp|sip|mm|in)$''')
 
+
+
     var static valueTypes = #{
         "PX" -> 0,
         "DP" -> 1,
@@ -56,10 +58,16 @@ class CssCompiler {
         _style.«property.name.toSetter»(«property.value.toJava»);
     '''
 
+    def compileValue(String propertyName, String value) {
+
+    }
+
     def compile(String packageName, String fileName, List<CssDefinition> definitions) '''
         package «packageName»;
         import io.lattekit.ui.style.NumberValue;
         import io.lattekit.ui.style.Style;
+        import io.lattekit.plugin.css.declaration.CssValuesKt;
+        import io.lattekit.plugin.css.declaration.CssValue;
         import android.graphics.Color;
         import java.util.ArrayList;
         import java.util.Map;
@@ -79,13 +87,13 @@ class CssCompiler {
             }
 
             @Override
-            public Map<String,Map<String,String>> getRuleSets() {
-                Map<String,Map<String,String>> ruleSets = new HashMap<>();
-                Map<String,String> ruleSet;
+            public Map<String,Map<String,CssValue>> getRuleSets() {
+                Map<String,Map<String,CssValue>> ruleSets = new HashMap<>();
+                Map<String,CssValue> ruleSet;
                 «FOR definition: definitions»
                     ruleSet = new HashMap<>();
                     «FOR child: definition.childNodes»
-                        ruleSet.put("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»);
+                        ruleSet.put("«child.name»",CssValuesKt.getCssValue("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»));
                     «ENDFOR»
                     ruleSets.put("«definition.selector»",ruleSet);
                 «ENDFOR»

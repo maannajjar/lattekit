@@ -1,7 +1,10 @@
 package io.lattekit.plugin.css.property
 
+import android.content.Context
 import android.view.ViewGroup
 import io.lattekit.plugin.css.NodeStyle
+import io.lattekit.plugin.css.declaration.LengthValue
+import io.lattekit.plugin.css.declaration.MarginValue
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -9,27 +12,63 @@ import io.lattekit.ui.view.NativeView
  */
 
 
-open class SingleMarginCssProperty(property: String) : NumberProperty(property) {
+open class MarginCssProperty : CssProperty("margin") {
+
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px"
 
-    init {
-        this.propertyName = property
+
+    var marginLeft: Int = 0
+    var marginTop: Int = 0
+    var marginRight: Int = 0
+    var marginBottom: Int = 0
+
+    fun readShorthand(values: List<LengthValue>, context: Context) {
+        if (values.size == 1) {
+            marginTop = values[0].inPixels(context).toInt()
+            marginRight = values[0].inPixels(context).toInt()
+            marginBottom = values[0].inPixels(context).toInt()
+            marginLeft = values[0].inPixels(context).toInt()
+        } else if (values.size == 2) {
+            marginTop = values[0].inPixels(context).toInt()
+            marginRight = values[1].inPixels(context).toInt()
+            marginBottom = values[0].inPixels(context).toInt()
+            marginLeft = values[1].inPixels(context).toInt()
+        } else if (values.size == 3) {
+            marginTop = values[0].inPixels(context).toInt()
+            marginRight = values[1].inPixels(context).toInt()
+            marginBottom = values[2].inPixels(context).toInt()
+            marginLeft = values[1].inPixels(context).toInt()
+        } else if (values.size == 3) {
+            marginTop = values[0].inPixels(context).toInt()
+            marginRight = values[1].inPixels(context).toInt()
+            marginBottom = values[2].inPixels(context).toInt()
+            marginLeft = values[3].inPixels(context).toInt()
+        }
     }
-    override fun apply(view: NativeView, style: NodeStyle) {
-        var marginLayoutParams = view.androidView?.layoutParams
-        if (marginLayoutParams is ViewGroup.MarginLayoutParams) {
-            when (PROPERTY_NAME) {
-                "margin-top" -> marginLayoutParams.topMargin = computedValue!!.toInt()
-                "margin-bottom" -> marginLayoutParams.bottomMargin = computedValue!!.toInt()
-                "margin-left" -> marginLayoutParams.leftMargin = computedValue!!.toInt()
-                "margin-right" -> marginLayoutParams.rightMargin = computedValue!!.toInt()
+
+    override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
+        var declarations = style.getDeclarations("margin", "margin-top", "margin-right", "margin-bottom", "margin-left")
+        declarations.forEach {
+            var values = (it.value as MarginValue).marginValues
+            if (it.propertyName == "margin") {
+                readShorthand(values, context)
+            } else when (it.propertyName) {
+                "margin-top" -> marginTop = values[0].inPixels(context).toInt()
+                "margin-right" -> marginRight = values[0].inPixels(context).toInt()
+                "margin-bottom" -> marginBottom = values[0].inPixels(context).toInt()
+                "margin-left" -> marginLeft = values[0].inPixels(context).toInt()
             }
         }
     }
-}
 
-class MarginLeftCssProperty : SingleMarginCssProperty("margin-left") {}
-class MarginTopCssProperty : SingleMarginCssProperty("margin-top") {}
-class MarginRightCssProperty : SingleMarginCssProperty("margin-right") {}
-class MarginBottomCssProperty : SingleMarginCssProperty("margin-bottom") {}
+    override fun apply(view: NativeView, style: NodeStyle) {
+        var marginLayoutParams = view.androidView?.layoutParams
+        if (marginLayoutParams is ViewGroup.MarginLayoutParams) {
+            marginLayoutParams.topMargin = marginTop
+            marginLayoutParams.leftMargin = marginLeft
+            marginLayoutParams.rightMargin = marginRight
+            marginLayoutParams.bottomMargin = marginBottom
+        }
+    }
+}

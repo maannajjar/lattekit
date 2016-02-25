@@ -28,10 +28,7 @@ open abstract class CssProperty(property : String) {
 
     open abstract fun apply(view: NativeView, style: NodeStyle);
     open fun computeValue(context : Context, view : LatteView) {}
-
-    open fun read(propertyValue: String) {
-        specifiedValue = propertyValue
-    }
+    open fun computeValue(context : Context, view : NativeView, style: NodeStyle) {}
 
 }
 

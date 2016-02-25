@@ -1,45 +1,37 @@
 package io.lattekit.plugin.css
 
-import android.util.Log
+import io.lattekit.plugin.css.declaration.CssValue
 import io.lattekit.plugin.css.property.*
 import io.lattekit.ui.view.NativeView
+import java.util.*
 
 /**
  * Created by maan on 2/22/16.
  */
+
+data class CssDeclaration(val selector: List<String>, val propertyName : String, val value: CssValue) {
+    var index : Int = 0
+}
 class NodeStyle {
     var properties = mutableMapOf<String,CssProperty>()
-    var declarations = mutableMapOf<String,String>()
+    var declarations = LinkedHashMap<String,CssDeclaration>()
+    var allDeclarations = mutableMapOf<String,MutableList<CssDeclaration>>()
+
 
     companion object {
         val PROPERTY_CLASSES = listOf(
-            FontSizeCssProperty::class.java,
-            FontFamilyCssProperty::class.java,
-            BackgroundColorCssProperty::class.java,
-            PaddingLeftCssProperty::class.java,
-            PaddingTopCssProperty::class.java,
-            PaddingRightCssProperty::class.java,
-            PaddingBottomCssProperty::class.java,
-            BorderLeftWidthCssProperty::class.java,
-            BorderTopWidthCssProperty::class.java,
-            BorderRightWidthCssProperty::class.java,
-            BorderBottomWidthCssProperty::class.java,
-            MarginLeftCssProperty::class.java,
-            MarginTopCssProperty::class.java,
-            MarginRightCssProperty::class.java,
-            MarginBottomCssProperty::class.java,
-            BorderRadiusTopLeftCssProperty::class.java,
-            BorderRadiusTopRightCssProperty::class.java,
-            BorderRadiusBottomLeftCssProperty::class.java,
-            BorderRadiusBottomRightCssProperty::class.java,
-            BorderRadiusBottomRightCssProperty::class.java,
-            ColorCssProperty::class.java,
-            TextAlignCssProperty::class.java,
-            FontWeightCssProperty::class.java,
-            BorderLeftCssProperty::class.java,
-            BorderTopCssProperty::class.java,
-            BorderRightCssProperty::class.java,
-            BorderBottomCssProperty::class.java
+            FontCssProperty::class.java,
+            PaddingCssProperty::class.java,
+            MarginCssProperty::class.java,
+            BorderCssProperty::class.java,
+            BackgroundCssProperty::class.java,
+            TextAlignCssProperty::class.java
+//            BorderRadiusTopLeftCssProperty::class.java,
+//            BorderRadiusTopRightCssProperty::class.java,
+//            BorderRadiusBottomLeftCssProperty::class.java,
+//            BorderRadiusBottomRightCssProperty::class.java,
+//            BorderRadiusBottomRightCssProperty::class.java,
+//            ColorCssProperty::class.java,
         )
     }
 
@@ -50,19 +42,26 @@ class NodeStyle {
         }
     }
 
-    fun read() {
-        properties.values.forEach {
-            Log.d("LatteCss", "Applying ${it.PROPERTY_NAME}")
-            var declaredValue = declarations.get(it.PROPERTY_NAME)
-            if (declaredValue != null) {
-                it.read(declaredValue)
-            }
-        }
+    fun addDeclaration(declaration : CssDeclaration) {
+        var propertyDeclarations = allDeclarations.getOrPut(declaration.propertyName, { mutableListOf<CssDeclaration>() } )
+        propertyDeclarations.add(declaration)
+        // TODO: Determine which declaration based on specifity, currently picks last declaration
+        var selectedDeclaration = propertyDeclarations[propertyDeclarations.lastIndex]
+        declaration.index = declarations.size
+        declarations.put(declaration.propertyName, selectedDeclaration)
+    }
+
+    fun getDeclarations(vararg properties : String) : List<CssDeclaration> {
+        return properties.map { declarations[it] }.filterNotNull().sortedBy { it.index }
+    }
+
+    fun getDeclaration(propertyName : String) : CssDeclaration? {
+        return declarations[propertyName]
     }
 
     fun apply(view : NativeView) {
         properties.values.forEach{
-            it.computeValue(view.activity!!, view)
+            it.computeValue(view.activity!!, view, this)
             it.apply(view, this)
         }
 

@@ -66,7 +66,6 @@ class CssPlugin : LattePlugin() {
     override fun onPropsUpdated(view: LatteView, oldProps: MutableMap<String,Any?>) {
         if (view is NativeView) {
             var style = getStyleFor(view)
-            style.read()
             style.apply(view)
         }
     }
