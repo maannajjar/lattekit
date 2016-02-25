@@ -27,7 +27,8 @@ class NodeStyle {
             BackgroundCssProperty::class.java,
             TextAlignCssProperty::class.java,
             ColorCssProperty::class.java,
-            BorderRadiusCssProperty::class.java
+            BorderRadiusCssProperty::class.java,
+            ElevationCssProperty::class.java
         )
     }
 
