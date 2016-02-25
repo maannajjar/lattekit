@@ -71,13 +71,19 @@ class ColorCssProperty : ColorProperty("color") {
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "black"
 
+    var color : Int = Color.BLACK
+
+    override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
+        var declaration = style.getDeclaration("color")
+        if (declaration != null) {
+            color = (declaration.value as ColorValue).color
+        }
+    }
 
     override fun apply(view: NativeView,style: NodeStyle) {
-
         if (view.androidView is TextView) {
-            (view.androidView as TextView).setTextColor(computedValue!!)
+            (view.androidView as TextView).setTextColor(color)
         }
-
     }
 }
 

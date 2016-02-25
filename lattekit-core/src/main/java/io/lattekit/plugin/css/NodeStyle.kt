@@ -25,13 +25,13 @@ class NodeStyle {
             MarginCssProperty::class.java,
             BorderCssProperty::class.java,
             BackgroundCssProperty::class.java,
-            TextAlignCssProperty::class.java
+            TextAlignCssProperty::class.java,
+            ColorCssProperty::class.java
 //            BorderRadiusTopLeftCssProperty::class.java,
 //            BorderRadiusTopRightCssProperty::class.java,
 //            BorderRadiusBottomLeftCssProperty::class.java,
 //            BorderRadiusBottomRightCssProperty::class.java,
 //            BorderRadiusBottomRightCssProperty::class.java,
-//            ColorCssProperty::class.java,
         )
     }
 

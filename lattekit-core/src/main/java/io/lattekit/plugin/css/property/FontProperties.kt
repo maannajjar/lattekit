@@ -106,7 +106,7 @@ class TextAlignCssProperty : StaticProperty<Int>("text-align") {
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
         var declaration = style.getDeclaration("text-align")
         if (declaration != null) {
-            textAlign = (declaration as StringValue).valueString
+            textAlign = (declaration.value as StringValue).valueString
         }
     }
 

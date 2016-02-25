@@ -138,7 +138,8 @@ data class ColorValue(val valueString : String) : CssValue {
     companion object {
         val PREDEFINED_VALUES = mapOf(
             "white" to "#ffffff",
-            "black" to "#000000"
+            "black" to "#000000",
+            "blue" to "#ff0000"
         )
     }
     init {
