@@ -11,21 +11,23 @@ import io.lattekit.ui.view.NativeView
  * Created by maan on 2/25/16.
  */
 
-fun getCssAccessory(view : NativeView) : CssAccessory {
-    var accessory = view.data("css:accessory")
-    if (accessory == null) {
-        accessory = CssAccessory(view)
-        view.data("css:accessory",accessory)
-    }
-    return accessory as CssAccessory
-}
-
 class CssAccessory(view : NativeView) {
     var style : NodeStyle = NodeStyle()
     var shapeDrawable : ShapeDrawable = ShapeDrawable()
     var gradientDrawable : GradientDrawable = GradientDrawable()
     var borderDrawable : BorderDrawable = BorderDrawable()
     var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable))
+
+    companion object {
+        fun getCssAccessory(view : NativeView) : CssAccessory {
+            var accessory = view.data("css:accessory")
+            if (accessory == null) {
+                accessory = CssAccessory(view)
+                view.data("css:accessory",accessory)
+            }
+            return accessory as CssAccessory
+        }
+    }
 
     init {
         layerDrawable.setId(0, 0)

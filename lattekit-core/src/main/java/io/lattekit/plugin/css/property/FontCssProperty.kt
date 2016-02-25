@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Typeface
 import android.util.TypedValue
-import android.view.Gravity
 import android.widget.TextView
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.FontFamilyValue

@@ -2,14 +2,9 @@ package io.lattekit.plugin.css.property
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.shapes.RoundRectShape
+import io.lattekit.plugin.css.CssAccessory
 import io.lattekit.plugin.css.NodeStyle
-import io.lattekit.plugin.css.declaration.BorderRadius
 import io.lattekit.plugin.css.declaration.BorderValue
-import io.lattekit.plugin.css.declaration.LengthValue
-import io.lattekit.plugin.css.declaration.SingleCornerBorderRadius
-import io.lattekit.plugin.css.getCssAccessory
-import io.lattekit.ui.drawable.BorderDrawable
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -79,7 +74,7 @@ open class BorderCssProperty : CssProperty("border") {
     }
 
     override fun apply(view: NativeView, style: NodeStyle) {
-        var borderDrawable = getCssAccessory(view).borderDrawable
+        var borderDrawable = CssAccessory.getCssAccessory(view).borderDrawable
         borderDrawable.topBorderWidth = borderWidth["border-top"]!!
         borderDrawable.rightBorderWidth = borderWidth["border-right"]!!
         borderDrawable.bottomBorderWidth = borderWidth["border-bottom"]!!

@@ -2,10 +2,9 @@ package io.lattekit.plugin.css.property
 
 import android.content.Context
 import android.graphics.Color
-import android.widget.TextView
+import io.lattekit.plugin.css.CssAccessory
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.ColorValue
-import io.lattekit.plugin.css.getCssAccessory
 import io.lattekit.ui.view.NativeView
 
 /**
@@ -30,7 +29,7 @@ class BackgroundCssProperty : CssProperty("background") {
     }
 
     override fun apply(view: NativeView,style: NodeStyle) {
-        getCssAccessory(view).gradientDrawable.setColors(listOf(backgroundColor, backgroundColor).toIntArray())
+        CssAccessory.getCssAccessory(view).gradientDrawable.setColors(listOf(backgroundColor, backgroundColor).toIntArray())
     }
 }
 

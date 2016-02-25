@@ -2,11 +2,11 @@ package io.lattekit.plugin.css.property
 
 import android.content.Context
 import android.graphics.drawable.shapes.RoundRectShape
+import io.lattekit.plugin.css.CssAccessory
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.BorderRadius
 import io.lattekit.plugin.css.declaration.LengthValue
 import io.lattekit.plugin.css.declaration.SingleCornerBorderRadius
-import io.lattekit.plugin.css.getCssAccessory
 import io.lattekit.ui.drawable.BorderDrawable
 import io.lattekit.ui.view.NativeView
 
@@ -80,7 +80,7 @@ open class BorderRadiusCssProperty : CssProperty("border-radius") {
     }
 
     override fun apply(view: NativeView, style: NodeStyle) {
-        var cssAccessory = getCssAccessory(view)
+        var cssAccessory = CssAccessory.getCssAccessory(view)
 
         var borderDrawable = cssAccessory.borderDrawable
         var context = view.androidView?.context!!
