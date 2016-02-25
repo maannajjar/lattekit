@@ -163,8 +163,8 @@ data class SingleCornerBorderRadius(val valueString : String) : CssValue {
 }
 
 data class BorderRadius(val valueString : String) : CssValue  {
-    val hRadius : MutableList<LengthValue?> = mutableListOf()
-    val vRadius : MutableList<LengthValue?> = mutableListOf()
+    val hRadius : MutableList<LengthValue> = mutableListOf()
+    val vRadius : MutableList<LengthValue> = mutableListOf()
 
     init {
         var values = valueString.trim().split("/");

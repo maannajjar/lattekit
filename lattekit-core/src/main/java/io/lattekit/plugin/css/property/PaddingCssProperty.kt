@@ -35,7 +35,7 @@ open class PaddingCssProperty : CssProperty("padding") {
             paddingRight = values[1].inPixels(context).toInt()
             paddingBottom = values[2].inPixels(context).toInt()
             paddingLeft = values[1].inPixels(context).toInt()
-        } else if (values.size == 3) {
+        } else if (values.size == 4) {
             paddingTop = values[0].inPixels(context).toInt()
             paddingRight = values[1].inPixels(context).toInt()
             paddingBottom = values[2].inPixels(context).toInt()

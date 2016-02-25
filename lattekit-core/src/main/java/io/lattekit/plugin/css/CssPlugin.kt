@@ -14,17 +14,6 @@ class CssPlugin : LattePlugin() {
 
     companion object {
         var PROCESSED = mutableSetOf<LatteView>();
-
-        fun getStyleFor(view : LatteView) : NodeStyle {
-            var style = view.data("latteCssStyle")
-            if (style != null) {
-                return style as NodeStyle
-            } else {
-                style = NodeStyle()
-                view.data("latteCssStyle", style)
-                return style;
-            }
-        }
     }
 
     fun getRoot(view : LatteView) : LatteView {
@@ -37,14 +26,12 @@ class CssPlugin : LattePlugin() {
 
     fun getStylesheetsFor(view : LatteView) : List<Stylesheet> {
         var rootView = getRoot(view)
-        Log.d("LatteCss","ROOT VIEW IS $rootView")
         var stylesheetList = rootView.data("css:stylesheet")
         if (stylesheetList != null && stylesheetList is List<*>) {
             return stylesheetList as List<Stylesheet>;
         } else {
             var stylesheets = mutableListOf<Stylesheet>()
             var cssFiles = rootView.data("css")
-            Log.d("LatteCss","CSS FILE IS $cssFiles")
             if (cssFiles != null) {
                 var files = if (cssFiles is String) { // Single CSS file
                     listOf(cssFiles)
@@ -65,7 +52,7 @@ class CssPlugin : LattePlugin() {
     }
     override fun onPropsUpdated(view: LatteView, oldProps: MutableMap<String,Any?>) {
         if (view is NativeView) {
-            var style = getStyleFor(view)
+            var style = getCssAccessory(view).style
             style.apply(view)
         }
     }

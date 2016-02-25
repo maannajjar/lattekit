@@ -65,7 +65,7 @@ class Stylesheet {
         for ( (selector, declarations) in  allSelectors) {
             var matched = query(selector, listOf(nativeRoot))
             matched.forEach {
-                var style = CssPlugin.getStyleFor(it)
+                var style = getCssAccessory(it).style
                 for ((key,values) in declarations) {
                     style?.addDeclaration(CssDeclaration(selector,key,values))
                 }

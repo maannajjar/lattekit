@@ -39,7 +39,7 @@ open class MarginCssProperty : CssProperty("margin") {
             marginRight = values[1].inPixels(context).toInt()
             marginBottom = values[2].inPixels(context).toInt()
             marginLeft = values[1].inPixels(context).toInt()
-        } else if (values.size == 3) {
+        } else if (values.size == 4) {
             marginTop = values[0].inPixels(context).toInt()
             marginRight = values[1].inPixels(context).toInt()
             marginBottom = values[2].inPixels(context).toInt()
