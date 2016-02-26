@@ -1,5 +1,6 @@
 package io.lattekit.plugin.css
 
+import android.util.Log
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.ui.view.LatteView
@@ -21,7 +22,7 @@ class CssPlugin : LattePlugin() {
     fun findStylesheets(view: LatteView, results: MutableList<Stylesheet>) {
         var stylesheetList = view.data("css:stylesheet")
         if (stylesheetList != null && stylesheetList is List<*>) {
-            results.addAll(stylesheetList as List<Stylesheet>)
+            results.addAll(0,stylesheetList as List<Stylesheet>)
         } else {
             var cssFiles = view.data("css")
             if (cssFiles != null) {
@@ -35,16 +36,16 @@ class CssPlugin : LattePlugin() {
                 }
                 files.forEach {
                     if (it is String) {
-                        results.add(0,Stylesheet.getStylesheet(it))
+                        results.add(Stylesheet.getStylesheet(it))
                     } else if (it is Stylesheet) {
-                        results.add(0,it)
+                        results.add(it)
                     }
                 }
             }
             if (view.parentView != null) {
                 findStylesheets(view.parentView!!, results)
             }
-            view.data("css:stylesheet", results)
+            view.data("css:stylesheet", results.toList())
         }
 
     }

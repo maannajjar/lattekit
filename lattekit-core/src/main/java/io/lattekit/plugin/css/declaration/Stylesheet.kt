@@ -1,5 +1,6 @@
 package io.lattekit.plugin.css.declaration
 
+import android.util.Log
 import com.google.common.base.CaseFormat
 import io.lattekit.plugin.css.CssAccessory
 import io.lattekit.plugin.css.NodeStyle
@@ -35,13 +36,14 @@ open class Stylesheet {
     fun addRuleSet(ruleSet : RuleSet) = ruleSets.add(ruleSet)
 
     fun assignStyles(rootView : LatteView, shouldClear : Boolean = false) {
-        var nativeRoot = getNativeView(rootView)
+        var nativeView = getNativeView(rootView)
         var clearedStyles = mutableSetOf<NodeStyle>()
         for ( ruleSet in  ruleSets) {
             var declarations = ruleSet.declaraions
             ruleSet.selectors.forEach { selectorElements ->
-                var matched = query(selectorElements, listOf(nativeRoot))
-                matched.forEach {
+                var matched = query(selectorElements, listOf(nativeView))
+                // TODO: instead of querying, find only matching rule set
+                matched.filter{ it == nativeView }.forEach {
                     var style = CssAccessory.getCssAccessory(it).style
                     if(shouldClear && !clearedStyles.contains(style)) {
                         style.clearDeclarations()
