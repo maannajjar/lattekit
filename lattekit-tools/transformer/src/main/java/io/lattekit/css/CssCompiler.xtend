@@ -64,19 +64,16 @@ class CssCompiler {
 
     def compile(String packageName, String fileName, List<CssDefinition> definitions) '''
         package «packageName»;
-        import io.lattekit.ui.style.NumberValue;
-        import io.lattekit.ui.style.Style;
         import io.lattekit.plugin.css.declaration.CssValuesKt;
         import io.lattekit.plugin.css.declaration.CssValue;
-        import io.lattekit.plugin.css.CssDeclaration;
-        import io.lattekit.plugin.css.RuleSet;
-        import android.graphics.Color;
+        import io.lattekit.plugin.css.declaration.CssDeclaration;
+        import io.lattekit.plugin.css.declaration.RuleSet;
+        import io.lattekit.plugin.css.declaration.Stylesheet;
         import java.util.ArrayList;
         import java.util.Map;
         import java.util.HashMap;
         import java.util.List;
         import java.util.Arrays;
-        import io.lattekit.ui.style.Stylesheet;
 
         public class «fileName.toClass» extends Stylesheet {
 
@@ -85,29 +82,20 @@ class CssCompiler {
             }
 
             public «fileName.toClass»() {
-                Stylesheet.registerStylesheet("«fileName»",this);
-            }
+                Stylesheet.register("«fileName»",this);
 
-            @Override
-            public List<RuleSet> getRuleSets() {
-                List<RuleSet> ruleSets = new ArrayList<>();
-                List<CssDeclaration> declarations;
+                RuleSet ruleSet;
+
                 «FOR definition: definitions»
-                    declarations = new ArrayList<>();
+                    ruleSet = new RuleSet("«definition.selector»");
                     «FOR child: definition.childNodes»
-                        declarations.add(new CssDeclaration("«child.name»", CssValuesKt.getCssValue("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»)));
+                        ruleSet.addDeclaration(new CssDeclaration("«child.name»", CssValuesKt.getCssValue("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»)));
                     «ENDFOR»
-                    ruleSets.add(new RuleSet("«definition.selector»",declarations));
+                    addRuleSet(ruleSet);
                 «ENDFOR»
-                return ruleSets;
             }
 
-            @Override
-            public void apply(Stylesheet stylesheet) {
-                Style _style;
 
-
-            }
         }
     '''
 

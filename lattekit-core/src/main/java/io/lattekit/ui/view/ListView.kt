@@ -1,6 +1,5 @@
 package io.lattekit.ui.view
 
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
@@ -71,7 +70,6 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
             template.props.put("modelIndex", position);
             template.props.put("model", getItem(position));
             template.parentView = this@ListView
-            template.stylesheet = this@ListView.stylesheet
             var lp = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
             var v = template.buildView(activity!!, lp)
             v.setTag(template)

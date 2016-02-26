@@ -24,7 +24,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-import io.lattekit.ui.style.Stylesheet;
+import io.lattekit.plugin.css.declaration.Stylesheet;
 import io.lattekit.util.Util;
 
 /**
@@ -141,8 +141,6 @@ public class ViewPager extends NativeView {
                     template.getProps().put("modelIndex", Integer.valueOf(position));
                     template.getProps().put("model", item);
                     template.setParentView(ViewPager.this);
-                    Stylesheet _stylesheet = ViewPager.this.getStylesheet();
-                    template.setStylesheet(_stylesheet);
                     return ViewPager.PagerFragment.newInstance(template);
                 } catch (Throwable _e) {
                     throw Exceptions.sneakyThrow(_e);

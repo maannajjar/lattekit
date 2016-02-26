@@ -2,6 +2,7 @@ package io.lattekit.plugin.css
 
 import android.util.Log
 import io.lattekit.plugin.LattePlugin
+import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.ui.view.LatteView
 import io.lattekit.ui.view.NativeView
 
@@ -36,10 +37,7 @@ class CssPlugin : LattePlugin() {
                 } else { emptyList<String>() }
                 files.forEach {
                     Log.d("LatteCss","Loading $it")
-                    var newStylesheet = Stylesheet()
-                    var legacyStylesheet = io.lattekit.ui.style.Stylesheet.getStylesheet(it)
-                    newStylesheet.processCss(legacyStylesheet.ruleSets)
-                    stylesheets.add(newStylesheet)
+                    stylesheets.add(Stylesheet.getStylesheet(it))
                 }
                 rootView.data("css:stylesheet",stylesheets)
             }

@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import io.lattekit.annotation.Prop
 import io.lattekit.plugin.css.CssPlugin
 import io.lattekit.ui.LatteActivity
-import io.lattekit.ui.style.Stylesheet
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 
@@ -165,7 +164,6 @@ open class LatteView {
 
     var children = mutableListOf<LatteView>()
 
-    var stylesheet : Stylesheet = Stylesheet();
     var objectId : String? = null;
     var activity : Activity? = null
     var childrenProc : ChildrenProc? = null
@@ -312,7 +310,6 @@ open class LatteView {
         copy.children = mutableListOf()
         children.forEach { copy.children.add(it.copy()) }
         copy.viewType = viewType
-        copy.stylesheet = stylesheet;
         return copy;
     }
 
@@ -381,7 +378,6 @@ open class LatteView {
 
         var renderMe = this.renderImpl()
         if (renderMe != null) {
-            renderMe.stylesheet = this.stylesheet
             newRenderedViews.add(renderMe)
         }
         if (this is NativeViewGroup) {
@@ -408,7 +404,6 @@ open class LatteView {
                     var recycledOldView = getRecycledView(newView)
                     if (recycledOldView != null) {
                         recycledOldView.parentView = this
-                        recycledOldView.stylesheet = this.stylesheet
                         recycledOldView.children = newView.children
                         recycledOldView.props = newView.props
                         recycledOldView.isMounted = false
@@ -416,7 +411,6 @@ open class LatteView {
                         newRenderedViews[i] = recycledOldView
                     } else {
                         newView.parentView = this
-                        newView.stylesheet = this.stylesheet
                         newView.renderTree()
                     }
                 }
@@ -424,7 +418,6 @@ open class LatteView {
                 var recycledOldView = getRecycledView(newView)
                 if (recycledOldView != null) {
                     recycledOldView.parentView = this
-                    recycledOldView.stylesheet = this.stylesheet
                     recycledOldView.children = newView.children
                     recycledOldView.props = newView.props
                     recycledOldView.isMounted = false
@@ -432,7 +425,6 @@ open class LatteView {
                     newRenderedViews[i] = recycledOldView
                 } else {
                     newView.parentView = this
-                    newView.stylesheet = this.stylesheet
                     newView.renderTree()
                 }
             }
@@ -454,10 +446,6 @@ open class LatteView {
 
     open fun render() : String {
         return ""
-    }
-
-    fun loadStylesheet(vararg stylesheets : Stylesheet) {
-        stylesheets.forEach{ it -> it.apply(this.stylesheet) };
     }
 
 

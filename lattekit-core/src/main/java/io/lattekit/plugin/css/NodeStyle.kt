@@ -1,6 +1,6 @@
 package io.lattekit.plugin.css
 
-import io.lattekit.plugin.css.declaration.CssValue
+import io.lattekit.plugin.css.declaration.CssDeclaration
 import io.lattekit.plugin.css.property.*
 import io.lattekit.ui.view.NativeView
 import java.util.*
@@ -9,13 +9,10 @@ import java.util.*
  * Created by maan on 2/22/16.
  */
 
-data class CssDeclaration(val propertyName : String, val value: CssValue) {
-    var index : Int = 0
-    var selector: List<String>? = null
-}
+
 class NodeStyle {
     var properties = mutableMapOf<String,CssProperty>()
-    var declarations = LinkedHashMap<String,CssDeclaration>()
+    var declarations = LinkedHashMap<String, CssDeclaration>()
     var allDeclarations = mutableMapOf<String,MutableList<CssDeclaration>>()
 
 
