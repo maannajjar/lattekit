@@ -40,6 +40,11 @@ class NodeStyle {
         }
     }
 
+    fun clearDeclarations() {
+        declarations.clear()
+        allDeclarations.clear()
+
+    }
     fun addDeclaration(declaration : CssDeclaration) {
         var propertyDeclarations = allDeclarations.getOrPut(declaration.propertyName, { mutableListOf<CssDeclaration>() } )
         propertyDeclarations.add(declaration)

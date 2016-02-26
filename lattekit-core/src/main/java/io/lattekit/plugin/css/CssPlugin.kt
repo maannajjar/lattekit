@@ -11,11 +11,7 @@ import io.lattekit.ui.view.NativeView
 
 
 class CssPlugin : LattePlugin() {
-
-    companion object {
-        var PROCESSED = mutableSetOf<LatteView>();
-    }
-
+    
     fun getRoot(view : LatteView) : LatteView {
         if (view.parentView == null) {
             return view
@@ -50,26 +46,20 @@ class CssPlugin : LattePlugin() {
             return stylesheets
         }
     }
+
     override fun onPropsUpdated(view: LatteView, oldProps: MutableMap<String,Any?>) {
         if (view is NativeView) {
-            var style = CssAccessory.getCssAccessory(view).style
-            style.apply(view)
+            getStylesheetsFor(view).forEachIndexed { i, s -> s.assignStyles(view, i == 0) }
+            CssAccessory.getCssAccessory(view).style.apply(view)
         }
     }
 
     override fun onViewMounted(view: LatteView) {
         if (view is NativeView) {
-            if (!PROCESSED.contains(view)) {
-                PROCESSED.add(view)
-                getStylesheetsFor(view).forEach{ it.assignStyles(view) }
-            }
-            onPropsUpdated(view, view.props)
+            getStylesheetsFor(view).forEachIndexed { i, s -> s.assignStyles(view, i == 0) }
+            CssAccessory.getCssAccessory(view).style.apply(view)
         }
     }
-
-    override fun onViewWillMount(view: LatteView) {
-    }
-
 }
 
 

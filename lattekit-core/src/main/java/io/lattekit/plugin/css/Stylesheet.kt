@@ -10,6 +10,13 @@ import java.util.regex.Pattern
 /**
  * Created by maan on 2/22/16.
  */
+fun getNativeView(view : LatteView) : NativeView {
+    if (view is NativeView) {
+        return view
+    }
+    return getNativeView(view.renderedViews[0])
+}
+
 class Stylesheet {
     companion object {
         val TOKENS_RE = Pattern.compile("""((?:\.|#)?[^>\s\.#:]+|:|\s*>\s*|\s+)""")
@@ -45,12 +52,6 @@ class Stylesheet {
     }
 
 
-    fun getNativeView(view : LatteView) : NativeView {
-        if (view is NativeView) {
-            return view
-        }
-        return getNativeView(view.renderedViews[0])
-    }
 
     fun getDirectChildren(view : NativeView) : List<NativeView> {
         if (view is NativeViewGroup) {
@@ -59,13 +60,16 @@ class Stylesheet {
         return emptyList()
     }
 
-    fun assignStyles(rootView : LatteView) {
+    fun assignStyles(rootView : LatteView, shouldClear : Boolean = false) {
         var nativeRoot = getNativeView(rootView)
 
         for ( (selector, declarations) in  allSelectors) {
             var matched = query(selector, listOf(nativeRoot))
             matched.forEach {
                 var style = CssAccessory.getCssAccessory(it).style
+                if(shouldClear) {
+                    style.clearDeclarations()
+                }
                 for ((key,values) in declarations) {
                     style?.addDeclaration(CssDeclaration(selector,key,values))
                 }
@@ -88,10 +92,15 @@ class Stylesheet {
                 currentViews = childViews.toList()
             } else {
                 var selectedViews = mutableListOf<NativeView>()
-                currentViews.forEach{
+                currentViews.forEach {
                     var native = getNativeView(it)
                     if (elMatches(el, native)) {
                         selectedViews.add(native)
+                    }
+                    native.renderedViews.forEach {
+                        query(listOf(el), listOf(getNativeView(it))).forEach {
+                            selectedViews.add(it)
+                        }
                     }
                 }
                 currentViews = selectedViews.toList()

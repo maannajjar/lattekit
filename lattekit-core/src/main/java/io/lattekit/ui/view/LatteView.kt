@@ -232,6 +232,7 @@ open class LatteView {
     fun handleStateChanged() {
         this.renderTree()
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
+        PLUGINS.forEach { it.onViewRendered(this) }
     }
 
     fun data(key : String) : Any? {
@@ -280,12 +281,11 @@ open class LatteView {
             if (this.androidView?.layoutParams == null) {
                 this.androidView?.layoutParams = lp;
             }
-            if (!isMounted) {
-                notifyMounted();
-            }
-
             if (this is NativeViewGroup) {
                 this.mountChildren()
+            }
+            if (!isMounted) {
+                notifyMounted();
             }
             return this.androidView!!
         } else {
@@ -397,8 +397,8 @@ open class LatteView {
                 if (sameView(oldView, newView)) {
                     var oldProps = oldView.props
                     oldView.children = newView.children
-                    PLUGINS.forEach { it.onPropsUpdated(oldView,oldView.props) }
                     oldView.props = newView.props
+                    PLUGINS.forEach { it.onPropsUpdated(oldView,oldView.props) }
                     if (oldView.onPropsUpdated(oldProps)) {
                         oldView.renderTree()
                     }
@@ -444,6 +444,7 @@ open class LatteView {
         }
 
         this.renderedViews = newRenderedViews;
+
     }
 
 
