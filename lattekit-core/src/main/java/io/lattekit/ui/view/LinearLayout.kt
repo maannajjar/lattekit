@@ -9,7 +9,7 @@ import android.view.ViewGroup
 class LinearLayout : NativeViewGroup() {
 
     var orientation : String? = null
-        get() =  props.get("orientation") as String
+        get() =  (props.get("orientation") ?: "vertical" ) as String
 
     override fun applyProps() {
         super.applyProps()
