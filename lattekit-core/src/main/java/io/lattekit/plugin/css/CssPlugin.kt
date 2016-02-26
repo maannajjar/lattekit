@@ -1,6 +1,5 @@
 package io.lattekit.plugin.css
 
-import android.util.Log
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.ui.view.LatteView
@@ -12,45 +11,45 @@ import io.lattekit.ui.view.NativeView
 
 
 class CssPlugin : LattePlugin() {
-    
-    fun getRoot(view : LatteView) : LatteView {
-        if (view.parentView == null) {
-            return view
-        } else {
-            return getRoot(view.parentView!!)
-        }
+
+    fun getStylesheetsFor(view: LatteView): List<Stylesheet> {
+        var results = mutableListOf<Stylesheet>()
+        findStylesheets(view, results)
+        return results;
     }
 
-    fun getStylesheetsFor(view : LatteView) : List<Stylesheet> {
-        var rootView = getRoot(view)
-        var stylesheetList = rootView.data("css:stylesheet")
+    fun findStylesheets(view: LatteView, results: MutableList<Stylesheet>) {
+        var stylesheetList = view.data("css:stylesheet")
         if (stylesheetList != null && stylesheetList is List<*>) {
-            return stylesheetList as List<Stylesheet>;
+            results.addAll(stylesheetList as List<Stylesheet>)
         } else {
-            var stylesheets = mutableListOf<Stylesheet>()
-            var cssFiles = rootView.data("css")
+            var cssFiles = view.data("css")
             if (cssFiles != null) {
-                var files = if (cssFiles is String) { // Single CSS file
+                var files = if (cssFiles is String) {
+                    // Single CSS file
                     listOf(cssFiles)
                 } else if (cssFiles is List<*>) {
                     cssFiles as List<*>
-                } else { emptyList<String>() }
-                files.forEach {
-                    Log.d("LatteCss","Loading $it")
-                    if (it is String) {
-                        stylesheets.add(Stylesheet.getStylesheet(it))
-                    } else if (it is Stylesheet) {
-                        stylesheets.add(it)
-                    }
-
+                } else {
+                    emptyList<String>()
                 }
-                rootView.data("css:stylesheet",stylesheets)
+                files.forEach {
+                    if (it is String) {
+                        results.add(0,Stylesheet.getStylesheet(it))
+                    } else if (it is Stylesheet) {
+                        results.add(0,it)
+                    }
+                }
             }
-            return stylesheets
+            if (view.parentView != null) {
+                findStylesheets(view.parentView!!, results)
+            }
+            view.data("css:stylesheet", results)
         }
+
     }
 
-    override fun onPropsUpdated(view: LatteView, oldProps: MutableMap<String,Any?>) {
+    override fun onPropsUpdated(view: LatteView, oldProps: MutableMap<String, Any?>) {
         if (view is NativeView) {
             getStylesheetsFor(view).forEachIndexed { i, s -> s.assignStyles(view, i == 0) }
             CssAccessory.getCssAccessory(view).style.apply(view)
