@@ -237,7 +237,7 @@ open class LatteView {
         return dataValues.get(key)
     }
 
-    fun data(key : String, value : Any?) : Any? {
+    inline fun data(key : String, value : Any?) : Any? {
         dataValues.put(key,value)
         return value
     }

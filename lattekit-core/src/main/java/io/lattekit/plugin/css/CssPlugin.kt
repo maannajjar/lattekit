@@ -33,11 +33,16 @@ class CssPlugin : LattePlugin() {
                 var files = if (cssFiles is String) { // Single CSS file
                     listOf(cssFiles)
                 } else if (cssFiles is List<*>) {
-                    cssFiles as List<String>
+                    cssFiles as List<*>
                 } else { emptyList<String>() }
                 files.forEach {
                     Log.d("LatteCss","Loading $it")
-                    stylesheets.add(Stylesheet.getStylesheet(it))
+                    if (it is String) {
+                        stylesheets.add(Stylesheet.getStylesheet(it))
+                    } else if (it is Stylesheet) {
+                        stylesheets.add(it)
+                    }
+
                 }
                 rootView.data("css:stylesheet",stylesheets)
             }

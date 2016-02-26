@@ -89,7 +89,7 @@ class CssCompiler {
                 «FOR definition: definitions»
                     ruleSet = new RuleSet("«definition.selector»");
                     «FOR child: definition.childNodes»
-                        ruleSet.addDeclaration(new CssDeclaration("«child.name»", CssValuesKt.getCssValue("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»)));
+                        ruleSet.add("«child.name»", «IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»);
                     «ENDFOR»
                     addRuleSet(ruleSet);
                 «ENDFOR»

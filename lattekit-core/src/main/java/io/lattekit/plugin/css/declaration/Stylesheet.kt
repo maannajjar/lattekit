@@ -11,9 +11,6 @@ import io.lattekit.ui.view.LatteView
  * Created by maan on 2/22/16.
  */
 
-
-
-
 open class Stylesheet {
 
     companion object {
