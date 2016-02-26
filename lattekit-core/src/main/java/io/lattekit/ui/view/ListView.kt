@@ -1,5 +1,6 @@
 package io.lattekit.ui.view
 
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
@@ -84,7 +85,20 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
         return props.get("data") as List<*>;
     }
 
-
+    fun getModelIndex(view : LatteView) : Int {
+        var topMost : LatteView? = view;
+        while (topMost != null ) {
+            topMost = topMost.parentView;
+            if (topMost?.parentView == this) {
+                break
+            }
+        }
+        if (topMost == null) {
+            return -1;
+        }  else {
+            return topMost.props.get("modelIndex") as Int
+        }
+    }
     fun getDividerHeight(): Int {
         if (this.props.containsKey("dividerHeight")) {
             return this.props.get("dividerHeight") as Int

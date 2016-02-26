@@ -10,11 +10,14 @@ import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.lattekit.plugin.css.declaration.CssValue;
+import io.lattekit.plugin.css.CssDeclaration;
+import io.lattekit.plugin.css.RuleSet;
 
 @SuppressWarnings("all")
 public class Stylesheet {
@@ -26,10 +29,9 @@ public class Stylesheet {
         Stylesheet.styleSheets.put(fileName, stylesheet);
     }
 
-    public Map<String, Map<String,CssValue>> getRuleSets() {
-        return new HashMap<>();
+    public List<RuleSet> getRuleSets() {
+        return new ArrayList<>();
     }
-
     public static Stylesheet getStylesheet(final String fileName) {
         try {
             String[] parts = fileName.split("/");
