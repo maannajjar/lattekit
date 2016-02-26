@@ -16,6 +16,8 @@ open class DisplayCssProperty : CssProperty("display") {
         var declaration = style.getDeclaration("display")
         if (declaration != null) {
             display = (declaration.value as StringValue).valueString;
+        } else {
+            display = "block";
         }
     }
 

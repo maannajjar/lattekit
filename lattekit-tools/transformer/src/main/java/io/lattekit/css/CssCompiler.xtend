@@ -68,6 +68,8 @@ class CssCompiler {
         import io.lattekit.ui.style.Style;
         import io.lattekit.plugin.css.declaration.CssValuesKt;
         import io.lattekit.plugin.css.declaration.CssValue;
+        import io.lattekit.plugin.css.CssDeclaration;
+        import io.lattekit.plugin.css.RuleSet;
         import android.graphics.Color;
         import java.util.ArrayList;
         import java.util.Map;
@@ -87,15 +89,15 @@ class CssCompiler {
             }
 
             @Override
-            public Map<String,Map<String,CssValue>> getRuleSets() {
-                Map<String,Map<String,CssValue>> ruleSets = new HashMap<>();
-                Map<String,CssValue> ruleSet;
+            public List<RuleSet> getRuleSets() {
+                List<RuleSet> ruleSets = new ArrayList<>();
+                List<CssDeclaration> declarations;
                 «FOR definition: definitions»
-                    ruleSet = new HashMap<>();
+                    declarations = new ArrayList<>();
                     «FOR child: definition.childNodes»
-                        ruleSet.put("«child.name»",CssValuesKt.getCssValue("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»));
+                        declarations.add(new CssDeclaration("«child.name»", CssValuesKt.getCssValue("«child.name»",«IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»)));
                     «ENDFOR»
-                    ruleSets.put("«definition.selector»",ruleSet);
+                    ruleSets.add(new RuleSet("«definition.selector»",declarations));
                 «ENDFOR»
                 return ruleSets;
             }

@@ -9,8 +9,9 @@ import java.util.*
  * Created by maan on 2/22/16.
  */
 
-data class CssDeclaration(val selector: List<String>, val propertyName : String, val value: CssValue) {
+data class CssDeclaration(val propertyName : String, val value: CssValue) {
     var index : Int = 0
+    var selector: List<String>? = null
 }
 class NodeStyle {
     var properties = mutableMapOf<String,CssProperty>()

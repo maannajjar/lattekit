@@ -1,8 +1,8 @@
 package io.lattekit.plugin.css
 
 import android.content.res.Resources
-import io.lattekit.plugin.css.declaration.CssValue
 import io.lattekit.ui.view.LatteView
+import io.lattekit.ui.view.ListView
 import io.lattekit.ui.view.NativeView
 import io.lattekit.ui.view.NativeViewGroup
 import java.util.regex.Pattern
@@ -17,18 +17,88 @@ fun getNativeView(view : LatteView) : NativeView {
     return getNativeView(view.renderedViews[0])
 }
 
+val TOKENS_RE = Pattern.compile("""((?:\.|#|:)?[^>\s\.#:]+|:|\s*>\s*|\s+)""")
+
+data class RuleSet ( val selectorString : String, val declaraions: List<CssDeclaration>) {
+    val selectors  : MutableList<List<String>> = mutableListOf()
+    init {
+
+        selectorString.split(",").forEach {
+            var matcher = TOKENS_RE.matcher(it)
+            var selectorElements = mutableListOf<String>()
+            while (matcher.find()) {
+                var el = matcher.group().trim()
+                if (el == "" && selectorElements.isEmpty()) {
+                } else {
+                    selectorElements.add(el)
+                }
+            }
+            selectors.add(selectorElements)
+        }
+    }
+}
+
 class Stylesheet {
     companion object {
-        val TOKENS_RE = Pattern.compile("""((?:\.|#)?[^>\s\.#:]+|:|\s*>\s*|\s+)""")
+        val TOKENS_RE = Pattern.compile("""((?:\.|#|:)?[^>\s\.#:]+|:|\s*>\s*|\s+)""")
     }
 
-    var classesSelectors = mutableMapOf<String,Pair<MutableList<String>,Map<String,CssValue>>>()
-    var idsSelectors = mutableMapOf<String,Pair<MutableList<String>,Map<String,CssValue>>>()
-    var allSelectors = mutableMapOf<MutableList<String>,Map<String,CssValue>>()
+    var allSelectors  = listOf<RuleSet>()
+
+    fun getParentNativeViewGroup(view : LatteView) : NativeView? {
+        if (view.parentView == null) {
+            return null;
+        } else if (view.parentView is ListView) {
+            return view.parentView as ListView
+        } else if (view.parentView is NativeViewGroup) {
+            return view.parentView as NativeViewGroup
+        } else {
+            return getParentNativeViewGroup(view.parentView!!)
+        }
+    }
+
+    fun testNthChild(index : Int, view : NativeView) : Boolean {
+        var parentGroup = getParentNativeViewGroup(view);
+        return if (parentGroup is NativeViewGroup ) {
+            parentGroup?.managedViews?.getOrNull(index) == view.androidView
+        } else if (parentGroup is ListView ) {
+            parentGroup.getModelIndex(view) == index
+        } else {
+            false
+        }
+    }
+
+    fun testLastChild(view : NativeView) : Boolean {
+        var parentGroup = getParentNativeViewGroup(view);
+        return if (parentGroup is NativeViewGroup ) {
+            parentGroup?.managedViews?.last() == view.androidView
+        } else if (parentGroup is ListView ) {
+            parentGroup.getModelIndex(view) == parentGroup.getData().size-1
+        } else {
+            false
+        }
+    }
 
 
-    fun elMatches(elName : String, view : LatteView) : Boolean {
-        if (elName.startsWith("#")) {
+    fun elMatches(elName : String, view : NativeView) : Boolean {
+        if (elName.startsWith(":")) {
+            var pseudo = elName.substring(1)
+            return when(pseudo) {
+                "first-child" -> testNthChild(0, view)
+                "last-child" -> testLastChild(view)
+                else -> if (pseudo.startsWith("nth-child")) {
+                    // TODO: optimize and accept series an+b
+                    var index = Regex("""nth-child\(\s*(\d+)\s*\)""").matchEntire(pseudo)?.groupValues?.getOrNull(1)
+                    if ( index != null && index != "" ) {
+                        testNthChild(index.toInt(),view)
+                    } else {
+                        false
+                    }
+                } else {
+                    true
+                }
+            }
+        } else if (elName.startsWith("#")) {
             try {
                 var viewId = view.androidView?.getResources()?.getResourceName(view.androidView?.id!!)
                 if ("#"+viewId == elName) {
@@ -62,16 +132,21 @@ class Stylesheet {
 
     fun assignStyles(rootView : LatteView, shouldClear : Boolean = false) {
         var nativeRoot = getNativeView(rootView)
-
-        for ( (selector, declarations) in  allSelectors) {
-            var matched = query(selector, listOf(nativeRoot))
-            matched.forEach {
-                var style = CssAccessory.getCssAccessory(it).style
-                if(shouldClear) {
-                    style.clearDeclarations()
-                }
-                for ((key,values) in declarations) {
-                    style?.addDeclaration(CssDeclaration(selector,key,values))
+        var clearedStyles = mutableSetOf<NodeStyle>()
+        for ( ruleSet in  allSelectors) {
+            var declarations = ruleSet.declaraions
+            ruleSet.selectors.forEach { selectorElements ->
+                var matched = query(selectorElements, listOf(nativeRoot))
+                matched.forEach {
+                    var style = CssAccessory.getCssAccessory(it).style
+                    if(shouldClear && !clearedStyles.contains(style)) {
+                        style.clearDeclarations()
+                        clearedStyles.add(style)
+                    }
+                    for (declaration in declarations) {
+                        declaration.selector = selectorElements;
+                        style?.addDeclaration(declaration)
+                    }
                 }
             }
         }
@@ -90,6 +165,8 @@ class Stylesheet {
                     childViews.addAll(getDirectChildren(it))
                 }
                 currentViews = childViews.toList()
+            } else if (el.startsWith(":")){
+                currentViews = currentViews.filter { elMatches(el,it) }
             } else {
                 var selectedViews = mutableListOf<NativeView>()
                 currentViews.forEach {
@@ -111,30 +188,8 @@ class Stylesheet {
     }
 
 
-    fun processCss(ruleSets : Map<String, Map<String,CssValue>>) {
-        for ((selectorGroup, declarations) in ruleSets) {
-            selectorGroup.split(",").forEach { selector ->
-
-                var matcher = TOKENS_RE.matcher(selector)
-                var selectorElements = mutableListOf<String>()
-                var isHashed = false
-                while (matcher.find()) {
-                    var el = matcher.group().trim()
-                    if (el == "" && selectorElements.isEmpty()) {
-                    } else {
-                        if (el.startsWith("#")) {
-                            isHashed = true
-                            idsSelectors.put(el,Pair(selectorElements,declarations));
-                        } else if (el.startsWith(".")) {
-                            isHashed = true
-                            classesSelectors.put(el,Pair(selectorElements,declarations));
-                        }
-                        selectorElements.add(el)
-                    }
-                }
-                allSelectors.put(selectorElements,declarations)
-            }
-        }
+    fun processCss(ruleSets :  List<RuleSet>) {
+        allSelectors = ruleSets
     }
 }
 

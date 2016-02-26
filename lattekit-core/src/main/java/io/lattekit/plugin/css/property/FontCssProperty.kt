@@ -24,6 +24,7 @@ class FontCssProperty : CssProperty("font-family") {
 
     override fun computeValue(context: Context, view: NativeView ,style : NodeStyle) {
         initFonts(view.activity!!)
+        typeface = Typeface.DEFAULT
         var declarations = style.getDeclarations("font","font-family","font-style","font-weight","font-size")
         declarations.forEach {
             if (it.value is FontFamilyValue) {
