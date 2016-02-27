@@ -98,7 +98,7 @@ open class LatteView {
 
         @JvmStatic
         fun createLayout( viewType : String , props: MutableMap<String,Any?> ) : LatteView {
-            return createLayout(mutableListOf(), viewType, props, ChildrenProc { mutableListOf() })
+            return createLayout(mutableListOf(), viewType, props, ChildrenProc {  })
         }
 
         @JvmStatic
@@ -133,11 +133,11 @@ open class LatteView {
             log("Found class " + clazz)
             if (ViewGroup::class.java.isAssignableFrom(clazz)) {
                 layout = NativeViewGroup();
-                (layout as NativeViewGroup).nativeViewClass = clazz as Class<out View>
+                layout.nativeViewClass = clazz as Class<out View>
                 viewType = clazz.name
             } else if (View::class.java.isAssignableFrom(clazz)) {
                 layout = NativeView();
-                (layout as NativeView).nativeViewClass = clazz as Class<out View>
+                layout.nativeViewClass = clazz as Class<out View>
                 viewType = clazz.name
             } else {
                 layout = clazz.newInstance() as LatteView;
@@ -146,8 +146,8 @@ open class LatteView {
 
             layout.viewType = viewType;
             layout.props = props;
-            layout.childrenProc = childrenProc;
-            layout.children = layout.childrenProc?.apply() as MutableList<LatteView>
+            layout.children = mutableListOf()
+            childrenProc?.apply(layout)
 
             return layout
         }
@@ -166,7 +166,6 @@ open class LatteView {
 
     var objectId : String? = null;
     var activity : Activity? = null
-    var childrenProc : ChildrenProc? = null
     var isMounted : Boolean = false;
 
     var dataValues  = mutableMapOf<String,Any?>()
@@ -370,7 +369,9 @@ open class LatteView {
         }
         return false;
     }
-
+    fun addChild(child : LatteView) {
+        children.add(child)
+    }
     fun renderTree() {
         var newRenderedViews  = mutableListOf<LatteView>()
 

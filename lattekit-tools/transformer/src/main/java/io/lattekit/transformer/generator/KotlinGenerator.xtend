@@ -44,15 +44,13 @@ class KotlinGenerator extends BaseGenerator {
     override String compile(Tag tag) '''
     «IF tag.parentTag == null»
     override fun renderImpl() : LatteView? {
-        return «ENDIF» LatteView.createLayout(«getFirstParams(tag)», LatteView.props(«tag.props.map[compile].join(",")»),  io.lattekit.ui.view.ChildrenProc { ->
-            val myChildren = mutableListOf<LatteView>();
+        return «ENDIF» LatteView.createLayout(«getFirstParams(tag)», LatteView.props(«tag.props.map[compile].join(",")»), io.lattekit.ui.view.ChildrenProc { it : LatteView ->
             «FOR child : tag.childNodes»
                 «IF child instanceof TextNode»«child.text»«ENDIF»
                 «IF child instanceof Tag»
-                    myChildren.add(«child.compile»);
+                    it.addChild(«child.compile»);
                 «ENDIF»
             «ENDFOR»
-            myChildren;
         })
     «IF tag.parentTag == null»
     }
