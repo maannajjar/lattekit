@@ -37,22 +37,19 @@ class KotlinGenerator extends BaseGenerator {
     «ENDFOR»
     '''
 
-    def getFirstParams(Tag tag) {
-        return '''"«tag.name»"'''
-    }
+
 
     override String compile(Tag tag) '''
     «IF tag.parentTag == null»
-    override fun renderImpl() : LatteView? {
-        return «ENDIF» LatteView.createLayout(«getFirstParams(tag)», LatteView.props(«tag.props.map[compile].join(",")»), io.lattekit.ui.view.ChildrenProc { it : LatteView ->
+    override fun renderImpl() {
+        render(«ENDIF»LatteView.createLayout(LatteView.lookupClass("«tag.name»"), LatteView.props(«tag.props.map[compile].join(",")»), io.lattekit.ui.view.ChildrenProc { it : LatteView ->
             «FOR child : tag.childNodes»
                 «IF child instanceof TextNode»«child.text»«ENDIF»
                 «IF child instanceof Tag»
                     it.addChild(«child.compile»);
                 «ENDIF»
-            «ENDFOR»
-        })
-    «IF tag.parentTag == null»
+            «ENDFOR»})
+    «IF tag.parentTag == null»)
     }
     «ENDIF»
     '''
