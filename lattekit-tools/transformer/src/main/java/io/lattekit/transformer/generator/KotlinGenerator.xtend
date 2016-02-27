@@ -12,7 +12,7 @@ import java.util.regex.Pattern
 
 class KotlinGenerator extends BaseGenerator {
 
-    val static TOKENS_RE = Pattern.compile('''(class\s+([^\s]*)\s*(?:(:)\s+([^\n]*)\s*)\{|(?:override\s+fun|fun)\s+render\(\)+\s+=\s+"""((?:(?!""")[\S\s])*)"""|("""|'|")(?:(?=(\\?))\7[\S\s])*?\6|(\/\*)(?:(?=(\\?))\9[\S\s])*?\*\/|\/\/.*|[\S\s])''');
+    val static TOKENS_RE = Pattern.compile('''(class\s+([^\s]*)\s*(?:(:)\s+([^\n]*)\s*)\{|render\(\s*"""((?:(?!""")[\S\s])*)"""\s*\)|("""|'|")(?:(?=(\\?))\7[\S\s])*?\6|(\/\*)(?:(?=(\\?))\9[\S\s])*?\*\/|\/\/.*|[\S\s])''');
 
     override getTokensPattern() {
         return TOKENS_RE
@@ -41,17 +41,15 @@ class KotlinGenerator extends BaseGenerator {
 
     override String compile(Tag tag) '''
     «IF tag.parentTag == null»
-    override fun renderImpl() {
         render(«ENDIF»LatteView.createLayout(LatteView.lookupClass("«tag.name»"), LatteView.props(«tag.props.map[compile].join(",")»), io.lattekit.ui.view.ChildrenProc { it : LatteView ->
             «FOR child : tag.childNodes»
                 «IF child instanceof TextNode»«child.text»«ENDIF»
                 «IF child instanceof Tag»
                     it.addChild(«child.compile»);
                 «ENDIF»
-            «ENDFOR»})
-    «IF tag.parentTag == null»)
-    }
-    «ENDIF»
+            «ENDFOR»
+        })
+    «IF tag.parentTag == null»)«ENDIF»
     '''
 
 

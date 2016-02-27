@@ -135,10 +135,10 @@ open class LatteView {
             }  else if (NativeView::class.java.isAssignableFrom(clazz)) {
                 layout = clazz.newInstance() as LatteView;
             }  else {
-                var implClass =  if (clazz.name.contains("DiggApp")) {
-                    Class.forName(clazz.name)
-                } else {
+                var implClass =  try {
                     Class.forName(clazz.name + "Impl")
+                } catch(ex : ClassNotFoundException ) {
+                    clazz
                 }
                 layout = implClass.newInstance() as LatteView;
             }
@@ -166,6 +166,8 @@ open class LatteView {
     var isMounted: Boolean = false;
 
     var dataValues = mutableMapOf<String, Any?>()
+
+    var layoutFn : Runnable? = null
 
     val propFields: MutableMap<String, Field>
         get() {
@@ -357,9 +359,6 @@ open class LatteView {
         }
     }
 
-    open fun renderImpl() {
-    }
-
 
     fun sameView(leftView: LatteView, rightView: LatteView): Boolean {
         if (leftView.javaClass == rightView.javaClass) {
@@ -378,6 +377,10 @@ open class LatteView {
 
     fun addChild(child: LatteView) {
         children.add(child)
+    }
+
+    fun render(string : String) {
+
     }
 
     fun render(newView : LatteView) {
@@ -430,10 +433,14 @@ open class LatteView {
         this.props.put(str,value)
     }
 
+    open fun layout() {
+        this.layoutFn?.run()
+    }
+
     fun renderTree() {
         newRenderedViews = mutableListOf()
         injectProps()
-        this.renderImpl()
+        this.layout()
         if (this is NativeViewGroup) {
             for (child in this.children) {
                 render(child)
@@ -451,10 +458,6 @@ open class LatteView {
 
     open fun onPropsUpdated(props: Map<String, Any?>): Boolean {
         return true;
-    }
-
-    open fun render(): String {
-        return ""
     }
 
 }
