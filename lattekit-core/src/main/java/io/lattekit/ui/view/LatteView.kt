@@ -3,9 +3,11 @@ package io.lattekit.ui.view
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.support.v4.widget.DrawerLayout
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toolbar
 import io.lattekit.annotation.Prop
 import io.lattekit.plugin.css.CssPlugin
 import io.lattekit.ui.LatteActivity
@@ -71,6 +73,7 @@ open class LatteView {
             }
             return null;
         }
+
 
         @JvmStatic
         fun props(vararg objects: Any?): MutableMap<String, Any?> {
@@ -365,26 +368,7 @@ open class LatteView {
         return false;
     }
 
-    fun add(clazz: KClass<*>, props: MutableMap<String,Any?>) : LatteView {
-        var view = LatteView.createLayout(clazz.java,props, ChildrenProc { it-> });
-        addChild(view)
-        return view;
-    }
-    fun add(clazz: KClass<*>, props: MutableMap<String,Any?>, init: LatteView.() -> Unit) : LatteView {
-        var view = LatteView.createLayout(clazz.java,props, ChildrenProc { it->
-            it.init()
-        })
-        addChild(view)
-        return view
-    }
-
-    fun add(clazz: KClass<*>)  : LatteView{
-        var view = LatteView.createLayout(clazz.java,mutableMapOf(), ChildrenProc { it-> })
-        addChild(view)
-        return view;
-    }
-
-    fun add(clazz: KClass<*>,  init: LatteView.() -> Unit) : LatteView {
+    inline fun register(clazz: KClass<*>,  crossinline init: LatteView.() -> Unit) : LatteView {
         var view = LatteView.createLayout(clazz.java,mutableMapOf(), ChildrenProc { it->
             it.init()
         })
@@ -442,6 +426,10 @@ open class LatteView {
         }
     }
 
+    fun prop(str : String, value : Any) {
+        this.props.put(str,value)
+    }
+
     fun renderTree() {
         newRenderedViews = mutableListOf()
         injectProps()
@@ -461,7 +449,7 @@ open class LatteView {
     }
 
 
-    open fun onPropsUpdated(props: MutableMap<String, Any?>): Boolean {
+    open fun onPropsUpdated(props: Map<String, Any?>): Boolean {
         return true;
     }
 
@@ -469,5 +457,9 @@ open class LatteView {
         return ""
     }
 
-
 }
+
+
+inline fun LatteView.DrawerLayout(noinline init: LatteView.() -> Unit = {}) = register(DrawerLayout::class,init);
+inline fun LatteView.LinearLayout(noinline init: LatteView.() -> Unit = {}) = register(LinearLayout::class,init);
+inline fun LatteView.Toolbar(noinline init: LatteView.() -> Unit = {}) = register(Toolbar::class,init);
