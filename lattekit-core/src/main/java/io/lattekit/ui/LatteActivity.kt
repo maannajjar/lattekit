@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.support.v4.app.FragmentActivity
 import android.view.View
 import android.widget.FrameLayout
+import io.lattekit.Latte
 import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.ui.view.LatteView
 
@@ -21,7 +22,7 @@ class LatteActivity : FragmentActivity()  {
         var myId = getIntent().getStringExtra("_LATTE_KIT_OBJ_ID");
 
         if (myId != null) {
-            latteView = LatteView.getSavedObject(myId)
+            latteView = Latte.getSavedObject(myId)
             androidView = latteView?.buildView(this, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
             setContentView(androidView);
         }

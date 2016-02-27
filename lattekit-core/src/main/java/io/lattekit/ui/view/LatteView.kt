@@ -3,92 +3,23 @@ package io.lattekit.ui.view
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.support.v4.widget.DrawerLayout
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toolbar
+import io.lattekit.Latte
 import io.lattekit.annotation.Prop
-import io.lattekit.plugin.css.CssPlugin
 import io.lattekit.ui.LatteActivity
-import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import kotlin.reflect.KClass
 
 /**
  * Created by maan on 2/15/16.
  */
+
+
 open class LatteView {
 
     companion object {
-        var PLUGINS = mutableListOf(CssPlugin())
-        var SAVED_OBJECTS = mutableMapOf<String, LatteView>();
-        var PROP_FILEDS = mutableMapOf<String, MutableMap<String, Field>>()
-        var RECYCLED_VIEWS = mutableMapOf<String, MutableList<WeakReference<LatteView>>>()
-
-        @JvmStatic
-        var LOOKUP_CACHE: MutableMap<String, Class<out Any>> = mutableMapOf(
-            "View" to View::class.java,
-            "TextView" to android.widget.TextView::class.java,
-            "ImageView" to ImageView::class.java,
-            "ListView" to ListView::class.java,
-            "LinearLayout" to LinearLayout::class.java,
-            "RelativeLayout" to RelativeLayout::class.java,
-            "ViewPager" to ViewPager::class.java,
-            "WebView" to android.webkit.WebView::class.java
-        )
-
-        fun recycleView(view: LatteView) {
-            if (view is NativeView) {
-                var recycleKey = view.props.get("recycle")
-                if (recycleKey != null) {
-                    var list = RECYCLED_VIEWS.get(view.getViewClass().name + ":" + recycleKey);
-                    if (list == null) {
-                        list = mutableListOf()
-                        RECYCLED_VIEWS.put(view.getViewClass().name + ":" + recycleKey, list)
-                    }
-                    view.isMounted = false
-                    list.add(WeakReference(view))
-                }
-            }
-        }
-
-        fun getRecycledView(forView: LatteView): LatteView? {
-            if (forView is NativeView) {
-                var recycleKey = forView.props.get("recycle")
-                if (recycleKey != null) {
-
-                    var list = RECYCLED_VIEWS.get(forView.getViewClass().name + ":" + recycleKey);
-                    if (list == null) {
-                        list = mutableListOf()
-                        RECYCLED_VIEWS.put(forView.getViewClass().name + ":" + recycleKey, list)
-                    }
-                    var view = list.getOrNull(0)
-                    if (view != null) {
-                        list.removeAt(0);
-                        log("Recycler", "Re-used View ${view}")
-                    }
-                    return view?.get()
-                }
-            }
-            return null;
-        }
-
-
-        @JvmStatic
-        fun props(vararg objects: Any?): MutableMap<String, Any?> {
-            var map = mutableMapOf<String, Any?>()
-            for (i in 0..objects.size - 1 step 2) {
-                map.put(objects.get(i) as String, objects.get(i + 1))
-            }
-            return map;
-        }
-
-        @JvmStatic
-        fun getSavedObject(id: String): LatteView? {
-            return SAVED_OBJECTS.get(id)
-        }
-
         @JvmStatic
         fun log(message: String) {
             Log.d("Latte", message)
@@ -98,58 +29,6 @@ open class LatteView {
         fun log(tag: String, message: String) {
             Log.d(tag, message)
         }
-
-
-        @JvmStatic
-        fun createLayout(viewType: Class<*>, props: MutableMap<String, Any?>): LatteView {
-            return createLayout(viewType, props, ChildrenProc { })
-        }
-
-        @JvmStatic
-        fun lookupClass(className: String): Class<*> {
-            var cachedCls: Class<*>? = LOOKUP_CACHE.get(className);
-            var clazz = if ( cachedCls != null ) {
-                cachedCls
-            } else if (className.contains("."))  {
-                var cls = Class.forName(className)
-                LOOKUP_CACHE.put(className, cls);
-                cls
-            } else {
-                var cls = Class.forName("android.widget." + className);
-                LOOKUP_CACHE.put(className, cls);
-                cls
-            }
-
-            return clazz
-        }
-
-        @JvmStatic
-        fun createLayout(clazz: Class<*>, props: MutableMap<String, Any?>, childrenProc: ChildrenProc): LatteView {
-            var layout: LatteView?;
-            if (ViewGroup::class.java.isAssignableFrom(clazz)) {
-                layout = NativeViewGroup();
-                layout.nativeViewClass = clazz as Class<out View>
-            } else if (View::class.java.isAssignableFrom(clazz)) {
-                layout = NativeView();
-                layout.nativeViewClass = clazz as Class<out View>
-            }  else if (NativeView::class.java.isAssignableFrom(clazz)) {
-                layout = clazz.newInstance() as LatteView;
-            }  else {
-                var implClass =  try {
-                    Class.forName(clazz.name + "Impl")
-                } catch(ex : ClassNotFoundException ) {
-                    clazz
-                }
-                layout = implClass.newInstance() as LatteView;
-            }
-            layout.props = props;
-            layout.children = mutableListOf()
-            childrenProc?.apply(layout)
-
-            return layout
-        }
-
-
     }
 
     var renderedViews: MutableList<LatteView> = mutableListOf()
@@ -161,17 +40,17 @@ open class LatteView {
 
     var children = mutableListOf<LatteView>()
 
-    var objectId: String? = null;
     var activity: Activity? = null
     var isMounted: Boolean = false;
 
     var dataValues = mutableMapOf<String, Any?>()
 
-    var layoutFn : Runnable? = null
+    var layoutFn : (LatteView.() -> Unit)? = null
+
 
     val propFields: MutableMap<String, Field>
         get() {
-            var map = PROP_FILEDS[this.javaClass.name]
+            var map = Latte.PROP_FILEDS[this.javaClass.name]
             if (map == null) {
                 val newMap = mutableMapOf<String, Field>()
                 var cls: Class<in Object> = this.javaClass
@@ -186,7 +65,7 @@ open class LatteView {
                     }
                     cls = cls.superclass
                 }
-                PROP_FILEDS.put(this.javaClass.name, newMap)
+                Latte.PROP_FILEDS.put(this.javaClass.name, newMap)
                 return newMap
             }
             return map!!
@@ -207,7 +86,7 @@ open class LatteView {
     var id: Int = 0
         get() = this.props.get("id") as Int
 
-    fun buildView(activity: Activity, lp: ViewGroup.LayoutParams): View {
+    fun buildView(activity: Activity, lp: ViewGroup.LayoutParams?): View {
         this.activity = activity;
         this.renderTree()
         this.buildAndroidViewTree(activity, lp);
@@ -217,18 +96,14 @@ open class LatteView {
     fun notifyMounted() {
         isMounted = true;
         findRefs(this.renderedViews);
-        PLUGINS.forEach { it.onViewMounted(this) }
+        Latte.PLUGINS.forEach { it.onViewMounted(this) }
         onViewMounted();
     }
 
     fun onStateChanged() {
-        handleStateChanged()
-    }
-
-    fun handleStateChanged() {
         this.renderTree()
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
-        PLUGINS.forEach { it.onViewRendered(this) }
+        Latte.PLUGINS.forEach { it.onViewRendered(this) }
     }
 
     fun data(key: String): Any? {
@@ -254,7 +129,7 @@ open class LatteView {
         var myId = "${System.currentTimeMillis()}";
         var intent = Intent(caller.rootAndroidView?.context, LatteActivity::class.java);
         intent.putExtra("_LATTE_KIT_OBJ_ID", myId)
-        LatteView.SAVED_OBJECTS.put(myId, this)
+        Latte.SAVED_OBJECTS.put(myId, this)
         caller.rootAndroidView?.context?.startActivity(intent);
     }
 
@@ -265,11 +140,11 @@ open class LatteView {
 
     }
 
-    fun buildAndroidViewTree(a: Context, lp: ViewGroup.LayoutParams): View {
+    fun buildAndroidViewTree(a: Context, lp: ViewGroup.LayoutParams?): View {
         // First build my view
         this.activity = a as Activity;
         if (!isMounted) {
-            PLUGINS.forEach { it.onViewWillMount(this) }
+            Latte.PLUGINS.forEach { it.onViewWillMount(this) }
             this.onViewWillMount()
         }
         if (this is NativeView) {
@@ -277,7 +152,9 @@ open class LatteView {
                 this.androidView = this.renderNative(a);
             }
             if (this.androidView?.layoutParams == null) {
-                this.androidView?.layoutParams = lp;
+                this.androidView?.layoutParams = if (lp == null) {
+                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT)
+                } else { lp; }
             }
             if (this is NativeViewGroup) {
                 this.mountChildren()
@@ -294,13 +171,6 @@ open class LatteView {
             }
             return subAndroid;
         }
-    }
-
-    fun getNonVirtualParent(): NativeView? {
-        if (parentView is NativeView) {
-            return parentView as NativeView;
-        }
-        return parentView?.getNonVirtualParent()
     }
 
     fun copy(): LatteView {
@@ -368,7 +238,7 @@ open class LatteView {
     }
 
     inline fun register(clazz: KClass<*>,  crossinline init: LatteView.() -> Unit) : LatteView {
-        var view = LatteView.createLayout(clazz.java,mutableMapOf(), ChildrenProc { it->
+        var view = Latte.create(clazz.java,mutableMapOf(), ChildrenProc { it->
             it.init()
         })
         addChild(view);
@@ -379,8 +249,7 @@ open class LatteView {
         children.add(child)
     }
 
-    fun render(string : String) {
-
+    fun render(xml : String) {
     }
 
     fun render(newView : LatteView) {
@@ -391,14 +260,14 @@ open class LatteView {
                 var oldProps = oldView.props
                 oldView.children = newView.children
                 oldView.props = newView.props
-                PLUGINS.forEach { it.onPropsUpdated(oldView, oldView.props) }
+                Latte.PLUGINS.forEach { it.onPropsUpdated(oldView, oldView.props) }
                 if (oldView.onPropsUpdated(oldProps)) {
                     oldView.renderTree()
                 }
                 newRenderedViews.add(oldView)
             } else {
                 // Try find recycled view
-                var recycledOldView = getRecycledView(newView)
+                var recycledOldView = Latte.getRecycledView(newView)
                 if (recycledOldView != null) {
                     recycledOldView.parentView = this
                     recycledOldView.children = newView.children
@@ -413,7 +282,7 @@ open class LatteView {
                 }
             }
         } else {
-            var recycledOldView = getRecycledView(newView)
+            var recycledOldView = Latte.getRecycledView(newView)
             if (recycledOldView != null) {
                 recycledOldView.parentView = this
                 recycledOldView.children = newView.children
@@ -433,14 +302,23 @@ open class LatteView {
         this.props.put(str,value)
     }
 
-    open fun layout() {
-        this.layoutFn?.run()
+    open fun layout() : LatteView? {
+        if (this.layoutFn != null) {
+            this.children.clear()
+            this.layoutFn!!()
+            return this.children.get(0)
+        }
+//        throw Exception("Empty layout function ? Please make sure you override layout of ${this.javaClass.name} ")
+        return null
     }
 
     fun renderTree() {
         newRenderedViews = mutableListOf()
         injectProps()
-        this.layout()
+        var layoutView = this.layout();
+        if (layoutView != null) {
+            render(layoutView)
+        }
         if (this is NativeViewGroup) {
             for (child in this.children) {
                 render(child)
@@ -449,7 +327,7 @@ open class LatteView {
 
         this.renderedViews.forEach {
             if (!newRenderedViews.contains(it)) {
-                recycleView(it)
+                Latte.recycleView(it)
             }
         }
         this.renderedViews = newRenderedViews;
@@ -462,7 +340,3 @@ open class LatteView {
 
 }
 
-
-inline fun LatteView.DrawerLayout(noinline init: LatteView.() -> Unit = {}) = register(DrawerLayout::class,init);
-inline fun LatteView.LinearLayout(noinline init: LatteView.() -> Unit = {}) = register(LinearLayout::class,init);
-inline fun LatteView.Toolbar(noinline init: LatteView.() -> Unit = {}) = register(Toolbar::class,init);
