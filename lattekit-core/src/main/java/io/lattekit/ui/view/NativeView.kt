@@ -103,23 +103,23 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 
 
-    open fun applyProps() {
-        applyProps(false);
+    open fun applyProps(applyTo : Map<String,Any?>) {
+        applyProps(applyTo, false);
     }
 
-    fun applyProps(onlyDelayed : Boolean ) {
+    fun applyProps(propsToApply : Map<String,Any?>, onlyDelayed : Boolean ) {
         if (androidView != null) {
             // Default clickable to false
             this.androidView?.isClickable = false
             val myCls = getViewClass()
-            props.forEach { entry ->
+            propsToApply.forEach { entry ->
                 var it = entry.key
                 if (it == "id") {
                     this.androidView?.id = if (this.props.get("id")!! is String) Util.makeResId("latte", "id", this.props.get("id") as String) else this.props.get("id") as Int
                 } else if (it.startsWith("@") && !isAttached) {
                 } else if (onlyDelayed && !it.startsWith("@")) {
                 } else {
-                    val value = props.get(it);
+                    val value = propsToApply.get(it);
                     var field = if (it.startsWith("@")) {
                         it.substring(1)
                     } else it;
@@ -155,7 +155,8 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 
     override fun onPropsUpdated(oldProps :Map<String, Any?>) : Boolean {
-        applyProps();
+        var changedProps = props.filter { props[it.component1()] != oldProps[it.component1()] }
+        applyProps(changedProps);
         return false
     }
 
@@ -166,7 +167,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
             }
             androidView?.setOnTouchListener(this);
 
-            applyProps()
+            applyProps(this.props)
         }
     }
 

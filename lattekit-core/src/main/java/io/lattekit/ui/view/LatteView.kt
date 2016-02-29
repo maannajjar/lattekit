@@ -36,6 +36,7 @@ open class LatteView {
     var androidView: View? = null
 
     var props: MutableMap<String, Any?> = mutableMapOf()
+    var injectedProps: MutableMap<String,Any?> = mutableMapOf();
     var parentView: LatteView? = null
 
     var children = mutableListOf<LatteView>()
@@ -46,6 +47,7 @@ open class LatteView {
     var dataValues = mutableMapOf<String, Any?>()
 
     var layoutFn : (LatteView.() -> Unit)? = null
+    var isRecycled = false;
 
 
     val propFields: MutableMap<String, Field>
@@ -206,32 +208,36 @@ open class LatteView {
 
 
     open fun injectProps() {
-        log("${this} I have props fields ${propFields.map { "${it.key}" }.joinToString(",")} ::: ${this.javaClass.declaredFields.map { "${it.name} : ${it.isAnnotationPresent(Prop::class.java)}" }.joinToString(",")}")
         propFields.forEach { it ->
             if (!this.props.containsKey(it.key)) {
                 // Remove deleted property
+                injectedProps.remove(it.key)
                 var field = propFields.get(it.key)
                 field?.set(this, null)
             }
         }
 
         this.props?.forEach { entry ->
-            var field: Field? = this.propFields[entry.key]
-            if ( field != null) {
-                if (field.getType().isAssignableFrom(entry.value?.javaClass)) {
-                    field.set(this, entry.value)
-                } else {
-                    // TODO: Maybe need to throw exception ?
-                    log("WARNING: Provided property ${entry.key} value with different type, it will be set to null")
+            var previousValue = injectedProps.get(entry.key)
+            if ( previousValue != entry.value) {
+                var field: Field? = this.propFields[entry.key]
+                if ( field != null) {
+                    if (field.getType().isAssignableFrom(entry.value?.javaClass)) {
+                        injectedProps.put(entry.key,entry.value)
+                        field.set(this, entry.value)
+                    } else {
+                        log("WARNING: Provided property ${entry.key} value with different type, it will be set to null")
+                    }
                 }
-
             }
         }
     }
 
 
     fun sameView(leftView: LatteView, rightView: LatteView): Boolean {
-        if (leftView.javaClass == rightView.javaClass) {
+        if (leftView is NativeView && rightView is NativeView) {
+            return leftView.getViewClass() == rightView.getViewClass()
+        } else if (leftView.javaClass == rightView.javaClass) {
             return true;
         }
         return false;
@@ -249,13 +255,10 @@ open class LatteView {
         children.add(child)
     }
 
-    fun render(xml : String) {
-    }
-
     fun render(newView : LatteView) {
         var i = newRenderedViews.size
         if (i < renderedViews.size) {
-            var oldView: LatteView = renderedViews.get(i)
+            var oldView: LatteView = renderedViews[i]
             if (sameView(oldView, newView)) {
                 var oldProps = oldView.props
                 oldView.children = newView.children
@@ -265,36 +268,18 @@ open class LatteView {
                     oldView.renderTree()
                 }
                 newRenderedViews.add(oldView)
+                Latte.recycle(newView)
             } else {
                 // Try find recycled view
-                var recycledOldView = Latte.getRecycledView(newView)
-                if (recycledOldView != null) {
-                    recycledOldView.parentView = this
-                    recycledOldView.children = newView.children
-                    recycledOldView.props = newView.props
-                    recycledOldView.isMounted = false
-                    recycledOldView.renderTree()
-                    newRenderedViews.add(recycledOldView)
-                } else {
-                    newView.parentView = this
-                    newView.renderTree()
-                    newRenderedViews.add(newView)
-                }
-            }
-        } else {
-            var recycledOldView = Latte.getRecycledView(newView)
-            if (recycledOldView != null) {
-                recycledOldView.parentView = this
-                recycledOldView.children = newView.children
-                recycledOldView.props = newView.props
-                recycledOldView.isMounted = false
-                recycledOldView.renderTree()
-                newRenderedViews.add(recycledOldView)
-            } else {
                 newView.parentView = this
                 newView.renderTree()
                 newRenderedViews.add(newView)
+
             }
+        } else {
+            newView.parentView = this
+            newView.renderTree()
+            newRenderedViews.add(newView)
         }
     }
 
@@ -324,7 +309,6 @@ open class LatteView {
                 render(child)
             }
         }
-
         this.renderedViews.forEach {
             if (!newRenderedViews.contains(it)) {
                 Latte.recycleView(it)
@@ -332,7 +316,6 @@ open class LatteView {
         }
         this.renderedViews = newRenderedViews;
     }
-
 
     open fun onPropsUpdated(props: Map<String, Any?>): Boolean {
         return true;

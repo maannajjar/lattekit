@@ -6,6 +6,7 @@ import android.util.Log
 import android.util.Xml
 import android.view.View
 import android.view.ViewGroup
+import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.CssPlugin
 import io.lattekit.ui.view.*
 import org.xmlpull.v1.XmlPullParser
@@ -20,10 +21,11 @@ import java.util.*
 
 class Latte {
     companion object {
-        var PLUGINS = mutableListOf(CssPlugin())
+        var PLUGINS = mutableListOf<LattePlugin>(CssPlugin())
         var SAVED_OBJECTS = mutableMapOf<String, LatteView>();
         var PROP_FILEDS = mutableMapOf<String, MutableMap<String, Field>>()
         var RECYCLED_VIEWS = mutableMapOf<String, MutableList<WeakReference<LatteView>>>()
+        var RECYCLED_INSTANCES = mutableMapOf<String, MutableList<WeakReference<LatteView>>>()
 
         @JvmStatic
         var LOOKUP_CACHE: MutableMap<String, Class<out Any>> = mutableMapOf(
@@ -139,11 +141,28 @@ class Latte {
             }.buildView(context as Activity,null);
         }
 
-
+        @JvmStatic
+        fun recycle(view : LatteView) {
+            if (view is NativeView && view.androidView != null) {
+                return;
+            }
+            var key = view.props.get("__cache_key") ?: view.javaClass.name
+            RECYCLED_INSTANCES.getOrPut(key as String, { mutableListOf() }).add(WeakReference(view))
+        }
 
         @JvmStatic
         fun create(clazz: Class<*>, props: MutableMap<String, Any?>, childrenProc: ChildrenProc): LatteView {
             var layout: LatteView?;
+            var cache = RECYCLED_INSTANCES.get(clazz.name)
+            if (cache != null && !cache.isEmpty()) {
+                layout = cache.removeAt(0).get()
+                if (layout != null ) {
+                    layout.props = props;
+                    layout.children = mutableListOf()
+                    childrenProc?.apply(layout)
+                    return layout
+                }
+            }
             if (ViewGroup::class.java.isAssignableFrom(clazz)) {
                 layout = NativeViewGroup();
                 layout.nativeViewClass = clazz as Class<out View>
@@ -161,6 +180,7 @@ class Latte {
                 layout = implClass.newInstance() as LatteView;
             }
             layout.props = props;
+            props.put("__cache_key", clazz.name)
             layout.children = mutableListOf()
             childrenProc?.apply(layout)
 
@@ -206,4 +226,7 @@ fun xml(layoutXml: String): LatteView {
         }
     }
     return topLevelViews[0]!!
+}
+fun Activity.render(xml: String) {
+    setContentView(Latte.render(this, xml))
 }

@@ -30,8 +30,8 @@ class ImageView : NativeView() {
 
     }
 
-    override fun applyProps() {
-        super.applyProps()
+    override fun applyProps(props : Map<String,Any?>) {
+        super.applyProps(props)
         var view = androidView as android.widget.ImageView;
         if (getSrc() is String) {
             loadWithGlide(view);

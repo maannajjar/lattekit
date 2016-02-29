@@ -1,12 +1,7 @@
 package io.lattekit.plugin.css.declaration
 
-import android.util.Log
 import com.google.common.base.CaseFormat
-import io.lattekit.plugin.css.CssAccessory
-import io.lattekit.plugin.css.NodeStyle
-import io.lattekit.plugin.css.getNativeView
-import io.lattekit.plugin.css.query
-import io.lattekit.ui.view.LatteView
+import java.util.*
 
 /**
  * Created by maan on 2/22/16.
@@ -32,30 +27,16 @@ open class Stylesheet {
     }
 
     var ruleSets  = mutableListOf<RuleSet>()
+    var classesRules : MutableMap<String, MutableList<RuleSet>> = mutableMapOf();
+    var idsRules : MutableMap<String, MutableList<RuleSet>> = mutableMapOf();
 
-    fun addRuleSet(ruleSet : RuleSet) = ruleSets.add(ruleSet)
-
-    fun assignStyles(rootView : LatteView, shouldClear : Boolean = false) {
-        var nativeView = getNativeView(rootView)
-        var clearedStyles = mutableSetOf<NodeStyle>()
-        for ( ruleSet in  ruleSets) {
-            var declarations = ruleSet.declaraions
-            ruleSet.selectors.forEach { selectorElements ->
-                var matched = query(selectorElements, listOf(nativeView))
-                // TODO: instead of querying, find only matching rule set
-                matched.filter{ it == nativeView }.forEach {
-                    var style = CssAccessory.getCssAccessory(it).style
-                    if(shouldClear && !clearedStyles.contains(style)) {
-                        style.clearDeclarations()
-                        clearedStyles.add(style)
-                    }
-                    for (declaration in declarations) {
-                        declaration.selector = selectorElements;
-                        style?.addDeclaration(declaration)
-                    }
-                }
+    fun addRuleSet(ruleSet : RuleSet) {
+        ruleSet.selectors.forEach {
+            if (it[0].startsWith(".")) {
+                classesRules.getOrPut(it[0], { mutableListOf() }).add(ruleSet)
             }
         }
+        ruleSets.add(ruleSet)
     }
 
 

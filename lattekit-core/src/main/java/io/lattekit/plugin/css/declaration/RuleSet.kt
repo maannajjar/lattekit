@@ -9,10 +9,10 @@ import java.util.regex.Pattern
 class RuleSet ( val selectorString : String) {
 
     val selectors  : MutableList<List<String>> = mutableListOf()
-    val declaraions : MutableList<CssDeclaration> = mutableListOf()
+    val declarations : MutableList<CssDeclaration> = mutableListOf()
 
     inline fun add(propertyName : String, value : String) {
-        declaraions.add(CssDeclaration(propertyName, getCssValue(propertyName,value)))
+        declarations.add(CssDeclaration(propertyName, getCssValue(propertyName,value)))
     }
 
     companion object {

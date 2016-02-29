@@ -11,8 +11,8 @@ class LinearLayout : NativeViewGroup() {
     var orientation : String? = null
         get() =  (props.get("orientation") ?: "vertical" ) as String
 
-    override fun applyProps() {
-        super.applyProps()
+    override fun applyProps(props : Map<String,Any?>) {
+        super.applyProps(props)
         var view = androidView as android.widget.LinearLayout;
         if (orientation == "horizontal") {
             view.orientation = android.widget.LinearLayout.HORIZONTAL;

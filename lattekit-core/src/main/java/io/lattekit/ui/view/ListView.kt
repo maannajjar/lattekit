@@ -144,16 +144,14 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
     }
 
 
-    override fun applyProps() {
-        super.applyProps()
+    override fun applyProps(props : Map<String,Any?>) {
+        super.applyProps(props)
         var view = androidView as android.widget.ListView;
         if (getDividerHeight() != null) {
             view.dividerHeight = getDividerHeight();
         }
         if (props.get("onItemClickListener") != null) {
             view.onItemClickListener = props.get("onItemClickListener")  as AdapterView.OnItemClickListener;
-        } else {
-            view.onItemClickListener = this;
         }
 
         view.adapter = adapter;

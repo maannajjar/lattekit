@@ -10,9 +10,14 @@ import io.lattekit.ui.view.NativeView
 /**
  * Created by maan on 2/25/16.
  */
-
+inline fun NativeView.getCss() : CssAccessory {
+    return CssAccessory.getCssAccessory(this);
+}
+inline fun NativeView.getStyle() : NodeStyle {
+    return CssAccessory.getCssAccessory(this).style;
+}
 class CssAccessory(view : NativeView) {
-    var style : NodeStyle = NodeStyle()
+    var style : NodeStyle = NodeStyle(view)
     var shapeDrawable : ShapeDrawable = ShapeDrawable()
     var gradientDrawable : GradientDrawable = GradientDrawable()
     var borderDrawable : BorderDrawable = BorderDrawable()

@@ -40,7 +40,7 @@ class FontCssProperty : CssProperty("font-family") {
     }
 
     fun getStyle() : Int {
-        if (fontStyle == "bold" && fontWeight == "italic") {
+        if (fontWeight == "bold" && fontStyle == "italic") {
             return Typeface.BOLD_ITALIC
         } else if (fontWeight == "bold") {
             return Typeface.BOLD

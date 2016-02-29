@@ -1,10 +1,21 @@
 package io.lattekit.plugin.css.declaration
 
+import io.lattekit.Latte
 import io.lattekit.ui.view.LatteView
 
 /**
  * Created by maan on 2/26/16.
  */
+
+var GLOBAL_STYLESHEETS = mutableListOf<Stylesheet>()
+
+inline fun css( init: Stylesheet.() -> Unit)  : Stylesheet {
+    var stylesheet = Stylesheet()
+    stylesheet.init()
+    GLOBAL_STYLESHEETS.add(stylesheet)
+    return stylesheet
+}
+
 
 inline fun LatteView.css( stylesheet : Stylesheet)  {
     var css = dataOrPut("css", mutableListOf<Any>()) as MutableList<Any>

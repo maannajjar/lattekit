@@ -1,7 +1,7 @@
 package io.lattekit.plugin.css
 
-import android.util.Log
 import io.lattekit.plugin.LattePlugin
+import io.lattekit.plugin.css.declaration.GLOBAL_STYLESHEETS
 import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.ui.view.LatteView
 import io.lattekit.ui.view.NativeView
@@ -52,15 +52,13 @@ class CssPlugin : LattePlugin() {
 
     override fun onPropsUpdated(view: LatteView, oldProps: MutableMap<String, Any?>) {
         if (view is NativeView) {
-            getStylesheetsFor(view).forEachIndexed { i, s -> s.assignStyles(view, i == 0) }
-            CssAccessory.getCssAccessory(view).style.apply(view)
+            view.getStyle().applyStylesheets(GLOBAL_STYLESHEETS + getStylesheetsFor(view))
         }
     }
 
     override fun onViewMounted(view: LatteView) {
         if (view is NativeView) {
-            getStylesheetsFor(view).forEachIndexed { i, s -> s.assignStyles(view, i == 0) }
-            CssAccessory.getCssAccessory(view).style.apply(view)
+            view.getStyle().applyStylesheets(GLOBAL_STYLESHEETS + getStylesheetsFor(view))
         }
     }
 }
