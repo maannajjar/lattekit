@@ -2,9 +2,9 @@ package io.lattekit.ui.view
 
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AbsListView
 import android.widget.AdapterView
 import android.widget.BaseAdapter
-import android.widget.FrameLayout
 import io.lattekit.util.Util
 import org.eclipse.xtext.xbase.lib.Functions
 import org.eclipse.xtext.xbase.lib.Procedures
@@ -70,7 +70,7 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
             template.props.put("modelIndex", position);
             template.props.put("model", getItem(position));
             template.parentView = this@ListView
-            var lp = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+            var lp = AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.WRAP_CONTENT);
             var v = template.buildView(activity!!, lp)
             v.setTag(template)
             return v;
