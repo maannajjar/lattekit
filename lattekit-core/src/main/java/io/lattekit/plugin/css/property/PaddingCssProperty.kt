@@ -44,6 +44,11 @@ open class PaddingCssProperty : CssProperty("padding") {
     }
 
     override fun computeValue(context: Context, view: NativeView, style : NodeStyle) {
+        paddingLeft = 0
+        paddingTop = 0
+        paddingRight = 0
+        paddingBottom = 0
+
         var declarations = style.getDeclarations("padding", "padding-top", "padding-right", "padding-bottom", "padding-left")
         declarations.forEach {
             var values = (it.value as PaddingValue).paddingValues

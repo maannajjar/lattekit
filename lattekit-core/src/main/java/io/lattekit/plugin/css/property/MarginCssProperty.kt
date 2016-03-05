@@ -24,6 +24,7 @@ open class MarginCssProperty : CssProperty("margin") {
     var marginBottom: Int = 0
 
     fun readShorthand(values: List<LengthValue>, context: Context) {
+
         if (values.size == 1) {
             marginTop = values[0].inPixels(context).toInt()
             marginRight = values[0].inPixels(context).toInt()
@@ -48,6 +49,11 @@ open class MarginCssProperty : CssProperty("margin") {
     }
 
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
+        marginLeft = 0
+        marginTop = 0
+        marginRight = 0
+        marginBottom = 0
+
         var declarations = style.getDeclarations("margin", "margin-top", "margin-right", "margin-bottom", "margin-left")
         declarations.forEach {
             var values = (it.value as MarginValue).marginValues
