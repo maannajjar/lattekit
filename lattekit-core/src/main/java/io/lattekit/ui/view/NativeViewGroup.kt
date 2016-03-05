@@ -79,13 +79,13 @@ open class NativeViewGroup : NativeView() {
                 }
 
                 "layout_width" -> {
-                    var value = child.props.get(keyName) as String;
-                    params.width = parseSize(value,ViewGroup.LayoutParams.MATCH_PARENT, child.activity!!)
+                    var value = child.props.get(keyName);
+                    params.width = if (value is String) { parseSize(value,ViewGroup.LayoutParams.MATCH_PARENT, child.activity!!) } else { value as Int }
                 }
 
                 "layout_height" -> {
-                    var value = child.props.get(keyName) as String;
-                    params.height = parseSize(value,ViewGroup.LayoutParams.WRAP_CONTENT,child.activity!!)
+                    var value = child.props.get(keyName);
+                    params.height = if (value is String) { parseSize(value,ViewGroup.LayoutParams.WRAP_CONTENT,child.activity!!) } else { value as Int }
                 }
 
                 "layout_weight" -> {
