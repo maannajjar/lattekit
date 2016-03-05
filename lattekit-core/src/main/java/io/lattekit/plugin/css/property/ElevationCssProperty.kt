@@ -1,6 +1,7 @@
 package io.lattekit.plugin.css.property
 
 import android.content.Context
+import android.os.Build
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.LengthValue
 import io.lattekit.ui.view.NativeView
@@ -18,6 +19,8 @@ class ElevationCssProperty : CssProperty("elevation") {
     }
 
     override fun apply(view: NativeView, style: NodeStyle) {
-        view.androidView?.elevation = elevation
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            view.androidView?.elevation = elevation
+        }
     }
 }

@@ -3,6 +3,7 @@ package io.lattekit.plugin.css.declaration
 import android.content.Context
 import android.graphics.Color
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.ViewGroup
 import java.util.regex.Pattern
 
@@ -42,6 +43,9 @@ fun getCssValue(propertyName : String, valueString : String) : CssValue = when(p
     "color" -> ColorValue(valueString)
     "background-color" -> ColorValue(valueString)
     "elevation" -> LengthValue(valueString)
+    "height" ->  LengthValue(valueString)
+    "width" ->  LengthValue(valueString)
+    "gravity" ->  GravityValue(valueString)
     else -> StringValue(valueString)
 }
 
@@ -57,6 +61,25 @@ data class FontFamilyValue(val valueString : String) : CssValue {
     }
 }
 
+data class GravityValue(val valueString : String) : CssValue {
+    companion object {
+        var GRAVITY_MAPPING = mapOf(
+            "center" to Gravity.CENTER,
+            "center_horizontal" to Gravity.CENTER_HORIZONTAL,
+            "center_vertical" to Gravity.CENTER_VERTICAL,
+            "top" to Gravity.TOP,
+            "bottom" to Gravity.BOTTOM,
+            "start" to Gravity.START,
+            "end" to Gravity.END,
+            "left" to Gravity.LEFT,
+            "right" to Gravity.RIGHT
+        )
+    }
+    val value : Int
+    init {
+        value = valueString.split(",").map { GRAVITY_MAPPING[it] }.filterNotNull().reduce { accum, right ->  accum or right }
+    }
+}
 data class LengthValue(val valueString : String) : CssValue {
     var number : Float
     var unit : String? = null

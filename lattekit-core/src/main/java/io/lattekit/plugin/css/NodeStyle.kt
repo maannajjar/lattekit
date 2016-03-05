@@ -30,7 +30,9 @@ class NodeStyle(nativeView : NativeView) {
             ColorCssProperty::class.java,
             BorderRadiusCssProperty::class.java,
             ElevationCssProperty::class.java,
-            DisplayCssProperty::class.java
+            DisplayCssProperty::class.java,
+            SizeCssProperty::class.java,
+            GravityCssProperty::class.java
         )
     }
 
