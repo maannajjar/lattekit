@@ -17,6 +17,7 @@ import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.eclipse.xtext.xbase.lib.ExclusiveRange;
 import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.Functions.Function2;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -24,7 +25,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-import io.lattekit.plugin.css.declaration.Stylesheet;
 import io.lattekit.util.Util;
 
 /**
@@ -74,10 +74,10 @@ public class ViewPager extends NativeView {
         return ((List<?>) _get);
     }
 
+
     @Override
-    public void applyProps() {
-        super.applyProps();
-        this.adapter.notifyDataSetChanged();
+    public void applyProps(@NotNull Map<String, ? extends Object> applyTo) {
+        super.applyProps(applyTo);
     }
 
     @Override
