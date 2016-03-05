@@ -8,6 +8,7 @@ import android.widget.TextView
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.FontFamilyValue
 import io.lattekit.plugin.css.declaration.FontSizeValue
+import io.lattekit.plugin.css.declaration.LengthValue
 import io.lattekit.plugin.css.declaration.StringValue
 import io.lattekit.ui.view.NativeView
 
@@ -21,11 +22,13 @@ class FontCssProperty : CssProperty("font-family") {
     var fontStyle : String? = "normal"
     var fontWeight : String? = "normal"
     var fontSize : FontSizeValue = FontSizeValue("18sp")
+    var lineHeight : LengthValue? = null;
 
     override fun computeValue(context: Context, view: NativeView ,style : NodeStyle) {
         initFonts(view.activity!!)
         typeface = Typeface.DEFAULT
-        var declarations = style.getDeclarations("font","font-family","font-style","font-weight","font-size")
+        lineHeight= null;
+        var declarations = style.getDeclarations("font","font-family","font-style","font-weight","font-size","line-height")
         declarations.forEach {
             if (it.value is FontFamilyValue) {
                 typeface = allFonts?.getOrElse(it.value.fontList[0].toLowerCase(), { Typeface.DEFAULT })
@@ -35,6 +38,8 @@ class FontCssProperty : CssProperty("font-family") {
                 fontStyle = (it.value as StringValue).valueString
             } else if (it.propertyName == "font-size") {
                 fontSize = it.value as FontSizeValue
+            } else if (it.propertyName == "line-height") {
+                lineHeight = it.value as LengthValue;
             }
         }
     }
@@ -56,6 +61,11 @@ class FontCssProperty : CssProperty("font-family") {
             var textView = view.androidView as TextView
             textView.setTypeface(typeface,getStyle())
             textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize.inPixels(view.androidView!!.context))
+            if (lineHeight != null) {
+                textView.setLineSpacing(lineHeight!!.inPixels(view.androidView!!.context)-fontSize.inPixels(view.androidView!!.context).toInt(),1f);
+            } else {
+                textView.setLineSpacing(0f,1f);
+            }
         }
     }
 

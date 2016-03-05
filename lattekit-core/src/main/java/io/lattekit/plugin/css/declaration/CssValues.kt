@@ -39,6 +39,7 @@ fun getCssValue(propertyName : String, valueString : String) : CssValue = when(p
     "border-bottom-right-radius" -> SingleCornerBorderRadius(valueString)
     "border-bottom-left-radius" -> SingleCornerBorderRadius(valueString)
     "font-size" -> FontSizeValue(valueString)
+    "line-height" -> LengthValue(valueString)
     "font-family" -> FontFamilyValue(valueString)
     "color" -> ColorValue(valueString)
     "background-color" -> ColorValue(valueString)

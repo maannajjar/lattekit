@@ -20,7 +20,7 @@ class GravityCssProperty : CssProperty("gravity"){
     }
 
     override fun apply(view: NativeView, style: NodeStyle) {
-        if (gravity != null)  {
+        if (gravity != null && view.androidView is TextView)  {
             (view.androidView as? TextView)?.gravity = gravity!!;
         }
     }
