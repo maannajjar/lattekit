@@ -119,6 +119,9 @@ open class NativeViewGroup : NativeView() {
                 applyChildLayoutProps(v, childView.layoutParams)
                 if (i >= managedViews.size) {
                     myContainer.addView(childView);
+                } else if (managedViews[i] != childView) {
+                    myContainer.removeView(managedViews[i]);
+                    myContainer.addView(childView,i);
                 }
 
                 v.androidView = childView
