@@ -1,6 +1,5 @@
 package io.lattekit.plugin.css
 
-import android.util.Log
 import io.lattekit.plugin.css.declaration.CssDeclaration
 import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.plugin.css.property.*
@@ -43,6 +42,11 @@ class NodeStyle(nativeView : NativeView) {
         }
     }
 
+    fun selectorMatches(selectorElements : List<String>, myClasses : List<String>) : Boolean {
+        return selectorElements.map {
+            if (it.trim() == "") false else (myClasses.contains(it.substring(1)))
+        }.reduce { a, b -> a && b }
+    }
 
     fun applyStylesheets(stylesheets : List<Stylesheet>) {
         declarations.clear()
@@ -54,8 +58,12 @@ class NodeStyle(nativeView : NativeView) {
             stylesheets.forEach { stylesheet ->
                 myClasses.forEach { cls ->
                     stylesheet.classesRules.get(".$cls")?.forEach { ruleSet ->
+
                         if (ruleSet != null) {
-                            ruleSet.declarations.forEach { this.addDeclaration(it) }
+                            var matches = ruleSet.selectors.map { selectorMatches(it,myClasses) }.reduce { a, b -> a || b }
+                            if (matches) {
+                                ruleSet.declarations.forEach { this.addDeclaration(it) }
+                            }
                         }
                     }
                 }

@@ -1,7 +1,6 @@
 package io.lattekit.plugin.css.declaration
 
 import com.google.common.base.CaseFormat
-import java.util.*
 
 /**
  * Created by maan on 2/22/16.
@@ -31,9 +30,11 @@ open class Stylesheet {
     var idsRules : MutableMap<String, MutableList<RuleSet>> = mutableMapOf();
 
     fun addRuleSet(ruleSet : RuleSet) {
-        ruleSet.selectors.forEach {
-            if (it[0].startsWith(".")) {
-                classesRules.getOrPut(it[0], { mutableListOf() }).add(ruleSet)
+        ruleSet.selectors.forEach { selectorList ->
+            selectorList.forEach {
+                if (it.startsWith(".")) {
+                    classesRules.getOrPut(it, { mutableListOf() }).add(ruleSet)
+                }
             }
         }
         ruleSets.add(ruleSet)
