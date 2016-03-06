@@ -20,6 +20,7 @@ class BackgroundCssProperty : CssProperty("background") {
     var backgroundColor : Int = Color.WHITE;
 
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
+        backgroundColor = Color.TRANSPARENT;
         var declarations = style.getDeclarations("background-color")
         declarations.forEach {
             if (it.value is ColorValue) {
