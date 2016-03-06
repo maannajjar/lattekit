@@ -31,7 +31,12 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 
     fun renderNative(context : Context) : View {
-        return getViewClass().constructors.find{ it.parameterTypes.size == 1 }?.newInstance(context) as View
+        var style = this.props.get("style");
+        if (style != null && style is Int) {
+            return getViewClass().constructors.find{ it.parameterTypes.size == 3 }?.newInstance(context,null,style) as View
+        } else {
+            return getViewClass().constructors.find{ it.parameterTypes.size == 1 }?.newInstance(context) as View
+        }
     }
 
 
@@ -143,6 +148,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
                             methodCache.put(methodKey, method);
                         }
                         if (method != null) {
+                            log("Setting $setter ${method.name}")
                             method.invoke(androidView, if (isFn) createLambdaProxyInstance(method.parameterTypes.get(0), value as Object) else value);
                         }
                     }
@@ -156,7 +162,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
     override fun onPropsUpdated(oldProps :Map<String, Any?>) : Boolean {
         var changedProps = props.filter { props[it.component1()] != oldProps[it.component1()] }
-        applyProps(changedProps);
+        applyProps(props);
         return false
     }
 
