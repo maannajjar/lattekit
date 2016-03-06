@@ -9,7 +9,7 @@ import com.bumptech.glide.Glide
 class ImageView : NativeView() {
 
     fun getSrc() : Any? {
-        return if (props.containsKey("src")) props.get("src") as String? else null;
+        return if (props.containsKey("src")) props.get("src") else null;
     }
 
     fun getScaleType() : String? {
