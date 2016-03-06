@@ -153,7 +153,7 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
         if (props.get("onItemClickListener") != null) {
             view.onItemClickListener = props.get("onItemClickListener")  as AdapterView.OnItemClickListener;
         }
-
+        view.onItemClickListener = this;
         view.adapter = adapter;
         adapter.notifyDataSetChanged()
     }
