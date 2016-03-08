@@ -7,31 +7,23 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 @Accessors
 class CssDefinition  {
-    new(Matcher m,String source) {
-        start = m.start
-        end = m .end
+    new(String selector,String body) {
+        this.selector = selector;
+        this.body = body;
     }
-    int start;
-    int end;
     String selector;
+    String body;
     List<CssProperty> childNodes = newArrayList()
 }
 
 @Accessors
 class CssProperty  {
-    new(Matcher m,String source) {
-        start = m.start
-        end = m .end
-    }
-
-    int start;
-    int end;
-    String text;
     String name;
     String value;
 }
 
 class CssParser {
+    var BLOCKS_REGEX = Pattern.compile('''([^\{]+)\s*\{([^\}]+)\}''')
     var TOKENS = Pattern.compile(
             // Group 1:captures selectors
             '''((?:(?:\.|#)?[^,> \n]+)(?:\s*[,> ]\s*(?:\.|#)?[^,> \n]+)*)\s+(?=\{)'''
@@ -44,42 +36,35 @@ class CssParser {
             +'''|(\})''')
 
 
-    def acceptDefinition(Matcher m, String source) {
-        if (m.group(1) == null || m.group(1).trim() == "") {
-            throw new Exception("Expected CSS definition block. Found"+m.group)
-        }
-
-        var selector = m.group(1);
-        var definition = new CssDefinition(m, source)
+    def acceptDefinition(String selector, String body) {
+        val definition = new CssDefinition(selector,body)
         definition.selector = selector;
-        m.find()
 
-        if (m.group(2) == null || m.group(2).trim() == "" ){
-            throw new Exception("Expected {")
-        }
-        m.find()
+        body.split("\r?\n").forEach [  line |
+            var trimmedLine = line.trim();
+            if (trimmedLine.endsWith(";")) {
+                trimmedLine = trimmedLine.substring(0,trimmedLine.length-1)
+            }
+            var property = new CssProperty();
+            var split = trimmedLine.split(":")
+            if (split.length > 1) {
+                property.name = split.get(0).trim();
+                property.value = split.get(1).trim();
+                definition.childNodes += property;
+            }
+        ]
 
-        while (m.group(5) == null || m.group(5).trim() == "") {
-            definition.childNodes += acceptProperty(m,source);
-            m.find()
-        }
-        m.find()
         return definition;
     }
 
-    def CssProperty acceptProperty(Matcher m, String source) {
-        var property = new CssProperty(m, source);
-        property.name = m.group(3)
-        property.value = m.group(4)
-        return property
-    }
 
     def List<CssDefinition> parse(String source) {
-        var matcher = TOKENS.matcher(source);
+        var blocksMatcher = BLOCKS_REGEX.matcher(source);
         var List<CssDefinition> results = newArrayList();
-        matcher.find()
-        while (!matcher.hitEnd) {
-            results += acceptDefinition(matcher,source);
+        println("Running blocks matcher")
+        while(blocksMatcher.find()) {
+            println("PARSING "+blocksMatcher.group(0))
+            results += acceptDefinition(blocksMatcher.group(1).trim(),blocksMatcher.group(2));
         }
         return results;
     }
@@ -96,133 +81,230 @@ class CssParser {
     width: match_parent;
 }
 .container {
+	width: match_parent;
+	height: match_parent;
+}
+.toolbar {
+    elevation: 2dp;
     width: match_parent;
-    height: match_parent;
-    transition: height 100ms 50ms, width 20ms 100ms;
+    background-color: #ffffff;
+}
+.home_feed {
+    background-color: #EBEBEB;
 }
 
-.test {
-    width: 200px;
-    height: 200px;
-    background-color: #eeeeee;
+.message_module {
+    font-size: 22sp;
+    text-align:center;
+    padding: 0 10dp;
+    font-family: GraphikApp-Bold;
+    background-color: #EBEBEB;
+    height: 120dp;
+    gravity: center;
+    line-height: 26sp;
 }
+.section_header_wrapper {
+    background-color: #EBEBEB;
+    padding-top: 26dp;
+}
+.section_header_wrapper.section1 {
+    padding-top:0dp;
+}
+.section_header {
+    background-color: #FFFFFF;
+    font-size: 13sp;
+    font-weight: bold;
+    font-family: GraphikApp-Semibold;
+    padding: 15dp 10dp;
+    border-bottom: 1dp solid #E6E6E6;
+    color: #005be2;
+    height: 44dp;
+    gravity: center_vertical;
+    padding-left: 16dp;
+    padding-right: 16dp;
+
+}
+
+.left_nav {
+    padding: 20dp;
+    width: 240dp;
+    height: match_parent;
+    elevation: 10dp;
+    background-color: #ffffff;
+    color:#000000;
+}
+
+.img {
+    margin-bottom:12dp;
+    width: match_parent;
+    margin-top: 16dp;
+}
+.img.image-no-image {
+    display: none;
+}
+.img.image-large {
+    margin-top: 0dp;
+}
+.img.image-video {
+    margin-top: 0dp;
+}
+.img.image-medium {
+    margin-top: 16dp;
+    margin-left: 16dp;
+    margin-right: 16dp;
+}
+
+.img.small {
+    height: 80dp;
+    width: 80dp;
+    margin-top: 0dp;
+    margin-right: 16dp;
+    margin-bottom:0dp;
+}
+
+
 .story {
     height: wrap_content;
     width: match_parent;
-    background-color:#00000000;
+    background-color: #ffffff;
     ripple-color: #aaaaaa;
 }
-.story_title {
-    font-family: "GraphikApp-Bold";
-    font-style: bold;
-    width: match_parent;
-    height: wrap_content;
-    background-color:#00000000;
+.story:active {
+    background-color: #aaaaaa;
 }
 
 .kicker {
     font-family: "GraphikApp-Bold";
-    font-size: 12sp;
+    font-size: 10sp;
     font-style: bold;
     width: match_parent;
     height: wrap_content;
-    text-color: #777777;
-    background-color:#00000000;
+    color: #808080;
+    margin-left: 16dp;
+    margin-right: 16dp;
+    margin-bottom: 4dp;
+}
+.kicker.image-no-image {
+    margin-top: 16dp
+}
+.kicker.story-A,.kicker.story-C {
+    display: none;
+}
+
+.title_container {
+    margin-bottom: 6dp;
+}
+.title_container.image-no-image.story-A,.title_container.image-no-image.story-C {
+    margin-top: 16dp;
+}
+
+.story_title {
+    font-family: GraphikApp-Bold;
+    width: match_parent;
+    height: wrap_content;
+    font-size: 19sp;
+    margin-left: 16dp;
+    margin-right: 16dp;
+    color: #131313;
+    line-height:24sp;
+}
+.story_title.image-no-image {
+    font-size: 19sp;
+    line-height:20sp;
+}
+.story_domain {
+    font-family: GraphikApp-Regular;
+    width: wrap_content;
+    height: wrap_content;
+    margin-left: 16dp;
+    margin-right: 16dp;
+    margin-bottom: 7dp;
+    color: #808080;
+    font-size:12sp;
+
+}
+.story_desc {
+    font-family: GraphikApp-Regular;
+    width: match_parent;
+    height: wrap_content;
+    font-size: 14sp;
+    padding: 0dp 16dp;
+    margin-bottom: 11dp;
+    color: #444444;
+    line-height:18sp;
+}
+.story_desc.story-A,.story_desc.story-B {
+    display:none
 }
 
 .diggs {
-    text-color:#9a9a9a;
+    color:#9a9a9a;
     background-color:#00000000;
     font-family: "GraphikApp-Regular";
     font-style: normal;
     font-size: 11sp;
-}
-
-
-
-.story_full .img {
-    width: match_parent;
-    height: 230dp;
-}
-.story_full .text_wrapper {
-    background-color:#00000000;
-    padding-left: 15dp;
-    padding-right: 15dp;
-    height: wrap_content;
-    width: match_parent;
-    padding-bottom: 10dp;
-    ripple-color: #000000;
-
-}
-.story_full .kicker {
-    text-color:#eeeeee;
-    margin-top: 5dp;
-}
-.story_full .story_title {
-    text-color: #ffffff;
-    font-size: 20sp;
+    margin-left: 15dp;
+    margin-top: 3dp;
+    padding-bottom: 15dp;
 
 }
 
-
-
-.story_compact {
-    padding-top: 15dp;
-}
-.story_compact .img {
-    height: 80dp;
-    width: 80dp;
-    margin-left: 10dp;
-    margin-right: 15dp;
-}
-.story_compact .story_border {
+.story_border {
     background-color: #eeeeee;
     height:1dp;
     width: match_parent;
     margin-left: 15dp;
     margin-right: 15dp;
+}
+.action-img {
+    width: wrap_content;
+}
+.heart {
+    margin-left: 16dp;
+    margin-right: 10dp;
+    margin-bottom: 16dp;
 
 }
-.story_compact .story_title {
-    font-size: 18sp;
 
-    margin-left: 15dp;
-    margin-top: 3dp;
+.edition_footer {
+    background-color: #005be2;
 }
-.story_compact .kicker {
-    margin-left: 15dp;
-}
-.story_compact .diggs {
-    margin-left: 15dp;
-    margin-top: 3dp;
-    padding-bottom: 15dp;
-}
+.footer_message {
+    margin-top: 60dp;
+    margin-bottom:60dp;
+    width:wrap_content;
+    height:wrap_content;
+    color:#ffffff;
+    line-height: 26sp;
+    font-size: 22sp;
+    text-align:center;
+    padding: 0 10dp;
+    font-family: "GraphikApp-Bold";
 
-
-.collection_header {
-    border-top: 1dp solid #000000;
-    border-bottom: 1dp solid #000000;
+}
+.footer_border {
+    background-color:#ffffff;
+    width: 72dp;
+    height: 1dp;
+    margin-bottom: 18dp;
+}
+.footer_question {
+    font-size: 13sp;
+    font-family: "GraphikApp-Regular";
+    margin-bottom: 8dp;
+    color: #ffffff;
+    gravity: center;
+    text-align:center;
+    line-height: 15sp;
+}
+.footer_answers_wrapper {
+    width: wrap_content;
     height: wrap_content;
-    width: match_parent;
-    padding-top: 5dp;
-    padding-bottom: 5dp;
-    padding-left: 15dp;
-    padding-right: 15dp;
-
+    margin-bottom: 13dp;
 }
-.header_text {
-    font-family: "Roboto-Black";
-    font-size: 14sp;
-    font-style: bold;
-}
-.header_link_text {
-    text-color: #0073e8;
-    font-family: "Roboto-Black";
-    font-size: 14sp;
-    font-style: bold;
-
-}
-        ''')
+.footer_answer_sad, .footer_answer_average {
+    margin-right: 12dp;
+}        ''')
         println(new CssCompiler().compile("com.digg2.style","main.css",rs));
     }
 
