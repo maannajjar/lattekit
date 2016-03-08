@@ -39,8 +39,6 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         }
     }
 
-
-
     fun findSetter(setter : String , valueType: Class<Any>, isFnValue : Boolean) : Method? {
         var myCls = getViewClass();
         var currentCls : Class<*> = myCls;
@@ -119,7 +117,8 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
             val myCls = getViewClass()
             propsToApply.forEach { entry ->
                 var it = entry.key
-                if (it == "id") {
+                if (it == "onTouch" || it == "onClick") {
+                } else if (it == "id") {
                     this.androidView?.id = if (this.props.get("id")!! is String) Util.makeResId("latte", "id", this.props.get("id") as String) else this.props.get("id") as Int
                 } else if (it.startsWith("@") && !isAttached) {
                 } else if (onlyDelayed && !it.startsWith("@")) {
@@ -148,15 +147,11 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
                             methodCache.put(methodKey, method);
                         }
                         if (method != null) {
-                            log("Setting $setter ${method.name}")
                             method.invoke(androidView, if (isFn) createLambdaProxyInstance(method.parameterTypes.get(0), value as Object) else value);
                         }
                     }
                 }
-
             }
-
-
         }
     }
 
@@ -178,12 +173,39 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 
     override fun onTouch(v : View, e : MotionEvent) : Boolean {
-
+        var handlerLambda: Any? = props.get("onTouch");
+        if (handlerLambda == null) {
+            return false;
+        }
+        if (handlerLambda is kotlin.Function0<*>) {
+            var result = handlerLambda.invoke();
+            if (result is Boolean) {
+                return result;
+            }
+        } else if (handlerLambda is kotlin.Function1<*,*>) {
+            var result = (handlerLambda as kotlin.Function1<Any,Any>).invoke(v);
+            if (result is Boolean) {
+                return result;
+            }
+        } else if (handlerLambda is kotlin.Function2<*,*,*>) {
+            var result = (handlerLambda as kotlin.Function2<Any,Any,Any>).invoke(v, e);
+            if (result is Boolean) {
+                return result;
+            }
+        }
         return false;
     }
 
-    override fun onClick(v: View?) {
-
+    override fun onClick(v: View) {
+        var handlerLambda: Any? = props.get("onClick");
+        if (handlerLambda == null) {
+            return
+        }
+        if (handlerLambda is kotlin.Function0<*>) {
+            handlerLambda.invoke();
+        } else if (handlerLambda is kotlin.Function1<*,*>) {
+            (handlerLambda as kotlin.Function1<Any,Any>).invoke(v);
+        }
 
     }
 }
