@@ -82,3 +82,4 @@ inline fun RuleSet.backgroundColor( value: String) = add("background-color", val
 inline fun RuleSet.elevation( value: String) = add("elevation", value)
 inline fun RuleSet.width( value: String) = add("width", value)
 inline fun RuleSet.height( value: String) = add("height", value)
+inline fun RuleSet.textAlign( value: String) = add("text-align", value)
