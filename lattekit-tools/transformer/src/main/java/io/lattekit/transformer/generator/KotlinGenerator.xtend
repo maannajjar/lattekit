@@ -12,7 +12,7 @@ import java.util.regex.Pattern
 
 class KotlinGenerator extends BaseGenerator {
 
-    val static TOKENS_RE = Pattern.compile('''(class\s+([^\s]*)\s*(?:(:)\s+([^\n]*)\s*)\{|lxml\(\s*"""((?:(?!""")[\S\s])*)"""\s*\)|("""|'|")(?:(?=(\\?))\7[\S\s])*?\6|(\/\*)(?:(?=(\\?))\9[\S\s])*?\*\/|\/\/.*|[\S\s])''');
+    val static TOKENS_RE = Pattern.compile('''(class\s+([^\s]*)\s*(?:(:)\s+([^\n]*)\s*)\{|lxml\(\s*"""((?:(?!""")[\S\s])*)"""\s*\)|("""|'|")(?:(?=(\\?))\7[\S\s])*?\6|(?:override\s*)?fun\s+([^{=]*)\s*(=|\{)\s*|(\/\*)(?:(?=(\\?))\9[\S\s])*?\*\/|\/\/.*|[\S\s])''');
 
     override getTokensPattern() {
         return TOKENS_RE
@@ -53,63 +53,74 @@ class KotlinGenerator extends BaseGenerator {
 
     def static void main(String... args) {
         println(new KotlinGenerator().transform("com.diggreader", '''
-class KotlinHomeFeedImpl : LatteView() {
 
-    internal var items: List<Story> = ArrayList();
-    internal var realm: Realm? = null;
-    @Prop
-    internal var refreshLayout: SwipeRefreshLayout? = null
-    internal var isRefreshing = false;
+
+class ArticleView : LatteView() {
+
+    @Prop var stories : List<Any?>?  = null;
+    @Prop var selectedStory : Int? = null;
+    @Prop var story : Story? = null;
+    @Prop var edition : DiggEdition? = null;
+
+    var pager : ViewPager? = null;
+
+    init {
+        css("com.digg2.style/main.css")
+    }
+
+    override fun layout() = lxml("""
+        <com.digg2.ui.SingleArticleView defaultView=${true} model=${story} edition=${edition} />
+    """)
+}
+
+class SingleArticleView : LatteView() {
+    @Prop("model") var story : Story ? = null;
+    @Prop var edition : DiggEdition? = null;
+    var webView : WebView? = null;
+    var progressBar : ProgressBar? = null;
+    var currentProgress : Int? = 0;
+    init {
+        css {
+            block(".progress") {
+                width("match_parent")
+                height("5dp")
+                backgroundColor("#ffffff")
+                marginTop("-2dp")
+            }
+        }
+    }
 
     override fun onViewMounted() {
-        realm = Realm.getInstance(this.activity)
-        downloadFeed();
-        displayFeed();
+        super.onViewMounted()
+
+        Analytics.logEvent("Read Story", mapOf("content_id" to this.story?.contentId!!, "edition_id" to this.edition?.editionId!!))
+
+        webView?.getSettings()?.javaScriptEnabled = true;
+        webView?.loadUrl(this.story?.content?.url)
+        webView?.setWebViewClient(object: WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                view?.loadUrl(url)
+                return false;
+            }
+        })
+        webView?.setWebChromeClient(object: WebChromeClient() {
+            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                currentProgress = newProgress;
+                progressBar?.setProgress(currentProgress!!);
+            }
+        })
     }
 
-    fun downloadFeed() {
-        ApiManager.getApi().getNews("top")
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { response ->
-                    log("Saving feed");
-                    realm?.executeTransaction { realm?.copyToRealmOrUpdate(response.data.feed) }
-                }
-    }
-
-    fun displayFeed() {
-        realm?.where(Story::class.java)
-                ?.findAllAsync()
-                ?.asObservable()
-                ?.subscribe { results ->
-                    items = results;
-                    onStateChanged();
-                };
-    }
-
-    fun handleStoryClick(story: Story) {
-        LatteView.createLayout("com.digg2.ui.ArticleView", mapOf("stories" to items, "currentStory" to story)).show(this);
-    }
-
-    fun doRefresh() {
-        Handler().postDelayed({
-            isRefreshing = false;
-            onStateChanged()
-        }, 3000)
-    }
-
-
-    fun render() = """
-        <LinearLayout orientation="vertical" cls="container">
-            <android.support.v4.widget.SwipeRefreshLayout ref="refreshLayout" refreshing={isRefreshing} onRefresh={{ doRefresh() }} size={SwipeRefreshLayout.LARGE}>
-                <ListView data={items} cls="container" dividerHeight={0} onItemClick={{ s :Story -> handleStoryClick(s) }}>
-                    <com.digg2.ui.MarqueeStoryCell when={{ item : Story, index: Int -> index == 0}} />
-                    <com.digg2.ui.CompactStoryCell defaultView="true"  />
-                </ListView>
-            </android.support.v4.widget.SwipeRefreshLayout>
+    override fun layout() = lxml("""
+        <LinearLayout orientation="vertical">
+            <ProgressBar ref="progressBar" style="@android:attr/progressBarStyleHorizontal"  max={100} progress=${currentProgress} cls="progress" alignParentTop={true}/>
+            <WebView ref="webView" cls="article_view" layout_width="match_parent" layout_height="match_parent"/>
         </LinearLayout>
-    """
+    """)
 }
+
+
+
 
         '''))
     }
