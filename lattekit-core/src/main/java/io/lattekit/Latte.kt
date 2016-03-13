@@ -126,19 +126,9 @@ class Latte {
             return layout
         }
 
-
         @JvmStatic
-        fun create(layoutXml : String): LatteView {
-            return create {
-                addChild(xml(layoutXml))
-            }
-        }
-
-        @JvmStatic
-        fun render(context: Context,layoutXml : String): View {
-            return create {
-                addChild(xml(layoutXml))
-            }.buildView(context as Activity,null);
+        fun render(layoutXml : String): LatteView {
+            return xml(layoutXml)
         }
 
         @JvmStatic
@@ -227,6 +217,8 @@ fun xml(layoutXml: String): LatteView {
     }
     return topLevelViews[0]!!
 }
-fun Activity.render(xml: String) {
-    setContentView(Latte.render(this, xml))
+fun Activity.render(xml: String): LatteView {
+    var latteView = Latte.render(xml)
+    setContentView(latteView.buildView(this,null))
+    return latteView;
 }
