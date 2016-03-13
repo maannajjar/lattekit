@@ -47,7 +47,6 @@ open class LatteView {
     var dataValues = mutableMapOf<String, Any?>()
 
     var layoutFn : (LatteView.() -> Unit)? = null
-    var isRecycled = false;
 
 
     val propFields: MutableMap<String, Field>
@@ -197,7 +196,7 @@ open class LatteView {
             var ref: String? = it.props.get("ref") as String?
             if ( ref != null ) {
                 val fieldName = ref;
-                var field = this.javaClass.getDeclaredFields().find { f -> f.name == fieldName }
+                var field = this.javaClass.superclass.getDeclaredFields().find { f -> f.name == fieldName }
                 if (field != null) {
                     field.setAccessible(true);
                     if (field.getType().isAssignableFrom(it.javaClass)) {
