@@ -18,19 +18,26 @@ class BackgroundCssProperty : CssProperty("background") {
 
 
     var backgroundColor : Int = Color.WHITE;
+    var touchedBackgroundColor : Int = Color.WHITE;
 
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
         backgroundColor = Color.TRANSPARENT;
-        var declarations = style.getDeclarations("background-color")
-        declarations.forEach {
-            if (it.value is ColorValue) {
-                backgroundColor = it.value.color
-            }
+        touchedBackgroundColor = Color.TRANSPARENT;
+
+        var bgDeclaration = style.getDeclaration("background-color")
+        if (bgDeclaration != null) {
+            backgroundColor = (bgDeclaration.value as ColorValue).color
+        }
+        var touchedBg = style.getTouchedDeclaration("background-color")
+        if (touchedBg != null) {
+            touchedBackgroundColor = (touchedBg?.value as ColorValue).color
         }
     }
 
     override fun apply(view: NativeView,style: NodeStyle) {
-        CssAccessory.getCssAccessory(view).gradientDrawable.setColors(listOf(backgroundColor, backgroundColor).toIntArray())
+        var css = CssAccessory.getCssAccessory(view)
+        css.gradientDrawable.setColors(listOf(backgroundColor, backgroundColor).toIntArray())
+        css.setRippleColor(touchedBackgroundColor);
     }
 }
 

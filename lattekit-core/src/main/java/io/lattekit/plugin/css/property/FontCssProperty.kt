@@ -23,12 +23,14 @@ class FontCssProperty : CssProperty("font-family") {
     var fontWeight : String? = "normal"
     var fontSize : FontSizeValue = FontSizeValue("18sp")
     var lineHeight : LengthValue? = null;
+    var letterSpacing : LengthValue? = null;
 
     override fun computeValue(context: Context, view: NativeView ,style : NodeStyle) {
         initFonts(view.activity!!)
         typeface = Typeface.DEFAULT
         lineHeight= null;
-        var declarations = style.getDeclarations("font","font-family","font-style","font-weight","font-size","line-height")
+        letterSpacing = null;
+        var declarations = style.getDeclarations("font","font-family","font-style","font-weight","font-size","line-height","letter-spacing")
         declarations.forEach {
             if (it.value is FontFamilyValue) {
                 typeface = allFonts?.getOrElse(it.value.fontList[0].toLowerCase(), { Typeface.DEFAULT })
@@ -40,6 +42,8 @@ class FontCssProperty : CssProperty("font-family") {
                 fontSize = it.value as FontSizeValue
             } else if (it.propertyName == "line-height") {
                 lineHeight = it.value as LengthValue;
+            } else if (it.propertyName == "letter-spacing") {
+                letterSpacing = it.value as LengthValue;
             }
         }
     }
@@ -65,6 +69,9 @@ class FontCssProperty : CssProperty("font-family") {
                 textView.setLineSpacing(lineHeight!!.inPixels(view.androidView!!.context)-fontSize.inPixels(view.androidView!!.context).toInt(),1f);
             } else {
                 textView.setLineSpacing(0f,1f);
+            }
+            if (letterSpacing != null) {
+                textView.letterSpacing = letterSpacing!!.inPixels(view.androidView!!.context)-fontSize.inPixels(view.androidView!!.context);
             }
         }
     }

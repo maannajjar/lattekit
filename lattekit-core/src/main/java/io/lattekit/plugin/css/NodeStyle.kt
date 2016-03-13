@@ -1,6 +1,8 @@
 package io.lattekit.plugin.css
 
+import android.widget.EditText
 import io.lattekit.plugin.css.declaration.CssDeclaration
+import io.lattekit.plugin.css.declaration.RuleSet
 import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.plugin.css.property.*
 import io.lattekit.ui.view.NativeView
@@ -14,8 +16,12 @@ import java.util.*
 class NodeStyle(nativeView : NativeView) {
     var currentClasses : String = ""
     var properties = mutableMapOf<String,CssProperty>()
+
     var declarations = LinkedHashMap<String, CssDeclaration>()
+    var touchedDeclarations = LinkedHashMap<String, CssDeclaration>()
     var allDeclarations = mutableMapOf<String,MutableList<CssDeclaration>>()
+
+
     var view : NativeView = nativeView
 
     companion object {
@@ -44,7 +50,7 @@ class NodeStyle(nativeView : NativeView) {
 
     fun selectorMatches(selectorElements : List<String>, myClasses : List<String>) : Boolean {
         return selectorElements.map {
-            if (it.trim() == "") false else (myClasses.contains(it.substring(1)))
+            if (it.trim() == "") false else (it.startsWith(":") || myClasses.contains(it.substring(1)))
         }.reduce { a, b -> a && b }
     }
 
@@ -60,9 +66,10 @@ class NodeStyle(nativeView : NativeView) {
                     stylesheet.classesRules.get(".$cls")?.forEach { ruleSet ->
 
                         if (ruleSet != null) {
-                            var matches = ruleSet.selectors.map { selectorMatches(it,myClasses) }.reduce { a, b -> a || b }
-                            if (matches) {
-                                ruleSet.declarations.forEach { this.addDeclaration(it) }
+                            ruleSet.selectors.forEach {
+                                if (selectorMatches(it, myClasses)) {
+                                    acceptRuleSet(ruleSet,it)
+                                }
                             }
                         }
                     }
@@ -70,17 +77,21 @@ class NodeStyle(nativeView : NativeView) {
             }
             apply(this.view);
         }
+    }
 
+    fun acceptRuleSet(ruleSet : RuleSet, matchingSelector : List<String>) {
+        if (matchingSelector.last() == ":active") {
+            ruleSet.declarations.forEach { this.addDeclaration(it,touchedDeclarations) }
+        } else {
+            ruleSet.declarations.forEach { this.addDeclaration(it,declarations) }
+        }
 
     }
 
-    fun addDeclaration(declaration : CssDeclaration) {
-        var propertyDeclarations = allDeclarations.getOrPut(declaration.propertyName, { mutableListOf<CssDeclaration>() } )
-        propertyDeclarations.add(declaration)
+    fun addDeclaration(declaration : CssDeclaration, addToBucket: LinkedHashMap<String, CssDeclaration>) {
         // TODO: Determine which declaration based on specifity, currently picks last declaration
-        var selectedDeclaration = propertyDeclarations[propertyDeclarations.lastIndex]
-        declaration.index = declarations.size
-        declarations.put(declaration.propertyName, selectedDeclaration)
+        declaration.index = addToBucket.size
+        addToBucket.put(declaration.propertyName, declaration)
     }
 
     fun getDeclarations(vararg properties : String) : List<CssDeclaration> {
@@ -90,6 +101,11 @@ class NodeStyle(nativeView : NativeView) {
     fun getDeclaration(propertyName : String) : CssDeclaration? {
         return declarations[propertyName]
     }
+
+    fun getTouchedDeclaration(propertyName : String) : CssDeclaration? {
+        return touchedDeclarations[propertyName]
+    }
+
 
     fun apply(view : NativeView) {
         properties.values.forEach{

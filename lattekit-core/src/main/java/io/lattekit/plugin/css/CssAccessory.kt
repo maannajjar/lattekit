@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.*
 import android.os.Build
+import android.widget.EditText
 import io.lattekit.ui.drawable.BorderDrawable
 import io.lattekit.ui.view.NativeView
 
@@ -16,12 +17,47 @@ inline fun NativeView.getCss() : CssAccessory {
 inline fun NativeView.getStyle() : NodeStyle {
     return CssAccessory.getCssAccessory(this).style;
 }
+//
+//class SelectorQuery(selectors : List<String>) {
+//    var segments: List<String> = selectors;
+//    var currentIndex : Int = 0
+//    var type : Int = 0;
+//    val DESCENDANT_TYPE = 1;
+//    val CHILD_TYPE = 2;
+//
+//    val isMatched : Boolean
+//        get() = currentIndex == segments.size
+//
+//    init {
+//        advance()
+//    }
+//
+//    fun advance()  {
+//        if (currentIndex+1 < segments.size) {
+//            currentIndex += 1
+//
+//        }
+//    }
+//
+//    fun match(viewType : String, viewClasses : List<String>, viewId : String) : SelectorQuery? {
+//        if (currentIndex >= segments.size) {
+//            return null
+//        }
+//        var currentEl = segments[currentIndex]
+//        if (currentEl.startsWith(".") && viewClasses.contains(currentEl.substring(1))) {
+//
+//        }
+//    }
+//
+//
+//}
 class CssAccessory(view : NativeView) {
     var style : NodeStyle = NodeStyle(view)
     var shapeDrawable : ShapeDrawable = ShapeDrawable()
     var gradientDrawable : GradientDrawable = GradientDrawable()
     var borderDrawable : BorderDrawable = BorderDrawable()
-    var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable))
+    var rippleDrawable : Drawable? = null;
+    var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable,ColorDrawable()))
 
     companion object {
         fun getCssAccessory(view : NativeView) : CssAccessory {
@@ -38,13 +74,29 @@ class CssAccessory(view : NativeView) {
         layerDrawable.setId(0, 0)
         layerDrawable.setId(1, 1)
         layerDrawable.setId(2, 2)
+        layerDrawable.setId(3,3)
 
         var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            view.androidView?.background = RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
+            rippleDrawable = RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
         } else {
-            view.androidView?.background = codetail.graphics.drawables.RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
+            rippleDrawable = codetail.graphics.drawables.RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
         }
+        if (view.androidView?.background != null) {
+            layerDrawable.setDrawableByLayerId(3,view.androidView?.background);
+        }
+        view.androidView?.background = rippleDrawable;
+    }
+
+    fun setRippleColor(color : Int) {
+        var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(color));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            (rippleDrawable as RippleDrawable).setColor(rippleColor)
+        } else {
+            (rippleDrawable as codetail.graphics.drawables.RippleDrawable).setColor(rippleColor)
+        }
+
     }
 
 }
