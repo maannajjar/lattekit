@@ -8,57 +8,39 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import org.eclipse.xtend.lib.annotations.Accessors;
-import org.eclipse.xtext.xbase.lib.Pure;
 
 @SuppressWarnings("all")
 public class BorderDrawable extends Drawable {
-    @Accessors
     private int topBorderColor = Color.BLACK;
 
-    @Accessors
     private int leftBorderColor = Color.BLACK;
 
-    @Accessors
     private int rightBorderColor = Color.BLACK;
 
-    @Accessors
     private int bottomBorderColor = Color.BLACK;
 
-    @Accessors
     private float topBorderWidth = 0;
 
-    @Accessors
     private float leftBorderWidth = 0;
 
-    @Accessors
     private float rightBorderWidth = 0;
 
-    @Accessors
     private float bottomBorderWidth = 0;
 
-    @Accessors
     private float topLeftRadiusV = 0;
 
-    @Accessors
     private float topRightRadiusV = 0;
 
-    @Accessors
     private float bottomLeftRadiusV = 0;
 
-    @Accessors
     private float bottomRightRadiusV = 0;
 
-    @Accessors
     private float topLeftRadiusH = 0;
 
-    @Accessors
     private float topRightRadiusH = 0;
 
-    @Accessors
     private float bottomLeftRadiusH = 0;
 
-    @Accessors
     private float bottomRightRadiusH = 0;
 
     private Paint paint;
@@ -353,7 +335,7 @@ public class BorderDrawable extends Drawable {
     public void setColorFilter(final ColorFilter cf) {
     }
 
-    @Pure
+
     public int getTopBorderColor() {
         return this.topBorderColor;
     }
@@ -362,7 +344,7 @@ public class BorderDrawable extends Drawable {
         this.topBorderColor = topBorderColor;
     }
 
-    @Pure
+
     public int getLeftBorderColor() {
         return this.leftBorderColor;
     }
@@ -371,7 +353,7 @@ public class BorderDrawable extends Drawable {
         this.leftBorderColor = leftBorderColor;
     }
 
-    @Pure
+
     public int getRightBorderColor() {
         return this.rightBorderColor;
     }
@@ -380,7 +362,7 @@ public class BorderDrawable extends Drawable {
         this.rightBorderColor = rightBorderColor;
     }
 
-    @Pure
+
     public int getBottomBorderColor() {
         return this.bottomBorderColor;
     }
@@ -389,7 +371,7 @@ public class BorderDrawable extends Drawable {
         this.bottomBorderColor = bottomBorderColor;
     }
 
-    @Pure
+
     public float getTopBorderWidth() {
         return this.topBorderWidth;
     }
@@ -398,7 +380,7 @@ public class BorderDrawable extends Drawable {
         this.topBorderWidth = topBorderWidth;
     }
 
-    @Pure
+
     public float getLeftBorderWidth() {
         return this.leftBorderWidth;
     }
@@ -407,7 +389,7 @@ public class BorderDrawable extends Drawable {
         this.leftBorderWidth = leftBorderWidth;
     }
 
-    @Pure
+
     public float getRightBorderWidth() {
         return this.rightBorderWidth;
     }
@@ -416,7 +398,7 @@ public class BorderDrawable extends Drawable {
         this.rightBorderWidth = rightBorderWidth;
     }
 
-    @Pure
+
     public float getBottomBorderWidth() {
         return this.bottomBorderWidth;
     }
@@ -425,7 +407,7 @@ public class BorderDrawable extends Drawable {
         this.bottomBorderWidth = bottomBorderWidth;
     }
 
-    @Pure
+
     public float getTopLeftRadiusV() {
         return this.topLeftRadiusV;
     }
@@ -434,7 +416,7 @@ public class BorderDrawable extends Drawable {
         this.topLeftRadiusV = topLeftRadiusV;
     }
 
-    @Pure
+
     public float getTopRightRadiusV() {
         return this.topRightRadiusV;
     }
@@ -443,7 +425,7 @@ public class BorderDrawable extends Drawable {
         this.topRightRadiusV = topRightRadiusV;
     }
 
-    @Pure
+
     public float getBottomLeftRadiusV() {
         return this.bottomLeftRadiusV;
     }
@@ -452,7 +434,7 @@ public class BorderDrawable extends Drawable {
         this.bottomLeftRadiusV = bottomLeftRadiusV;
     }
 
-    @Pure
+
     public float getBottomRightRadiusV() {
         return this.bottomRightRadiusV;
     }
@@ -461,7 +443,7 @@ public class BorderDrawable extends Drawable {
         this.bottomRightRadiusV = bottomRightRadiusV;
     }
 
-    @Pure
+
     public float getTopLeftRadiusH() {
         return this.topLeftRadiusH;
     }
@@ -470,7 +452,7 @@ public class BorderDrawable extends Drawable {
         this.topLeftRadiusH = topLeftRadiusH;
     }
 
-    @Pure
+
     public float getTopRightRadiusH() {
         return this.topRightRadiusH;
     }
@@ -479,7 +461,7 @@ public class BorderDrawable extends Drawable {
         this.topRightRadiusH = topRightRadiusH;
     }
 
-    @Pure
+
     public float getBottomLeftRadiusH() {
         return this.bottomLeftRadiusH;
     }
@@ -488,7 +470,7 @@ public class BorderDrawable extends Drawable {
         this.bottomLeftRadiusH = bottomLeftRadiusH;
     }
 
-    @Pure
+
     public float getBottomRightRadiusH() {
         return this.bottomRightRadiusH;
     }

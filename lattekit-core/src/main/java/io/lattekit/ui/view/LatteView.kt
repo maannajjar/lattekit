@@ -126,6 +126,13 @@ open class LatteView {
         return originalValue
     }
 
+    fun show(activity: Activity) {
+        var myId = "${System.currentTimeMillis()}";
+        var intent = Intent(activity, LatteActivity::class.java);
+        intent.putExtra("_LATTE_KIT_OBJ_ID", myId)
+        Latte.SAVED_OBJECTS.put(myId, this)
+        activity.startActivity(intent);
+    }
 
     fun show(caller: LatteView) {
         var myId = "${System.currentTimeMillis()}";

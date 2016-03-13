@@ -1,13 +1,12 @@
 package io.lattekit.ui.view
 
+import android.R
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AbsListView
 import android.widget.AdapterView
 import android.widget.BaseAdapter
 import io.lattekit.util.Util
-import org.eclipse.xtext.xbase.lib.Functions
-import org.eclipse.xtext.xbase.lib.Procedures
 import java.lang.reflect.ParameterizedType
 
 /**
@@ -155,6 +154,7 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
         }
         view.onItemClickListener = this;
         view.adapter = adapter;
+        view.setSelector(R.color.transparent)
         adapter.notifyDataSetChanged()
     }
 
@@ -174,15 +174,7 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
             // TODO: warn about wrong param type
             log("Warning " + paramType + " is not the same as " + obj.javaClass)
         }
-        if (handlerLambda is Procedures.Procedure1<*>) {
-            (handlerLambda as Procedures.Procedure1<Any>).apply(obj);
-        } else if (handlerLambda is Procedures.Procedure2<*,*>) {
-            (handlerLambda as Procedures.Procedure2<Any,Any>).apply(obj, position );
-        } else if (handlerLambda is Functions.Function1<*,*>) {
-            (handlerLambda as Functions.Function1<Any,Any>).apply(obj);
-        } else if (handlerLambda is Functions.Function2<*,*,*>) {
-            (handlerLambda as Functions.Function2<Any,Any,Any>).apply(obj, position);
-        } else if (handlerLambda is kotlin.jvm.functions.Function2<*,*,*>) {
+        if (handlerLambda is kotlin.jvm.functions.Function2<*,*,*>) {
             (handlerLambda as kotlin.jvm.functions.Function2<Any,Any,Any>).invoke(obj, position);
         } else if (handlerLambda is kotlin.jvm.functions.Function1<*,*>) {
             (handlerLambda as kotlin.jvm.functions.Function1<Any,Any>).invoke(obj)

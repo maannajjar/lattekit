@@ -50,14 +50,16 @@ open class NativeViewGroup : NativeView() {
         return ViewGroup.MarginLayoutParams::class.java
     }
 
-    fun createLayoutParams() : ViewGroup.LayoutParams {
-        return getLayoutParamsClass().constructors.find{
-                it.parameterTypes.size == 2 &&
+    fun createLayoutParams() : ViewGroup.LayoutParams = when (this.androidView) {
+        is android.widget.LinearLayout -> android.widget.LinearLayout.LayoutParams(-1, -1)
+        is android.widget.RelativeLayout -> android.widget.RelativeLayout.LayoutParams(-1, -1)
+        is android.widget.FrameLayout -> android.widget.FrameLayout.LayoutParams(-1, -1)
+        else -> getLayoutParamsClass().constructors.find {
+            it.parameterTypes.size == 2 &&
                 it.parameterTypes[0] == Integer.TYPE &&
                 it.parameterTypes[1] == Integer.TYPE
-            }?.newInstance(-1,-1) as ViewGroup.LayoutParams
+        }?.newInstance(-1, -1) as ViewGroup.LayoutParams
     }
-
 
     open fun onChildrenAdded() {}
 

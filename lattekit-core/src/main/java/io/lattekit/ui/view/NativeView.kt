@@ -1,12 +1,15 @@
 package io.lattekit.ui.view
 
 import android.content.Context
+import android.graphics.drawable.Drawable
+import android.support.v4.widget.SwipeRefreshLayout
 import android.view.MotionEvent
 import android.view.View
+import android.widget.AbsListView
 import android.widget.AdapterView
+import android.widget.ProgressBar
+import android.widget.TextView
 import io.lattekit.util.Util
-import org.eclipse.xtext.xbase.lib.Functions
-import org.eclipse.xtext.xbase.lib.Procedures
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.jvm.functions.Function0
@@ -92,11 +95,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     fun createLambdaProxyInstance(receiverClass : Class<*> , value: Object ) : Any {
         var instance = Proxy.newProxyInstance(receiverClass.getClassLoader(), arrayOf(receiverClass),
                 { any, invokedMethod, arrayOfAnys ->
-                    if (value is Procedures.Procedure0) {
-                        value.apply()
-                    } else if (value is Functions.Function0<*>) {
-                        value.apply()
-                    } else if ( Util.hasKotlin() && value is Function0<*>) {
+                    if (value is Function0<*>) {
                         value.invoke()
                     } else {
                         null
@@ -110,8 +109,61 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         applyProps(applyTo, false);
     }
 
+    fun applyBasicProps(propsToApply : Map<String,Any?>, onlyDelayed : Boolean ) {
+        androidView?.isClickable = false
+        propsToApply.forEach { var (key,value) =  it
+            if (key.startsWith("@") && !isAttached) {
+            } else if (onlyDelayed && !key.startsWith("@")) {
+            } else {
+                if (key.startsWith("@")) key = key.substring(1)
+                if (key == "alpha" ) {
+                    androidView?.alpha = value as Float
+                } else if (key == "text" && androidView is TextView) {
+                    (androidView as TextView).text = value as String
+                } else if (key == "hint" && androidView is TextView) {
+                    (androidView as TextView).hint = value as String
+                } else if (key == "imeOptions" && androidView is TextView) {
+                    (androidView as TextView).imeOptions = value as Int
+                } else if (key == "inputType" && androidView is TextView) {
+                    (androidView as TextView).inputType = value as Int
+                } else if (key == "onEditorActionListener" && androidView is TextView) {
+                    (androidView as TextView).setOnEditorActionListener(value as TextView.OnEditorActionListener)
+                } else if (key == "onScrollListener" && androidView is AbsListView) {
+                    (androidView as AbsListView).setOnScrollListener(value as AbsListView.OnScrollListener)
+                } else if (key == "clickable") {
+                    androidView?.isClickable = value as Boolean;
+                } else if (key == "visibility") {
+                    androidView?.visibility = value as Int
+                } else if (key == "id") {
+                    this.androidView?.id = if (this.props.get("id")!! is String) Util.makeResId("latte", "id", this.props.get("id") as String) else this.props.get("id") as Int
+                } else if (key == "logo" && androidView is android.support.v7.widget.Toolbar) {
+                    if (value is Int) {
+                        (androidView as android.support.v7.widget.Toolbar).setLogo(value)
+                    } else if (value is Drawable) {
+                        (androidView as android.support.v7.widget.Toolbar).setLogo(value)
+                    }
+                } else if (key == "progress" && androidView is ProgressBar) {
+                    (androidView as ProgressBar).progress = value as Int
+                } else if (key == "max" && androidView is ProgressBar) {
+                    (androidView as ProgressBar).max = value as Int
+                } else if (key == "refreshing" && androidView is SwipeRefreshLayout) {
+                    (androidView as SwipeRefreshLayout).isRefreshing = value as Boolean
+                } else if (key == "onRefresh" && androidView is SwipeRefreshLayout) {
+                    if (value is SwipeRefreshLayout.OnRefreshListener) {
+                        (androidView as SwipeRefreshLayout).setOnRefreshListener(value)
+                    } else if (value is Function<*>){
+                        var listener = createLambdaProxyInstance(SwipeRefreshLayout.OnRefreshListener::class.java, value as Object) as SwipeRefreshLayout.OnRefreshListener
+                        (androidView as SwipeRefreshLayout).setOnRefreshListener(listener);
+                    }
+                }
+            }
+        }
+    }
+
     fun applyProps(propsToApply : Map<String,Any?>, onlyDelayed : Boolean ) {
         if (androidView != null) {
+            applyBasicProps(propsToApply,onlyDelayed);
+            return;
             // Default clickable to false
             this.androidView?.isClickable = false
             val myCls = getViewClass()
@@ -127,9 +179,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
                     var field = if (it.startsWith("@")) {
                         it.substring(1)
                     } else it;
-                    var isFn = value is Procedures.Procedure0
-                            || value is Functions.Function0<*>
-                            || (Util.hasKotlin() && value is Function0<*>)
+                    var isFn =  value is Function0<*>
                     var setter = "set" + field.substring(0, 1).toUpperCase() + field.substring(1) + (if (isFn) "Listener" else "")
                     if (value == null) {
                     } else {

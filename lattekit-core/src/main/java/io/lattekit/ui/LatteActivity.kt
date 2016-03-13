@@ -16,6 +16,7 @@ class LatteActivity : FragmentActivity()  {
     var latteView : LatteView? = null;
     var androidView  : View? = null;
 
+    var onBackPress : ()->Boolean = { false }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -28,6 +29,11 @@ class LatteActivity : FragmentActivity()  {
         }
     }
 
+    override fun onBackPressed() {
+        if (!this.onBackPress()) {
+            super.onBackPressed()
+        }
+    }
     fun onStateChanged() {
         latteView?.onStateChanged();
     }
@@ -38,5 +44,15 @@ class LatteActivity : FragmentActivity()  {
 
     fun getCssFiles() :  List<Stylesheet> {
         return emptyList()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        var myId = getIntent().getStringExtra("_LATTE_KIT_OBJ_ID");
+
+        if (myId != null) {
+            Latte.Companion.SAVED_OBJECTS.remove(myId)
+        }
+
     }
 }
