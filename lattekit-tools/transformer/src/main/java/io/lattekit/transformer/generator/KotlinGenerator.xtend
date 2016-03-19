@@ -9,6 +9,7 @@ import io.lattekit.transformer.tree.Tag
 import io.lattekit.transformer.tree.TextNode
 import java.util.List
 import java.util.regex.Pattern
+import io.lattekit.Reflection
 
 class KotlinGenerator extends BaseGenerator {
 
@@ -38,9 +39,69 @@ class KotlinGenerator extends BaseGenerator {
     '''
 
 
+    def String getTypeName(Class type) {
+        if (type.name == "java.lang.CharSequence") {
+            return "String"
+        } else if (type.isPrimitive) {
+            return type.name.substring(0,1).toUpperCase() + type.name.substring(1)
+        } else {
+            return type.name.replaceAll("\\$",".");
+        }
+    }
+    def String compileProp(Prop prop, Class clz) {
+        var field = if (prop.name.startsWith("@")) {
+            prop.name.substring(1)
+        } else prop.name;
 
-    override String compile(Tag tag) '''
-        io.lattekit.Latte.create(io.lattekit.Latte.lookupClass("«tag.name»"), io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), io.lattekit.ui.view.ChildrenProc { it : LatteView ->
+        val setter = "set" + field.substring(0, 1).toUpperCase() + field.substring(1)
+        var methods = Reflection.findMethods(clz, setter);
+        val isFn = if (methods.empty) {
+            methods = Reflection.findMethods(clz, setter+"Listener");
+            true
+        } else { false }
+        if (methods.empty || setter == "setOnClick" || setter == "setOnTouch") {
+            return "";
+        }
+        return '''prop = props.get("«prop.name»");
+        if (prop != null) {'''
+            + methods.map['''
+            if (prop is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type)»«ENDIF») {
+                «IF isFn»
+                    var listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type)»::class.java, prop as Object) as «getTypeName(it.parameters.get(0).type)»
+                    view.«setter»«IF isFn»Listener«ENDIF»(listener);
+                «ELSE»
+                    view.«setter»(prop as «getTypeName(it.parameters.get(0).type)»);
+                «ENDIF»
+                acceptedProps.add("«prop.name»");
+            }
+        '''].join("else ") + "}"
+    }
+    def String compileNative(Tag tag, Class clz) {
+        '''io.lattekit.Latte.createNative(«clz.name»::class.java, io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), { viewWrapper, props ->
+            var view = viewWrapper.androidView as «clz.name»;
+            var prop : Any? = null;
+            var acceptedProps = mutableListOf<String>();
+            «FOR prop : tag.props»
+                «compileProp(prop, clz)»
+            «ENDFOR»
+            acceptedProps
+        }, io.lattekit.ui.view.ChildrenProc { it : LatteView ->
+                «FOR child : tag.childNodes»
+                    «IF child instanceof TextNode»«child.text»«ENDIF»
+                    «IF child instanceof Tag»
+                        it.addChild(«child.compile»);
+                    «ENDIF»
+                «ENDFOR»
+            })
+        '''
+    }
+
+    override String compile(Tag tag) {
+        var clz = Reflection.lookupClass(tag.name)
+        if (clz != null) {
+            return compileNative(tag, clz)
+        }
+        '''io.lattekit.Latte.create(io.lattekit.Latte.lookupClass("«tag.name»"), io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), io.lattekit.ui.view.ChildrenProc { it : LatteView ->
             «FOR child : tag.childNodes»
                 «IF child instanceof TextNode»«child.text»«ENDIF»
                 «IF child instanceof Tag»
@@ -48,7 +109,8 @@ class KotlinGenerator extends BaseGenerator {
                 «ENDIF»
             «ENDFOR»
         })
-    '''
+        '''
+    }
 
 
     def static void main(String... args) {

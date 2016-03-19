@@ -1,7 +1,6 @@
 package io.lattekit
 
 import android.app.Activity
-import android.content.Context
 import android.util.Log
 import android.util.Xml
 import android.view.View
@@ -13,7 +12,9 @@ import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
+import java.lang.reflect.Proxy
 import java.util.*
+import kotlin.jvm.functions.Function0
 
 /**
  * Created by maan on 2/27/16.
@@ -119,14 +120,12 @@ class Latte {
             return clazz
         }
 
-        @JvmStatic
         fun create(layoutFn : LatteView.() -> Unit): LatteView {
             var layout: LatteView = LatteView();
             layout.layoutFn = layoutFn
             return layout
         }
 
-        @JvmStatic
         fun render(layoutXml : String): LatteView {
             return xml(layoutXml)
         }
@@ -138,6 +137,33 @@ class Latte {
             }
             var key = view.props.get("__cache_key") ?: view.javaClass.name
             RECYCLED_INSTANCES.getOrPut(key as String, { mutableListOf() }).add(WeakReference(view))
+        }
+        @JvmStatic
+        fun createNative(clazz: Class<*>, props: MutableMap<String, Any?>, propsSetter: (NativeView, Map<String,Any?>)->List<String> , childrenProc: ChildrenProc): LatteView {
+            var layout: LatteView?;
+            log("Checking ${clazz.simpleName}")
+            var cachedCls = LOOKUP_CACHE.get(clazz.simpleName)
+
+            if (cachedCls != null && NativeView::class.java.isAssignableFrom(cachedCls)) {
+                log("Creating ${cachedCls} instead")
+                layout = cachedCls!!.newInstance() as NativeView;
+                layout.propsSetter = propsSetter;
+            } else if (ViewGroup::class.java.isAssignableFrom(clazz)) {
+                layout = NativeViewGroup();
+                layout.nativeViewClass = clazz as Class<out View>
+                layout.propsSetter = propsSetter;
+            } else {
+                layout = NativeView();
+                layout.nativeViewClass = clazz as Class<out View>
+                layout.propsSetter = propsSetter;
+            }
+
+            layout.props = props;
+            props.put("__cache_key", clazz.name)
+            layout.children = mutableListOf()
+            childrenProc?.apply(layout)
+
+            return layout;
         }
 
         @JvmStatic
@@ -177,8 +203,21 @@ class Latte {
             return layout
         }
 
-
+        fun createLambdaProxyInstance(receiverClass : Class<*> , value: Object ) : Any {
+            var instance = Proxy.newProxyInstance(receiverClass.getClassLoader(), arrayOf(receiverClass),
+                { any, invokedMethod, arrayOfAnys ->
+                    if (value is Function0<*>) {
+                        value.invoke()
+                    } else {
+                        null
+                    }
+                })
+            return instance;
+        }
     }
+
+
+
 }
 
 

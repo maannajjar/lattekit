@@ -9,6 +9,7 @@ import android.widget.AbsListView
 import android.widget.AdapterView
 import android.widget.ProgressBar
 import android.widget.TextView
+import io.lattekit.Latte
 import io.lattekit.util.Util
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
@@ -24,6 +25,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     var nativeViewClass : Class<out View>? = null
 
     val methodCache = mutableMapOf<String, Method?>()
+    var propsSetter : (NativeView, Map<String,Any?>)->List<String> = { view, props -> emptyList() };
 
     open fun getViewClass() : Class<out View> {
         return if (nativeViewClass != null) {
@@ -92,17 +94,6 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         return null;
     }
 
-    fun createLambdaProxyInstance(receiverClass : Class<*> , value: Object ) : Any {
-        var instance = Proxy.newProxyInstance(receiverClass.getClassLoader(), arrayOf(receiverClass),
-                { any, invokedMethod, arrayOfAnys ->
-                    if (value is Function0<*>) {
-                        value.invoke()
-                    } else {
-                        null
-                    }
-                })
-        return instance;
-    }
 
 
     open fun applyProps(applyTo : Map<String,Any?>) {
@@ -152,7 +143,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
                     if (value is SwipeRefreshLayout.OnRefreshListener) {
                         (androidView as SwipeRefreshLayout).setOnRefreshListener(value)
                     } else if (value is Function<*>){
-                        var listener = createLambdaProxyInstance(SwipeRefreshLayout.OnRefreshListener::class.java, value as Object) as SwipeRefreshLayout.OnRefreshListener
+                        var listener = Latte.createLambdaProxyInstance(SwipeRefreshLayout.OnRefreshListener::class.java, value as Object) as SwipeRefreshLayout.OnRefreshListener
                         (androidView as SwipeRefreshLayout).setOnRefreshListener(listener);
                     }
                 }
@@ -162,7 +153,9 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
     fun applyProps(propsToApply : Map<String,Any?>, onlyDelayed : Boolean ) {
         if (androidView != null) {
-            applyBasicProps(propsToApply,onlyDelayed);
+            androidView?.isClickable = false
+            propsSetter.invoke(this,propsToApply);
+//            applyBasicProps(propsToApply,onlyDelayed);
             return;
             // Default clickable to false
             this.androidView?.isClickable = false
@@ -197,7 +190,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
                             methodCache.put(methodKey, method);
                         }
                         if (method != null) {
-                            method.invoke(androidView, if (isFn) createLambdaProxyInstance(method.parameterTypes.get(0), value as Object) else value);
+                            method.invoke(androidView, if (isFn) Latte.createLambdaProxyInstance(method.parameterTypes.get(0), value as Object) else value);
                         }
                     }
                 }
@@ -259,3 +252,4 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
     }
 }
+
