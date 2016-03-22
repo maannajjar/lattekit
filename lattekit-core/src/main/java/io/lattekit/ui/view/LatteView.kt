@@ -160,9 +160,7 @@ open class LatteView {
                 this.androidView = this.renderNative(a);
             }
             if (this.androidView?.layoutParams == null) {
-                this.androidView?.layoutParams = if (lp == null) {
-                    ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT)
-                } else { lp; }
+                this.androidView?.layoutParams = lp ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT)
             }
             if (this is NativeViewGroup) {
                 this.mountChildren()
@@ -274,7 +272,6 @@ open class LatteView {
                     oldView.renderTree()
                 }
                 newRenderedViews.add(oldView)
-                Latte.recycle(newView)
             } else {
                 // Try find recycled view
                 newView.parentView = this
@@ -313,11 +310,6 @@ open class LatteView {
         if (this is NativeViewGroup) {
             for (child in this.children) {
                 render(child)
-            }
-        }
-        this.renderedViews.forEach {
-            if (!newRenderedViews.contains(it)) {
-                Latte.recycleView(it)
             }
         }
         this.renderedViews = newRenderedViews;

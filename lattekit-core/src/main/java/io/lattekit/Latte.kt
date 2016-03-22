@@ -10,7 +10,6 @@ import io.lattekit.plugin.css.CssPlugin
 import io.lattekit.ui.view.*
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
-import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Proxy
 import java.util.*
@@ -25,8 +24,6 @@ class Latte {
         var PLUGINS = mutableListOf<LattePlugin>(CssPlugin())
         var SAVED_OBJECTS = mutableMapOf<String, LatteView>();
         var PROP_FILEDS = mutableMapOf<String, MutableMap<String, Field>>()
-        var RECYCLED_VIEWS = mutableMapOf<String, MutableList<WeakReference<LatteView>>>()
-        var RECYCLED_INSTANCES = mutableMapOf<String, MutableList<WeakReference<LatteView>>>()
 
         @JvmStatic
         var LOOKUP_CACHE: MutableMap<String, Class<out Any>> = mutableMapOf(
@@ -39,43 +36,6 @@ class Latte {
             "ViewPager" to ViewPager::class.java,
             "WebView" to android.webkit.WebView::class.java
         )
-
-        fun recycleView(view: LatteView) {
-            if (view is NativeView) {
-                var recycleKey = view.props.get("recycle")
-                if (recycleKey != null) {
-                    var list = RECYCLED_VIEWS.get(view.getViewClass().name + ":" + recycleKey);
-                    if (list == null) {
-                        list = mutableListOf()
-                        RECYCLED_VIEWS.put(view.getViewClass().name + ":" + recycleKey, list)
-                    }
-                    view.isMounted = false
-                    list.add(WeakReference(view))
-                }
-            }
-        }
-
-        fun getRecycledView(forView: LatteView): LatteView? {
-            if (forView is NativeView) {
-                var recycleKey = forView.props.get("recycle")
-                if (recycleKey != null) {
-
-                    var list = RECYCLED_VIEWS.get(forView.getViewClass().name + ":" + recycleKey);
-                    if (list == null) {
-                        list = mutableListOf()
-                        RECYCLED_VIEWS.put(forView.getViewClass().name + ":" + recycleKey, list)
-                    }
-                    var view = list.getOrNull(0)
-                    if (view != null) {
-                        list.removeAt(0);
-                        log("Recycler", "Re-used View ${view}")
-                    }
-                    return view?.get()
-                }
-            }
-            return null;
-        }
-
 
         @JvmStatic
         fun props(vararg objects: Any?): MutableMap<String, Any?> {
@@ -131,14 +91,6 @@ class Latte {
         }
 
         @JvmStatic
-        fun recycle(view : LatteView) {
-            if (view is NativeView && view.androidView != null) {
-                return;
-            }
-            var key = view.props.get("__cache_key") ?: view.javaClass.name
-            RECYCLED_INSTANCES.getOrPut(key as String, { mutableListOf() }).add(WeakReference(view))
-        }
-        @JvmStatic
         fun createNative(clazz: Class<*>, props: MutableMap<String, Any?>, propsSetter: (NativeView, Map<String,Any?>)->List<String> , childrenProc: ChildrenProc): LatteView {
             var layout: LatteView?;
             log("Checking ${clazz.simpleName}")
@@ -159,7 +111,6 @@ class Latte {
             }
 
             layout.props = props;
-            props.put("__cache_key", clazz.name)
             layout.children = mutableListOf()
             childrenProc?.apply(layout)
 
@@ -169,16 +120,6 @@ class Latte {
         @JvmStatic
         fun create(clazz: Class<*>, props: MutableMap<String, Any?>, childrenProc: ChildrenProc): LatteView {
             var layout: LatteView?;
-            var cache = RECYCLED_INSTANCES.get(clazz.name)
-            if (cache != null && !cache.isEmpty()) {
-                layout = cache.removeAt(0).get()
-                if (layout != null ) {
-                    layout.props = props;
-                    layout.children = mutableListOf()
-                    childrenProc?.apply(layout)
-                    return layout
-                }
-            }
             if (ViewGroup::class.java.isAssignableFrom(clazz)) {
                 layout = NativeViewGroup();
                 layout.nativeViewClass = clazz as Class<out View>
@@ -196,7 +137,6 @@ class Latte {
                 layout = implClass.newInstance() as LatteView;
             }
             layout.props = props;
-            props.put("__cache_key", clazz.name)
             layout.children = mutableListOf()
             childrenProc?.apply(layout)
 
