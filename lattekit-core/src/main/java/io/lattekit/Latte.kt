@@ -1,7 +1,6 @@
 package io.lattekit
 
 import android.app.Activity
-import android.util.Log
 import android.util.Xml
 import android.view.View
 import android.view.ViewGroup
@@ -21,19 +20,23 @@ import kotlin.jvm.functions.Function0
 
 class Latte {
     companion object {
+        var CLASS_ORDER = Comparator<Class<out View>> { p0, p1 ->
+            if (p0.isAssignableFrom(p1)) 1 else -1
+        }
+
         var PLUGINS = mutableListOf<LattePlugin>(CssPlugin())
         var SAVED_OBJECTS = mutableMapOf<String, LatteView>();
         var PROP_FILEDS = mutableMapOf<String, MutableMap<String, Field>>()
+        var ADAPTERS =  mutableMapOf(
+            android.widget.ImageView::class.java to ImageView::class.java,
+            android.widget.ListView::class.java to ListView::class.java,
+            android.widget.RelativeLayout::class.java to RelativeLayout::class.java,
+            android.widget.LinearLayout::class.java to LinearLayout::class.java,
+            android.support.v4.view.ViewPager::class.java to ViewPager::class.java
+        )
 
         @JvmStatic
         var LOOKUP_CACHE: MutableMap<String, Class<out Any>> = mutableMapOf(
-            "View" to View::class.java,
-            "TextView" to android.widget.TextView::class.java,
-            "ImageView" to ImageView::class.java,
-            "ListView" to ListView::class.java,
-            "LinearLayout" to LinearLayout::class.java,
-            "RelativeLayout" to RelativeLayout::class.java,
-            "ViewPager" to ViewPager::class.java,
             "WebView" to android.webkit.WebView::class.java
         )
 
@@ -52,17 +55,6 @@ class Latte {
         }
 
         @JvmStatic
-        fun log(message: String) {
-            Log.d("Latte", message)
-        }
-
-        @JvmStatic
-        fun log(tag: String, message: String) {
-            Log.d(tag, message)
-        }
-
-
-        @JvmStatic
         fun lookupClass(className: String): Class<*> {
             var cachedCls: Class<*>? = LOOKUP_CACHE.get(className);
             var clazz = if ( cachedCls != null ) {
@@ -76,7 +68,6 @@ class Latte {
                 LOOKUP_CACHE.put(className, cls);
                 cls
             }
-
             return clazz
         }
 
@@ -87,18 +78,17 @@ class Latte {
         }
 
         fun render(layoutXml : String): LatteView {
-            return xml(layoutXml)
+            return parseXml(layoutXml)
         }
 
         @JvmStatic
         fun createNative(clazz: Class<*>, props: MutableMap<String, Any?>, propsSetter: (NativeView, Map<String,Any?>)->List<String> , childrenProc: ChildrenProc): LatteView {
             var layout: LatteView?;
-            log("Checking ${clazz.simpleName}")
-            var cachedCls = LOOKUP_CACHE.get(clazz.simpleName)
-
-            if (cachedCls != null && NativeView::class.java.isAssignableFrom(cachedCls)) {
-                log("Creating ${cachedCls} instead")
-                layout = cachedCls!!.newInstance() as NativeView;
+            var adaptableClass = ADAPTERS.filterKeys { it.isAssignableFrom(clazz) }.keys.sortedWith(CLASS_ORDER).getOrNull(0);
+            if (adaptableClass != null) {
+                var adapter = ADAPTERS.get(adaptableClass)!!;
+                layout = adapter.newInstance()
+                layout.nativeViewClass = clazz as Class<out View>
                 layout.propsSetter = propsSetter;
             } else if (ViewGroup::class.java.isAssignableFrom(clazz)) {
                 layout = NativeViewGroup();
@@ -110,11 +100,11 @@ class Latte {
                 layout.propsSetter = propsSetter;
             }
 
-            layout.props = props;
-            layout.children = mutableListOf()
+            layout!!.props = props;
+            layout!!.children = mutableListOf()
             childrenProc?.apply(layout)
 
-            return layout;
+            return layout!!;
         }
 
         @JvmStatic
@@ -154,9 +144,12 @@ class Latte {
                 })
             return instance;
         }
+
+        fun registerAdapter(androidClass : Class<out View>, adapterClass : Class<out NativeView>) {
+            var adapters = ADAPTERS.put(androidClass, adapterClass)
+        }
+
     }
-
-
 
 }
 
@@ -166,7 +159,7 @@ fun lxml(layoutXml: String): LatteView {
     throw Exception("Using LXML requires gradle plugin")
 }
 
-fun xml(layoutXml: String): LatteView {
+fun parseXml(layoutXml: String): LatteView {
     var currentView: LatteView? = null
     var topLevelViews = mutableListOf<LatteView>()
     var viewStack = Stack<LatteView>()
@@ -196,6 +189,9 @@ fun xml(layoutXml: String): LatteView {
     }
     return topLevelViews[0]!!
 }
+
+
+
 fun Activity.render(xml: String): LatteView {
     var latteView = Latte.render(xml)
     setContentView(latteView.buildView(this,null))
