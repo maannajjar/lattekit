@@ -50,6 +50,7 @@ class LattePlugin implements Plugin<Project> {
                     LibraryExtension: android.libraryVariants
                     default: throw new GradleException('''Unknown packaging type «android.class.simpleName»''')
                 }
+                io.lattekit.Reflection.loadAndroidSdk(android.getSdkDirectory.absolutePath,android.compileSdkVersion)
                 android.sourceSets.forEach [ sourceSet |
                     val manifestFile = sourceSet.manifest.srcFile;
                     if(manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {

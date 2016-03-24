@@ -32,7 +32,6 @@ public class Reflection {
     static def Class lookupClass(extension ClassLoader loader, String className) {
         var clazz = if (className.contains("."))  {
             try {
-                println("Finding "+className)
                 var cls = Class.forName(className,false,loader)
                 LOOKUP_CACHE.put(className, cls);
                 cls
@@ -57,13 +56,14 @@ public class Reflection {
         return clazz
     }
 
+    static def loadAndroidSdk(String path, String version) {
+        loadJar(path+"/platforms/"+version+"/android.jar")
+        loadJar(path+"/extras/android/support/v4/android-support-v4.jar")
+        loadJar(path+"/extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar")
+        loadJar(path+"/extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar")
+    }
+
     static def Class lookupClass(String className) {
-        if (CLASSLOADER == null) {
-            loadJar("/Users/maan/Library/Android/sdk/extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar")
-            loadJar("/Users/maan/Library/Android/sdk/platforms/android-23/android.jar")
-            loadJar("/Users/maan/Library/Android/sdk/extras/android/support/v4/android-support-v4.jar")
-            loadJar("/Users/maan/Library/Android/sdk/extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar")
-        }
         var cachedCls = LOOKUP_CACHE.get(className);
         if (cachedCls != null) {
             return cachedCls;
