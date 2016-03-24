@@ -12,7 +12,7 @@ import java.lang.reflect.ParameterizedType
 /**
  * Created by maan on 2/15/16.
  */
-class ListView : NativeView(), AdapterView.OnItemClickListener {
+class LatteListView : NativeView(), AdapterView.OnItemClickListener {
 
 
     var adapter: BaseAdapter = object : BaseAdapter() {
@@ -68,7 +68,7 @@ class ListView : NativeView(), AdapterView.OnItemClickListener {
             template = template.copy();
             template.props.put("modelIndex", position);
             template.props.put("model", getItem(position));
-            template.parentView = this@ListView
+            template.parentView = this@LatteListView
             var lp = AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.WRAP_CONTENT);
             var v = template.buildView(activity!!, lp)
             v.setTag(template)

@@ -6,7 +6,7 @@ import com.bumptech.glide.Glide
 /**
  * Created by maan on 2/15/16.
  */
-class ImageView : NativeView() {
+class LatteImageView : NativeView() {
 
     fun getSrc() : Any? {
         return if (props.containsKey("src")) props.get("src") else null;

@@ -2,7 +2,7 @@ package io.lattekit.plugin.css
 
 import android.content.res.Resources
 import io.lattekit.ui.view.LatteView
-import io.lattekit.ui.view.ListView
+import io.lattekit.ui.view.LatteListView
 import io.lattekit.ui.view.NativeView
 import io.lattekit.ui.view.NativeViewGroup
 
@@ -13,8 +13,8 @@ import io.lattekit.ui.view.NativeViewGroup
 fun getParentNativeViewGroup(view : LatteView) : NativeView? {
     if (view.parentView == null) {
         return null;
-    } else if (view.parentView is ListView) {
-        return view.parentView as ListView
+    } else if (view.parentView is LatteListView) {
+        return view.parentView as LatteListView
     } else if (view.parentView is NativeViewGroup) {
         return view.parentView as NativeViewGroup
     } else {
@@ -28,7 +28,7 @@ fun testNthChild(index : Int, view : NativeView) : Boolean {
     var parentGroup = getParentNativeViewGroup(view);
     return if (parentGroup is NativeViewGroup ) {
         parentGroup?.managedViews?.getOrNull(index) == view.androidView
-    } else if (parentGroup is ListView ) {
+    } else if (parentGroup is LatteListView ) {
         parentGroup.getModelIndex(view) == index
     } else {
         false
@@ -39,7 +39,7 @@ fun testLastChild(view : NativeView) : Boolean {
     var parentGroup = getParentNativeViewGroup(view);
     return if (parentGroup is NativeViewGroup ) {
         parentGroup?.managedViews?.last() == view.androidView
-    } else if (parentGroup is ListView ) {
+    } else if (parentGroup is LatteListView ) {
         parentGroup.getModelIndex(view) == parentGroup.getData().size-1
     } else {
         false

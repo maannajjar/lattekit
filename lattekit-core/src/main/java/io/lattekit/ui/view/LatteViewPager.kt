@@ -21,7 +21,7 @@ import java.util.*
 /**
  * Created by maan on 2/7/16.
  */
-class ViewPager : NativeView() {
+class LatteViewPager : NativeView() {
     class PagerFragment : Fragment() {
 
         private var templateView: LatteView? = null
@@ -30,7 +30,7 @@ class ViewPager : NativeView() {
             super.onCreate(savedInstanceState)
             val _arguments = this.arguments
             val _string = _arguments.getString("_LATTE_KIT_OBJ_ID")
-            val _get = ViewPager.PagerFragment.SAVED_OBJECTS[_string]
+            val _get = LatteViewPager.PagerFragment.SAVED_OBJECTS[_string]
             this.templateView = _get
         }
 
@@ -43,12 +43,12 @@ class ViewPager : NativeView() {
         companion object {
             private val SAVED_OBJECTS = HashMap<String, LatteView>()
 
-            fun newInstance(template: LatteView): ViewPager.PagerFragment {
+            fun newInstance(template: LatteView): LatteViewPager.PagerFragment {
                 val myId = "" + Math.random()!! + System.currentTimeMillis()
                 val args = Bundle()
                 args.putString("_LATTE_KIT_OBJ_ID", myId)
-                ViewPager.PagerFragment.SAVED_OBJECTS.put(myId, template)
-                val instance = ViewPager.PagerFragment()
+                LatteViewPager.PagerFragment.SAVED_OBJECTS.put(myId, template)
+                val instance = LatteViewPager.PagerFragment()
                 instance.arguments = args
                 return instance
             }
@@ -102,8 +102,8 @@ class ViewPager : NativeView() {
                 val template = children[selectedTemplate].copy()
                 template.props.put("modelIndex", Integer.valueOf(position))
                 template.props.put("model", item)
-                template.parentView = this@ViewPager
-                return ViewPager.PagerFragment.newInstance(template)
+                template.parentView = this@LatteViewPager
+                return LatteViewPager.PagerFragment.newInstance(template)
             }
         }
         val view = this.androidView as android.support.v4.view.ViewPager

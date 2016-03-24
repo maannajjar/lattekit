@@ -1,12 +1,9 @@
 package io.lattekit.ui.view
 
-import android.view.View
-import android.view.ViewGroup
-
 /**
  * Created by maan on 2/15/16.
  */
-class LinearLayout : NativeViewGroup() {
+class LatteLinearLayout : NativeViewGroup() {
 
     var orientation : String? = null
         get() =  (props.get("orientation") ?: "vertical" ) as String
@@ -19,14 +16,6 @@ class LinearLayout : NativeViewGroup() {
         } else {
             view.orientation = android.widget.LinearLayout.VERTICAL;
         }
-    }
-
-    override fun getViewClass() : Class<out View> {
-        return android.widget.LinearLayout::class.java
-    }
-
-    override fun getLayoutParamsClass(): Class<out ViewGroup.LayoutParams> {
-        return android.widget.LinearLayout.LayoutParams::class.java
     }
 
 }

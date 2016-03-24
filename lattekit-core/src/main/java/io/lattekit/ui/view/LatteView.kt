@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import io.lattekit.Latte
+import io.lattekit.annotation.Bind
 import io.lattekit.annotation.Prop
 import io.lattekit.ui.LatteActivity
 import java.lang.reflect.Field
@@ -72,6 +73,30 @@ open class LatteView {
             return map!!
         }
 
+    val viewFields: MutableMap<Int, Field>
+        get() {
+            var map = Latte.VIEW_FILEDS[this.javaClass.name]
+            if (map == null) {
+                val newMap = mutableMapOf<Int, Field>()
+                var cls: Class<in Object> = this.javaClass
+                while (cls != LatteView::class.java) {
+                    cls.declaredFields.forEach { f ->
+                        if (f.isAnnotationPresent(Bind::class.java)) {
+                            var anno = f.getAnnotation(Bind::class.java);
+                            val idName = if (anno.value == "") f.name else if (anno.value.startsWith("@")) anno.value.substring(1) else anno.value
+                            val packageName = activity!!.applicationContext.packageName
+                            var mappedResource = activity!!.getResources().getIdentifier(idName,"id",packageName)
+                            f.setAccessible(true);
+                            newMap.put(mappedResource, f)
+                        }
+                    }
+                    cls = cls.superclass
+                }
+                Latte.VIEW_FILEDS.put(this.javaClass.name, newMap)
+                return newMap
+            }
+            return map!!
+        }
 
     var rootAndroidView: View? = null
         get() {
@@ -96,7 +121,7 @@ open class LatteView {
 
     fun notifyMounted() {
         isMounted = true;
-        findRefs(this.renderedViews);
+        bindViews(this.renderedViews);
         Latte.PLUGINS.forEach { it.onViewMounted(this) }
         onViewMounted();
     }
@@ -189,28 +214,6 @@ open class LatteView {
         return copy;
     }
 
-    fun findRefs(subViews: List<LatteView>) {
-        subViews.forEach { it: LatteView ->
-            var ref: String? = it.props.get("ref") as String?
-            if ( ref != null ) {
-                val fieldName = ref;
-                var field = this.javaClass.superclass.getDeclaredFields().find { f -> f.name == fieldName }
-                if (field != null) {
-                    field.setAccessible(true);
-                    if (field.getType().isAssignableFrom(it.javaClass)) {
-                        field.set(this, it);
-                    } else if (it.androidView != null && field.getType().isAssignableFrom(it.androidView?.javaClass)) {
-                        field.set(this, it.androidView);
-                    }
-                } else {
-                    log("Couldn't find field " + fieldName)
-                }
-            }
-            this.findRefs(it.children)
-        }
-    }
-
-
     open fun injectProps() {
         propFields.forEach { it ->
             if (!this.props.containsKey(it.key)) {
@@ -237,6 +240,24 @@ open class LatteView {
         }
     }
 
+
+    open fun bindViews(subViews: List<LatteView>) {
+        subViews.forEach { it: LatteView ->
+            var ref: Int? = it.props["id"] as Int?
+            if ( ref != null ) {
+                val fieldName = ref;
+                var field = this.viewFields[fieldName]
+                if (field != null) {
+                    if (field.type.isAssignableFrom(it.javaClass)) {
+                        field.set(this, it);
+                    } else if (it.androidView != null && field.getType().isAssignableFrom(it.androidView?.javaClass)) {
+                        field.set(this, it.androidView);
+                    }
+                }
+            }
+            this.bindViews(it.children)
+        }
+    }
 
     fun sameView(leftView: LatteView, rightView: LatteView): Boolean {
         if (leftView is NativeView && rightView is NativeView) {
@@ -296,7 +317,6 @@ open class LatteView {
             this.layoutFn!!()
             return this.children.get(0)
         }
-//        throw Exception("Empty layout function ? Please make sure you override layout of ${this.javaClass.name} ")
         return null
     }
 

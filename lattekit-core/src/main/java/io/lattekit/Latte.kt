@@ -1,9 +1,14 @@
 package io.lattekit
 
 import android.app.Activity
+import android.support.v4.view.ViewPager
 import android.util.Xml
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ListView
+import android.widget.RelativeLayout
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.CssPlugin
 import io.lattekit.ui.view.*
@@ -27,12 +32,13 @@ class Latte {
         var PLUGINS = mutableListOf<LattePlugin>(CssPlugin())
         var SAVED_OBJECTS = mutableMapOf<String, LatteView>();
         var PROP_FILEDS = mutableMapOf<String, MutableMap<String, Field>>()
+        var VIEW_FILEDS = mutableMapOf<String, MutableMap<Int, Field>>()
         var ADAPTERS =  mutableMapOf(
-            android.widget.ImageView::class.java to ImageView::class.java,
-            android.widget.ListView::class.java to ListView::class.java,
-            android.widget.RelativeLayout::class.java to RelativeLayout::class.java,
-            android.widget.LinearLayout::class.java to LinearLayout::class.java,
-            android.support.v4.view.ViewPager::class.java to ViewPager::class.java
+            ImageView::class.java to LatteImageView::class.java,
+            ListView::class.java to LatteListView::class.java,
+            RelativeLayout::class.java to LatteRelativeLayout::class.java,
+            LinearLayout::class.java to LatteLinearLayout::class.java,
+            ViewPager::class.java to LatteViewPager::class.java
         )
 
         @JvmStatic
@@ -146,7 +152,7 @@ class Latte {
         }
 
         fun registerAdapter(androidClass : Class<out View>, adapterClass : Class<out NativeView>) {
-            var adapters = ADAPTERS.put(androidClass, adapterClass)
+            ADAPTERS.put(androidClass, adapterClass)
         }
 
     }

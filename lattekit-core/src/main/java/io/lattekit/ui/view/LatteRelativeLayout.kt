@@ -6,7 +6,7 @@ import android.view.ViewGroup
 /**
  * Created by maan on 2/15/16.
  */
-class RelativeLayout : NativeViewGroup() {
+class LatteRelativeLayout : NativeViewGroup() {
 
     override fun getViewClass(): Class<out View> {
         return android.widget.RelativeLayout::class.java;
