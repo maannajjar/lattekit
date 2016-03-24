@@ -9,6 +9,8 @@ class CssCompiler {
     var STRING_RE = Pattern.compile('''^(["'])(?:(?=(\\?))\2.)*?\1$''')
     var NUM_RE = Pattern.compile('''^(\d+(?:\.\d+)?)(ms|px|dp|dip|pt|sp|sip|mm|in)$''')
 
+
+
     var static valueTypes = #{
         "PX" -> 0,
         "DP" -> 1,
@@ -56,15 +58,22 @@ class CssCompiler {
         _style.«property.name.toSetter»(«property.value.toJava»);
     '''
 
+    def compileValue(String propertyName, String value) {
+
+    }
+
     def compile(String packageName, String fileName, List<CssDefinition> definitions) '''
         package «packageName»;
-        import io.lattekit.ui.style.NumberValue;
-        import io.lattekit.ui.style.Style;
-        import android.graphics.Color;
+        import io.lattekit.plugin.css.declaration.CssValuesKt;
+        import io.lattekit.plugin.css.declaration.CssValue;
+        import io.lattekit.plugin.css.declaration.CssDeclaration;
+        import io.lattekit.plugin.css.declaration.RuleSet;
+        import io.lattekit.plugin.css.declaration.Stylesheet;
         import java.util.ArrayList;
+        import java.util.Map;
+        import java.util.HashMap;
         import java.util.List;
         import java.util.Arrays;
-        import io.lattekit.ui.style.Stylesheet;
 
         public class «fileName.toClass» extends Stylesheet {
 
@@ -73,22 +82,20 @@ class CssCompiler {
             }
 
             public «fileName.toClass»() {
-                Stylesheet.registerStylesheet("«fileName»",this);
-            }
+                Stylesheet.register("«fileName»",this);
 
-            @Override
-            public void apply(Stylesheet stylesheet) {
-                Style _style;
+                RuleSet ruleSet;
+
                 «FOR definition: definitions»
-
-                    _style = new Style();
+                    ruleSet = new RuleSet("«definition.selector»");
                     «FOR child: definition.childNodes»
-                        «compile(child)»
+                        ruleSet.add("«child.name»", «IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»);
                     «ENDFOR»
-                    stylesheet.registerStyle("«definition.selector»",_style);
+                    addRuleSet(ruleSet);
                 «ENDFOR»
-
             }
+
+
         }
     '''
 

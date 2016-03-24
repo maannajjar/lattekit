@@ -80,11 +80,13 @@ abstract class BaseGenerator {
         var result = new TransformResult();
 
         var matcher = getTokensPattern().matcher(source)
-        var bracesStack = new Stack<String>();
+        var bracesStack = new Stack<Object>();
         var List<TransformedClass> classes = newArrayList();
         var TransformedClass currentClass;
+        var TransformedFunction currentFunction;
 
         while (matcher.find()) {
+            var isFunctionStart = false;
             if (matcher.group(1).startsWith("class")) {
                 var isInner = true;
                 if (currentClass == null) {
@@ -101,33 +103,54 @@ abstract class BaseGenerator {
                     }
                     currentClass.packageName = packageName;
 
-                    currentClass.append( "class "+matcher.group(2) + "Impl "+extendsKeyword+" "+matcher.group(4)+ " {")
+                    currentClass.append( "class "+matcher.group(2) + "Impl "+extendsKeyword+" "+matcher.group(2)+ "() {\n")
                 } else {
                     if (!isInner) {
                         currentClass.name = matcher.group(2)+"Impl"
                     }
-                    currentClass.append(matcher.group(1))
+                    if (currentFunction != null) {
+                        currentFunction.append(matcher.group(1))
+                    }
+
                 }
                 bracesStack.push(matcher.group(1))
             } else if (matcher.group(5) != null && matcher.group(5) != "") {
                 var layouCode = new TagParser().parse(matcher.group(5))
                 var compiledCode = compile(layouCode)
-                println(currentClass.name +" Is indeed a layout")
+                println("Processed "+currentClass.name +" layout")
                 currentClass.hasLayout = true;
-                currentClass.append(compiledCode)
+                println("Class has a layout function :"+currentFunction.name)
+                currentFunction.append(compiledCode);
+                currentClass.append(currentFunction)
+
+            } else if (matcher.group(8) != null && matcher.group(8) != "") {
+                currentFunction = new TransformedFunction();
+                currentFunction.name = matcher.group(8);
+                currentFunction.opener = matcher.group(9);
+                if (currentFunction.opener == "{") {
+                    bracesStack.push(currentFunction);
+                }
+                isFunctionStart = true;
             } else {
-                if (currentClass != null) {
-                    currentClass.append(matcher.group(1))
+                if (currentClass != null && currentFunction != null) {
+                    currentFunction.append(matcher.group(1))
                 } else {
                 }
             }
-
+            if (!isFunctionStart) {
+                if (currentFunction != null && currentFunction.opener == '=') {
+                    currentFunction = null;
+                }
+            }
             if (matcher.group(1) == "}") {
                 if (bracesStack.empty()) {
                     throw new Exception("Found unmathced closing brace at "+matcher.start);
                 }
                 var lastBrace = bracesStack.pop();
-                if (lastBrace != "{") {
+                if (lastBrace instanceof TransformedFunction) {
+                    currentFunction = null;
+                } else if (lastBrace != "{") {
+                    if (currentClass != null) currentClass.append(matcher.group(1))
                     currentClass =  null;
                 }
             } else if (matcher.group(1) == "{") {
@@ -137,6 +160,7 @@ abstract class BaseGenerator {
         }
         return classes.filter[ hasLayout ].toList
     }
+
 
     def static void main(String... args) {
         var test = '''
@@ -157,14 +181,30 @@ abstract class BaseGenerator {
 }
 
 @Accessors
+class TransformedFunction {
+    String code = "";
+    String name;
+    String opener;
+    def append(String a) {
+        code += a
+    }
+    override toString() '''
+        override fun «name» «IF opener == "{"»{«ELSE» = «ENDIF» «code»
+    '''
+}
+
+
+@Accessors
 class TransformedClass {
     String packageName;
     List<String> imports;
     String code = "";
+    List<Object> codeParts = newArrayList();
     String name;
     boolean hasLayout;
-    def append(String a) {
-        code += a
+
+    def append(Object a) {
+        codeParts += a
     }
 
     override toString() '''
@@ -173,7 +213,7 @@ class TransformedClass {
         import «cls»;
     «ENDFOR»
 
-    «code»
+    «FOR code : codeParts»«code.toString»«ENDFOR»
     '''
 
 }

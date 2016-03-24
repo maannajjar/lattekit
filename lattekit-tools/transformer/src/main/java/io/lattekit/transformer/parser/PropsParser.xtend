@@ -69,7 +69,7 @@ class CodeProp extends Prop {
 
 
 class PropsParser {
-    static var TOKENS_RE = Pattern.compile('''(\s+|[^ \[\{\}\]="]+|\{|\}|\[|\]|=|(?:(["'])(?:(?=(\\?))\3.)*?\2))''')
+    static var TOKENS_RE = Pattern.compile('''(\$?\{|\s+|[^ \[\{\}\]="]+|\}|\[|\]|=|(?:(["'])(?:(?=(\\?))\3.)*?\2))''')
     String source;
 
 
@@ -99,7 +99,7 @@ class PropsParser {
             var text = ""
             if (bracket == "{" && m.group(1) == "{") {
                 type = "dict"
-            } else if (bracket == "{") {
+            } else if (bracket == "{" || bracket == "${") {
                 type = "code"
             } else if (bracket == "[") {
                 type = "lambda"
@@ -175,6 +175,7 @@ class PropsParser {
     public def static closingOf(String bracket) {
         return #{
             "(" -> ")",
+            "${" -> "}",
             "{" -> "}",
             "[" -> "]",
             "{{" -> "}}"
@@ -182,7 +183,7 @@ class PropsParser {
     }
 
     def acceptBracketOpen(Matcher m) {
-        if (m.group(1) == "{" || m.group(1) == "[" || m.group(1) == "{{")  {
+        if (m.group(1) == "${" || m.group(1) == "{" || m.group(1) == "[" || m.group(1) == "{{")  {
             return accept(m)
         }
         return null;

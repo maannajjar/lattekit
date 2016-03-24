@@ -9,10 +9,11 @@ import io.lattekit.transformer.tree.Tag
 import io.lattekit.transformer.tree.TextNode
 import java.util.List
 import java.util.regex.Pattern
+import io.lattekit.Reflection
 
 class KotlinGenerator extends BaseGenerator {
 
-    val static TOKENS_RE = Pattern.compile('''(class\s+([^\s]*)\s*(?:(:)\s+([^\n]*)\s*)\{|(?:override\s+fun|fun)\s+render\(\)+\s+=\s+"""((?:(?!""")[\S\s])*)"""|("""|'|")(?:(?=(\\?))\7[\S\s])*?\6|(\/\*)(?:(?=(\\?))\9[\S\s])*?\*\/|\/\/.*|[\S\s])''');
+    val static TOKENS_RE = Pattern.compile('''(class\s+([^\s]*)\s*(?:(:)\s+([^\n]*)\s*)\{|lxml\(\s*"""((?:(?!""")[\S\s])*)"""\s*\)|("""|'|")(?:(?=(\\?))\7[\S\s])*?\6|(?:override\s*)?fun\s+([^{=]*)\s*(=|\{)\s*|(\/\*)(?:(?=(\\?))\9[\S\s])*?\*\/|\/\/.*|[\S\s])''');
 
     override getTokensPattern() {
         return TOKENS_RE
@@ -37,88 +38,151 @@ class KotlinGenerator extends BaseGenerator {
     «ENDFOR»
     '''
 
-    def getFirstParams(Tag tag) {
-        return '''"«tag.name»"'''
+
+    def String getTypeName(Class type) {
+        if (type.name == "java.lang.CharSequence") {
+            return "String"
+        } else if (type.isPrimitive) {
+            return type.name.substring(0,1).toUpperCase() + type.name.substring(1)
+        } else {
+            return type.name.replaceAll("\\$",".");
+        }
+    }
+    def String compileProp(Prop prop, Class clz) {
+        var field = if (prop.name.startsWith("@")) {
+            prop.name.substring(1)
+        } else prop.name;
+
+        val setter = "set" + field.substring(0, 1).toUpperCase() + field.substring(1)
+        var methods = Reflection.findMethods(clz, setter);
+        val isFn = if (methods.empty) {
+            methods = Reflection.findMethods(clz, setter+"Listener");
+            true
+        } else { false }
+        if (methods.empty || setter == "setOnClick" || setter == "setOnTouch") {
+            return "";
+        }
+        return '''prop = props.get("«prop.name»");
+        if (prop != null) {'''
+            + methods.map['''
+            if (prop is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type)»«ENDIF») {
+                «IF isFn»
+                    var listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type)»::class.java, prop as Object) as «getTypeName(it.parameters.get(0).type)»
+                    view.«setter»«IF isFn»Listener«ENDIF»(listener);
+                «ELSE»
+                    view.«setter»(prop as «getTypeName(it.parameters.get(0).type)»);
+                «ENDIF»
+                acceptedProps.add("«prop.name»");
+            }
+        '''].join("else ") + "}"
+    }
+    def String compileNative(Tag tag, Class clz) {
+        '''io.lattekit.Latte.createNative(«clz.name»::class.java, io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), { viewWrapper, props ->
+            var view = viewWrapper.androidView as «clz.name»;
+            var prop : Any? = null;
+            var acceptedProps = mutableListOf<String>();
+            «FOR prop : tag.props»
+                «compileProp(prop, clz)»
+            «ENDFOR»
+            acceptedProps
+        }, { it : LatteView ->
+                «FOR child : tag.childNodes»
+                    «IF child instanceof TextNode»«child.text»«ENDIF»
+                    «IF child instanceof Tag»
+                        it.addChild(«child.compile»);
+                    «ENDIF»
+                «ENDFOR»
+            })
+        '''
     }
 
-    override String compile(Tag tag) '''
-    «IF tag.parentTag == null»
-    override fun renderImpl() : LatteView? {
-        return «ENDIF» LatteView.createLayout(«getFirstParams(tag)», LatteView.props(«tag.props.map[compile].join(",")»),  { ->
-            val myChildren = java.util.ArrayList<LatteView>();
+    override String compile(Tag tag) {
+        var clz = Reflection.lookupClass(tag.name)
+        if (clz != null) {
+            return compileNative(tag, clz)
+        }
+        '''io.lattekit.Latte.create(io.lattekit.Latte.lookupClass("«tag.name»"), io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), { it : LatteView ->
             «FOR child : tag.childNodes»
                 «IF child instanceof TextNode»«child.text»«ENDIF»
                 «IF child instanceof Tag»
-                    myChildren.add(«child.compile»);
+                    it.addChild(«child.compile»);
                 «ENDIF»
             «ENDFOR»
-            myChildren;
         })
-    «IF tag.parentTag == null»
+        '''
     }
-    «ENDIF»
-    '''
 
 
     def static void main(String... args) {
         println(new KotlinGenerator().transform("com.diggreader", '''
-class KotlinHomeFeedImpl : LatteView() {
 
-    internal var items: List<Story> = ArrayList();
-    internal var realm: Realm? = null;
-    @Prop
-    internal var refreshLayout: SwipeRefreshLayout? = null
-    internal var isRefreshing = false;
+
+class ArticleView : LatteView() {
+
+    @Prop var stories : List<Any?>?  = null;
+    @Prop var selectedStory : Int? = null;
+    @Prop var story : Story? = null;
+    @Prop var edition : DiggEdition? = null;
+
+    var pager : ViewPager? = null;
+
+    init {
+        css("com.digg2.style/main.css")
+    }
+
+    override fun layout() = lxml("""
+        <com.digg2.ui.SingleArticleView defaultView=${true} model=${story} edition=${edition} />
+    """)
+}
+
+class SingleArticleView : LatteView() {
+    @Prop("model") var story : Story ? = null;
+    @Prop var edition : DiggEdition? = null;
+    var webView : WebView? = null;
+    var progressBar : ProgressBar? = null;
+    var currentProgress : Int? = 0;
+    init {
+        css {
+            block(".progress") {
+                width("match_parent")
+                height("5dp")
+                backgroundColor("#ffffff")
+                marginTop("-2dp")
+            }
+        }
+    }
 
     override fun onViewMounted() {
-        realm = Realm.getInstance(this.activity)
-        downloadFeed();
-        displayFeed();
+        super.onViewMounted()
+
+        Analytics.logEvent("Read Story", mapOf("content_id" to this.story?.contentId!!, "edition_id" to this.edition?.editionId!!))
+
+        webView?.getSettings()?.javaScriptEnabled = true;
+        webView?.loadUrl(this.story?.content?.url)
+        webView?.setWebViewClient(object: WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                view?.loadUrl(url)
+                return false;
+            }
+        })
+        webView?.setWebChromeClient(object: WebChromeClient() {
+            override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                currentProgress = newProgress;
+                progressBar?.setProgress(currentProgress!!);
+            }
+        })
     }
 
-    fun downloadFeed() {
-        ApiManager.getApi().getNews("top")
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { response ->
-                    log("Saving feed");
-                    realm?.executeTransaction { realm?.copyToRealmOrUpdate(response.data.feed) }
-                }
-    }
-
-    fun displayFeed() {
-        realm?.where(Story::class.java)
-                ?.findAllAsync()
-                ?.asObservable()
-                ?.subscribe { results ->
-                    items = results;
-                    onStateChanged();
-                };
-    }
-
-    fun handleStoryClick(story: Story) {
-        LatteView.createLayout("com.digg2.ui.ArticleView", mapOf("stories" to items, "currentStory" to story)).show(this);
-    }
-
-    fun doRefresh() {
-        Handler().postDelayed({
-            isRefreshing = false;
-            onStateChanged()
-        }, 3000)
-    }
-
-
-    fun render() = """
-        <LinearLayout orientation="vertical" cls="container">
-            <android.support.v4.widget.SwipeRefreshLayout ref="refreshLayout" refreshing={isRefreshing} onRefresh={{ doRefresh() }} size={SwipeRefreshLayout.LARGE}>
-                <ListView data={items} cls="container" dividerHeight={0} onItemClick={{ s :Story -> handleStoryClick(s) }}>
-                    <com.digg2.ui.MarqueeStoryCell when={{ item : Story, index: Int -> index == 0}} />
-                    <com.digg2.ui.CompactStoryCell defaultView="true"  />
-                </ListView>
-            </android.support.v4.widget.SwipeRefreshLayout>
+    override fun layout() = lxml("""
+        <LinearLayout orientation="vertical">
+            <ProgressBar ref="progressBar" style="@android:attr/progressBarStyleHorizontal"  max={100} progress=${currentProgress} cls="progress" alignParentTop={true}/>
+            <WebView ref="webView" cls="article_view" layout_width="match_parent" layout_height="match_parent"/>
         </LinearLayout>
-    """
+    """)
 }
+
+
+
 
         '''))
     }
