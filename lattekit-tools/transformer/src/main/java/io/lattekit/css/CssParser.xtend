@@ -61,9 +61,7 @@ class CssParser {
     def List<CssDefinition> parse(String source) {
         var blocksMatcher = BLOCKS_REGEX.matcher(source);
         var List<CssDefinition> results = newArrayList();
-        println("Running blocks matcher")
         while(blocksMatcher.find()) {
-            println("PARSING "+blocksMatcher.group(0))
             results += acceptDefinition(blocksMatcher.group(1).trim(),blocksMatcher.group(2));
         }
         return results;
