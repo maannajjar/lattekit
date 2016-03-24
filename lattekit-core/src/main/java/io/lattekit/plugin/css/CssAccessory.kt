@@ -4,7 +4,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.*
 import android.os.Build
-import android.widget.EditText
+import io.lattekit.R
 import io.lattekit.drawable.BorderDrawable
 import io.lattekit.view.NativeView
 
@@ -57,7 +57,6 @@ class CssAccessory(view : NativeView) {
     var gradientDrawable : GradientDrawable = GradientDrawable()
     var borderDrawable : BorderDrawable = BorderDrawable()
     var rippleDrawable : Drawable? = null;
-    var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable,ColorDrawable()))
 
     companion object {
         fun getCssAccessory(view : NativeView) : CssAccessory {
@@ -68,22 +67,29 @@ class CssAccessory(view : NativeView) {
             }
             return accessory as CssAccessory
         }
+
     }
 
     init {
-        layerDrawable.setId(0, 0)
-        layerDrawable.setId(1, 1)
-        layerDrawable.setId(2, 2)
-        layerDrawable.setId(3,3)
-
         var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            rippleDrawable = RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
+            rippleDrawable = view.androidView!!.resources.getDrawable(R.drawable.ripple).mutate();
+            var drawable =  rippleDrawable as RippleDrawable
+            drawable.setDrawableByLayerId(R.id.border_layer, borderDrawable)
+            drawable.setDrawableByLayerId(R.id.background_layer, gradientDrawable)
+            if (view.androidView?.background != null) {
+                drawable.setDrawableByLayerId(R.id.native_background_layer,view.androidView?.background);
+            }
         } else {
+            var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable,ColorDrawable()))
+            layerDrawable.setId(0, 0)
+            layerDrawable.setId(1, 1)
+            layerDrawable.setId(2, 2)
+            layerDrawable.setId(3,3)
             rippleDrawable = codetail.graphics.drawables.RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
-        }
-        if (view.androidView?.background != null) {
-            layerDrawable.setDrawableByLayerId(3,view.androidView?.background);
+            if (view.androidView?.background != null) {
+                layerDrawable.setDrawableByLayerId(3,view.androidView?.background);
+            }
         }
         view.androidView?.background = rippleDrawable;
     }
