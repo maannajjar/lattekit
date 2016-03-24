@@ -5,7 +5,7 @@ import android.graphics.Color
 import io.lattekit.plugin.css.CssAccessory
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.ColorValue
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 2/22/16.
@@ -34,7 +34,7 @@ class BackgroundCssProperty : CssProperty("background") {
         }
     }
 
-    override fun apply(view: NativeView,style: NodeStyle) {
+    override fun apply(view: NativeView, style: NodeStyle) {
         var css = CssAccessory.getCssAccessory(view)
         css.gradientDrawable.setColors(listOf(backgroundColor, backgroundColor).toIntArray())
         css.setRippleColor(touchedBackgroundColor);

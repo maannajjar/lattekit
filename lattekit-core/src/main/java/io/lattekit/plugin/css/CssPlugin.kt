@@ -3,8 +3,8 @@ package io.lattekit.plugin.css
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.declaration.GLOBAL_STYLESHEETS
 import io.lattekit.plugin.css.declaration.Stylesheet
-import io.lattekit.ui.view.LatteView
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.LatteView
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 2/20/16.

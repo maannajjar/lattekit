@@ -5,7 +5,7 @@ import android.widget.EditText
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.LengthValue
 import io.lattekit.plugin.css.declaration.PaddingValue
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 2/23/16.

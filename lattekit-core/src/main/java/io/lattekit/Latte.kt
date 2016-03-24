@@ -11,7 +11,7 @@ import android.widget.ListView
 import android.widget.RelativeLayout
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.CssPlugin
-import io.lattekit.ui.view.*
+import io.lattekit.view.*
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
 import java.lang.reflect.Field
@@ -88,7 +88,7 @@ class Latte {
         }
 
         @JvmStatic
-        fun createNative(clazz: Class<*>, props: MutableMap<String, Any?>, propsSetter: (NativeView, Map<String,Any?>)->List<String> , childrenProc: ChildrenProc): LatteView {
+        fun createNative(clazz: Class<*>, props: MutableMap<String, Any?>, propsSetter: (NativeView, Map<String,Any?>)->List<String>, childrenProc: (LatteView)->Unit): LatteView {
             var layout: LatteView?;
             var adaptableClass = ADAPTERS.filterKeys { it.isAssignableFrom(clazz) }.keys.sortedWith(CLASS_ORDER).getOrNull(0);
             if (adaptableClass != null) {
@@ -108,13 +108,13 @@ class Latte {
 
             layout!!.props = props;
             layout!!.children = mutableListOf()
-            childrenProc?.apply(layout)
+            childrenProc?.invoke(layout)
 
             return layout!!;
         }
 
         @JvmStatic
-        fun create(clazz: Class<*>, props: MutableMap<String, Any?>, childrenProc: ChildrenProc): LatteView {
+        fun create(clazz: Class<*>, props: MutableMap<String, Any?>, childrenProc: (LatteView)->Unit): LatteView {
             var layout: LatteView?;
             if (ViewGroup::class.java.isAssignableFrom(clazz)) {
                 layout = NativeViewGroup();
@@ -134,7 +134,7 @@ class Latte {
             }
             layout.props = props;
             layout.children = mutableListOf()
-            childrenProc?.apply(layout)
+            childrenProc?.invoke(layout)
 
             return layout
         }
@@ -176,7 +176,7 @@ fun parseXml(layoutXml: String): LatteView {
     while (parser.next() != XmlPullParser.END_DOCUMENT) {
         if (parser.getEventType() == XmlPullParser.START_TAG) {
             var tagName = parser.getName();
-            var myView = Latte.create(Latte.lookupClass(tagName), mutableMapOf(), ChildrenProc {})
+            var myView = Latte.create(Latte.lookupClass(tagName), mutableMapOf(), {})
             if (currentView != null) {
                 viewStack.add(currentView)
                 currentView.children.add(myView)

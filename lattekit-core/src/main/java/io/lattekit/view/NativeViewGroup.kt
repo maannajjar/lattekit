@@ -1,4 +1,4 @@
-package io.lattekit.ui.view
+package io.lattekit.view
 
 import android.content.Context
 import android.util.TypedValue
@@ -12,7 +12,6 @@ import java.util.*
  */
 open class NativeViewGroup : NativeView() {
 
-
     companion object {
         var SIZE_PATTERN  = Regex("""(\d+(?:\.\d+)?)([^\d ]+)""")
 
@@ -22,7 +21,7 @@ open class NativeViewGroup : NativeView() {
             } else if (size.toLowerCase() == "wrap_content") {
                 return ViewGroup.LayoutParams.WRAP_CONTENT
             } else {
-                var match = SIZE_PATTERN.matchEntire(size)
+                var match = NativeViewGroup.Companion.SIZE_PATTERN.matchEntire(size)
                 if (match != null) {
                     var value = match.groupValues.get(1).toFloat();
                     var unit = match.groupValues.get(2)
@@ -82,12 +81,16 @@ open class NativeViewGroup : NativeView() {
 
                 "layout_width" -> {
                     var value = child.props.get(keyName);
-                    params.width = if (value is String) { parseSize(value,ViewGroup.LayoutParams.MATCH_PARENT, child.activity!!) } else { value as Int }
+                    params.width = if (value is String) {
+                        NativeViewGroup.Companion.parseSize(value, ViewGroup.LayoutParams.MATCH_PARENT, child.activity!!)
+                    } else { value as Int }
                 }
 
                 "layout_height" -> {
                     var value = child.props.get(keyName);
-                    params.height = if (value is String) { parseSize(value,ViewGroup.LayoutParams.WRAP_CONTENT,child.activity!!) } else { value as Int }
+                    params.height = if (value is String) {
+                        NativeViewGroup.Companion.parseSize(value, ViewGroup.LayoutParams.WRAP_CONTENT, child.activity!!)
+                    } else { value as Int }
                 }
 
                 "layout_weight" -> {

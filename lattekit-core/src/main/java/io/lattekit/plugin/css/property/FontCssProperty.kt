@@ -10,7 +10,7 @@ import io.lattekit.plugin.css.declaration.FontFamilyValue
 import io.lattekit.plugin.css.declaration.FontSizeValue
 import io.lattekit.plugin.css.declaration.LengthValue
 import io.lattekit.plugin.css.declaration.StringValue
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 2/21/16.
@@ -25,7 +25,7 @@ class FontCssProperty : CssProperty("font-family") {
     var lineHeight : LengthValue? = null;
     var letterSpacing : LengthValue? = null;
 
-    override fun computeValue(context: Context, view: NativeView ,style : NodeStyle) {
+    override fun computeValue(context: Context, view: NativeView, style : NodeStyle) {
         initFonts(view.activity!!)
         typeface = Typeface.DEFAULT
         lineHeight= null;

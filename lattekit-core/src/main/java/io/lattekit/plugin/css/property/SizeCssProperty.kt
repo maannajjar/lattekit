@@ -3,7 +3,7 @@ package io.lattekit.plugin.css.property
 import android.content.Context
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.LengthValue
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 3/5/16.

@@ -5,7 +5,7 @@ import io.lattekit.plugin.css.declaration.CssDeclaration
 import io.lattekit.plugin.css.declaration.RuleSet
 import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.plugin.css.property.*
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.NativeView
 import java.util.*
 
 /**

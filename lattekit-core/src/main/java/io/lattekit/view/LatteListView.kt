@@ -1,4 +1,4 @@
-package io.lattekit.ui.view
+package io.lattekit.view
 
 import android.R
 import android.view.View
@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.AbsListView
 import android.widget.AdapterView
 import android.widget.BaseAdapter
+import android.widget.ListView
 import io.lattekit.util.Util
 import java.lang.reflect.ParameterizedType
 
@@ -145,7 +146,7 @@ class LatteListView : NativeView(), AdapterView.OnItemClickListener {
 
     override fun applyProps(props : Map<String,Any?>) {
         super.applyProps(props)
-        var view = androidView as android.widget.ListView;
+        var view = androidView as ListView;
         if (getDividerHeight() != null) {
             view.dividerHeight = getDividerHeight();
         }
@@ -159,7 +160,7 @@ class LatteListView : NativeView(), AdapterView.OnItemClickListener {
     }
 
     override fun getViewClass(): Class<out View> {
-        return android.widget.ListView::class.java
+        return ListView::class.java
     }
 
 

@@ -1,4 +1,4 @@
-package io.lattekit.ui.view
+package io.lattekit.view
 
 import android.app.Activity
 import android.content.Context
@@ -185,7 +185,7 @@ open class LatteView {
                 this.androidView = this.renderNative(a);
             }
             if (this.androidView?.layoutParams == null) {
-                this.androidView?.layoutParams = lp ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT)
+                this.androidView?.layoutParams = lp ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             }
             if (this is NativeViewGroup) {
                 this.mountChildren()
@@ -233,7 +233,7 @@ open class LatteView {
                         injectedProps.put(entry.key,entry.value)
                         field.set(this, entry.value)
                     } else {
-                        log("WARNING: Provided property ${entry.key} value with different type, it will be set to null")
+                        LatteView.Companion.log("WARNING: Provided property ${entry.key} value with different type, it will be set to null")
                     }
                 }
             }
@@ -268,8 +268,8 @@ open class LatteView {
         return false;
     }
 
-    inline fun register(clazz: KClass<*>,  crossinline init: LatteView.() -> Unit) : LatteView {
-        var view = Latte.create(clazz.java,mutableMapOf(), ChildrenProc { it->
+    inline fun register(clazz: KClass<*>, crossinline init: LatteView.() -> Unit) : LatteView {
+        var view = Latte.create(clazz.java,mutableMapOf(), { it ->
             it.init()
         })
         addChild(view);

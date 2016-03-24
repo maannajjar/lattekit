@@ -1,4 +1,4 @@
-package io.lattekit.ui.view
+package io.lattekit.view
 
 import android.view.View
 import android.view.ViewGroup
@@ -21,11 +21,11 @@ class LatteRelativeLayout : NativeViewGroup() {
         this.androidView?.requestLayout()
     }
 
-    fun clearRules(virtualView: LatteView ) {
+    fun clearRules(virtualView: LatteView) {
         for (i in 0..21-1) (virtualView.rootAndroidView?.layoutParams as android.widget.RelativeLayout.LayoutParams).removeRule(i);
     }
 
-    fun applyLayoutRules(virtualView : LatteView ) {
+    fun applyLayoutRules(virtualView : LatteView) {
         var rootAndroidView = virtualView.rootAndroidView
         val params = rootAndroidView?.layoutParams as android.widget.RelativeLayout.LayoutParams;
         virtualView.props.forEach {

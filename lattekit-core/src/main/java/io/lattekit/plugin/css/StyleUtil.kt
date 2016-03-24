@@ -1,10 +1,10 @@
 package io.lattekit.plugin.css
 
 import android.content.res.Resources
-import io.lattekit.ui.view.LatteView
-import io.lattekit.ui.view.LatteListView
-import io.lattekit.ui.view.NativeView
-import io.lattekit.ui.view.NativeViewGroup
+import io.lattekit.view.LatteView
+import io.lattekit.view.LatteListView
+import io.lattekit.view.NativeView
+import io.lattekit.view.NativeViewGroup
 
 /**
  * Created by maan on 2/26/16.

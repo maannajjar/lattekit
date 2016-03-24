@@ -1,7 +1,7 @@
 package io.lattekit.plugin.css.declaration
 
 import io.lattekit.Latte
-import io.lattekit.ui.view.LatteView
+import io.lattekit.view.LatteView
 
 /**
  * Created by maan on 2/26/16.
@@ -17,17 +17,17 @@ inline fun css( init: Stylesheet.() -> Unit)  : Stylesheet {
 }
 
 
-inline fun LatteView.css( stylesheet : Stylesheet)  {
+inline fun LatteView.css(stylesheet : Stylesheet)  {
     var css = dataOrPut("css", mutableListOf<Any>()) as MutableList<Any>
     css.add(stylesheet)
 }
 
-inline fun LatteView.css( stylesheet : String)  {
+inline fun LatteView.css(stylesheet : String)  {
     var css = dataOrPut("css", mutableListOf<Any>()) as MutableList<Any>
     css.add(stylesheet)
 }
 
-inline fun LatteView.css( init: Stylesheet.() -> Unit)  {
+inline fun LatteView.css(init: Stylesheet.() -> Unit)  {
     val re = Stylesheet()
     re.init()
     var css = dataOrPut("css", mutableListOf<Any>()) as MutableList<Any>

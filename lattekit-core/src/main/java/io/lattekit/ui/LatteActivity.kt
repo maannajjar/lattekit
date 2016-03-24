@@ -6,7 +6,7 @@ import android.view.View
 import android.widget.FrameLayout
 import io.lattekit.Latte
 import io.lattekit.plugin.css.declaration.Stylesheet
-import io.lattekit.ui.view.LatteView
+import io.lattekit.view.LatteView
 
 /**
  * Created by maan on 2/15/16.

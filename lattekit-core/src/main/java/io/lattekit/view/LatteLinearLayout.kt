@@ -1,4 +1,4 @@
-package io.lattekit.ui.view
+package io.lattekit.view
 
 /**
  * Created by maan on 2/15/16.

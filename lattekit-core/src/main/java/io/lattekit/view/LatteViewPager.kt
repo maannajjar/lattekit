@@ -1,4 +1,4 @@
-package io.lattekit.ui.view
+package io.lattekit.view
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -30,7 +30,7 @@ class LatteViewPager : NativeView() {
             super.onCreate(savedInstanceState)
             val _arguments = this.arguments
             val _string = _arguments.getString("_LATTE_KIT_OBJ_ID")
-            val _get = LatteViewPager.PagerFragment.SAVED_OBJECTS[_string]
+            val _get = LatteViewPager.PagerFragment.Companion.SAVED_OBJECTS[_string]
             this.templateView = _get
         }
 
@@ -47,7 +47,7 @@ class LatteViewPager : NativeView() {
                 val myId = "" + Math.random()!! + System.currentTimeMillis()
                 val args = Bundle()
                 args.putString("_LATTE_KIT_OBJ_ID", myId)
-                LatteViewPager.PagerFragment.SAVED_OBJECTS.put(myId, template)
+                LatteViewPager.PagerFragment.Companion.SAVED_OBJECTS.put(myId, template)
                 val instance = LatteViewPager.PagerFragment()
                 instance.arguments = args
                 return instance
@@ -103,7 +103,7 @@ class LatteViewPager : NativeView() {
                 template.props.put("modelIndex", Integer.valueOf(position))
                 template.props.put("model", item)
                 template.parentView = this@LatteViewPager
-                return LatteViewPager.PagerFragment.newInstance(template)
+                return LatteViewPager.PagerFragment.Companion.newInstance(template)
             }
         }
         val view = this.androidView as android.support.v4.view.ViewPager
@@ -119,7 +119,7 @@ class LatteViewPager : NativeView() {
         }
         if (testLambda !is kotlin.Function1<*, *> && testLambda !is kotlin.Function2<*, *, *>) {
             // TODO: Warn about wrong "when" variable
-            log("Latte","Warning 'when' should be a lambda ")
+            log("Latte", "Warning 'when' should be a lambda ")
             return false;
         }
         var isMatch = false;
@@ -130,10 +130,10 @@ class LatteViewPager : NativeView() {
                 if (test is Boolean) {
                     return test;
                 } else {
-                    log("Latte","Warning 'when' should return boolean ")
+                    log("Latte", "Warning 'when' should return boolean ")
                 }
             } else {
-                log("Latte","Skipping $template : $testLambda ")
+                log("Latte", "Skipping $template : $testLambda ")
             }
         }
         return isMatch;

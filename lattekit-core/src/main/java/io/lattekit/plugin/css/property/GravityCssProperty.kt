@@ -4,7 +4,7 @@ import android.content.Context
 import android.widget.TextView
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.GravityValue
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 3/5/16.

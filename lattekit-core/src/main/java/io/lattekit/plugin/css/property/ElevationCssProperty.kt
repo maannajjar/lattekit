@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.LengthValue
-import io.lattekit.ui.view.NativeView
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 2/25/16.

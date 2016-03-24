@@ -85,7 +85,7 @@ class KotlinGenerator extends BaseGenerator {
                 «compileProp(prop, clz)»
             «ENDFOR»
             acceptedProps
-        }, io.lattekit.ui.view.ChildrenProc { it : LatteView ->
+        }, { it : LatteView ->
                 «FOR child : tag.childNodes»
                     «IF child instanceof TextNode»«child.text»«ENDIF»
                     «IF child instanceof Tag»
@@ -101,7 +101,7 @@ class KotlinGenerator extends BaseGenerator {
         if (clz != null) {
             return compileNative(tag, clz)
         }
-        '''io.lattekit.Latte.create(io.lattekit.Latte.lookupClass("«tag.name»"), io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), io.lattekit.ui.view.ChildrenProc { it : LatteView ->
+        '''io.lattekit.Latte.create(io.lattekit.Latte.lookupClass("«tag.name»"), io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), { it : LatteView ->
             «FOR child : tag.childNodes»
                 «IF child instanceof TextNode»«child.text»«ENDIF»
                 «IF child instanceof Tag»

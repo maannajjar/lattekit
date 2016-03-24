@@ -5,8 +5,8 @@ import android.graphics.Color
 import android.graphics.drawable.*
 import android.os.Build
 import android.widget.EditText
-import io.lattekit.ui.drawable.BorderDrawable
-import io.lattekit.ui.view.NativeView
+import io.lattekit.drawable.BorderDrawable
+import io.lattekit.view.NativeView
 
 /**
  * Created by maan on 2/25/16.

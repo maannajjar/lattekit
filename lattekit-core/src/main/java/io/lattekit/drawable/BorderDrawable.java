@@ -1,4 +1,4 @@
-package io.lattekit.ui.drawable;
+package io.lattekit.drawable;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
