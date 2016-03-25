@@ -71,7 +71,6 @@ class CssAccessory(view : NativeView) {
     }
 
     init {
-        var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             rippleDrawable = view.androidView!!.resources.getDrawable(R.drawable.ripple).mutate();
             var drawable =  rippleDrawable as RippleDrawable
@@ -81,6 +80,7 @@ class CssAccessory(view : NativeView) {
                 drawable.setDrawableByLayerId(R.id.native_background_layer,view.androidView?.background);
             }
         } else {
+            var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
             var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable,ColorDrawable()))
             layerDrawable.setId(0, 0)
             layerDrawable.setId(1, 1)

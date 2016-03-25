@@ -5,9 +5,9 @@ import android.support.v4.view.ViewPager
 import android.util.Xml
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ListView
 import android.widget.RelativeLayout
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.CssPlugin
@@ -35,7 +35,7 @@ class Latte {
         var VIEW_FILEDS = mutableMapOf<String, MutableMap<Int, Field>>()
         var ADAPTERS =  mutableMapOf(
             ImageView::class.java to LatteImageView::class.java,
-            ListView::class.java to LatteListView::class.java,
+            AdapterView::class.java to LatteListView::class.java,
             RelativeLayout::class.java to LatteRelativeLayout::class.java,
             LinearLayout::class.java to LatteLinearLayout::class.java,
             ViewPager::class.java to LatteViewPager::class.java
