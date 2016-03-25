@@ -24,15 +24,18 @@ class Prop extends Node {
     def setName(String value) {
         if (value.contains(":")) {
             this.namespace = value.split(":",2).get(0)
+            if (this.namespace.startsWith("@")) {
+                modifier = "@";
+                namespace = namespace.substring(1)
+            }
             this.name = value.split(":",2).get(1)
         } else {
             this.name = value;
+            if (this.name.startsWith("@")) {
+                modifier = "@";
+                name = name.substring(1)
+            }
         }
-        if (this.name.startsWith("@")) {
-            modifier = "@";
-            name = name.substring(1)
-        }
-
     }
 }
 
