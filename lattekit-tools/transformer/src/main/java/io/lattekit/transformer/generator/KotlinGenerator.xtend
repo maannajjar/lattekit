@@ -71,7 +71,6 @@ class KotlinGenerator extends BaseGenerator {
                     var listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type,false)»::class.java, propValue as Object) as «getTypeName(it.parameters.get(0).type,true)»
                     view.«setter»«IF isFn»Listener«ENDIF»(listener);
                 «ELSE»
-                    log("Hello", "$propKey=$propValue is «getTypeName(it.parameters.get(0).type,true)»")
                     view.«setter»(propValue as «getTypeName(it.parameters.get(0).type,true)»);
                 «ENDIF»
                 acceptedProps.add("«prop.name»");
