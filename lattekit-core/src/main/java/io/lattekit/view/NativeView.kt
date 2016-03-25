@@ -3,8 +3,10 @@ package io.lattekit.view
 import android.content.Context
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.AdapterView
 import io.lattekit.Latte
+import io.lattekit.PropOption
 import java.lang.reflect.Method
 
 /**
@@ -28,7 +30,6 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 
     override fun onPropsUpdated(oldProps :Map<String, Any?>) : Boolean {
-        var changedProps = props.filter { props[it.component1()] != oldProps[it.component1()] }
         applyProps(props);
         return false
     }
@@ -39,9 +40,20 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
                 androidView?.setOnClickListener(this)
             }
             androidView?.setOnTouchListener(this);
-
+            androidView?.isClickable = false
             applyProps(this.props)
+            watchViewTree()
         }
+    }
+
+    fun watchViewTree() {
+        androidView?.viewTreeObserver?.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                isAttached = true;
+                applyProps(props.filterKeys { propsOptions[it] == PropOption.WAIT_LAYOUT })
+                androidView?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
+            }
+        })
     }
 
     override fun onTouch(v : View, e : MotionEvent) : Boolean {
@@ -100,15 +112,12 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         }
     }
 
-    open fun applyProps(applyTo : Map<String,Any?>) {
-        applyProps(applyTo, false);
-    }
-
-    fun applyProps(propsToApply : Map<String,Any?>, onlyDelayed : Boolean ) {
+    open fun applyProps(props : Map<String,Any?>) {
         if (androidView != null) {
-            androidView?.isClickable = false
+            var propsToApply =  if (!isAttached) {
+                props.filterKeys { propsOptions[it] != PropOption.WAIT_LAYOUT }
+            } else props
             propsSetter.invoke(this,propsToApply);
-            return;
         }
     }
 

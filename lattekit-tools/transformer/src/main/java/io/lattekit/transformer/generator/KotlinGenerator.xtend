@@ -23,6 +23,7 @@ class KotlinGenerator extends BaseGenerator {
     def String compile(Prop prop) { prop.compileProp }
 
     def dispatch String compileProp(Prop prop) ''' "«prop.name»",«compilePropStringValue(prop.value)» '''
+    def dispatch String compilePropOption(Prop prop) ''' "«prop.name»" to «IF prop.modifier == "@"»io.lattekit.PropOption.WAIT_LAYOUT«ELSE»0«ENDIF» '''
 
     def dispatch String compileProp(CodeProp prop) ''' "«prop.name»",«prop.value» '''
 
@@ -77,7 +78,7 @@ class KotlinGenerator extends BaseGenerator {
         '''].join("else ") + "}"
     }
     def String compileNative(Tag tag, Class clz) {
-        '''io.lattekit.Latte.createNative(«clz.name»::class.java, io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), { viewWrapper, props ->
+        '''io.lattekit.Latte.createNative(«clz.name»::class.java, io.lattekit.Latte.props(«tag.props.map[compile].join(",")»),mapOf(«tag.props.map[compilePropOption].join(",")»), { viewWrapper, props ->
             var view = viewWrapper.androidView as «clz.name»;
             var prop : Any? = null;
             var acceptedProps = mutableListOf<String>();
@@ -101,7 +102,7 @@ class KotlinGenerator extends BaseGenerator {
         if (clz != null) {
             return compileNative(tag, clz)
         }
-        '''io.lattekit.Latte.create(io.lattekit.Latte.lookupClass("«tag.name»"), io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), { it : LatteView ->
+        '''io.lattekit.Latte.create(io.lattekit.Latte.lookupClass("«tag.name»"), io.lattekit.Latte.props(«tag.props.map[compile].join(",")»), mapOf(«tag.props.map[compilePropOption].join(",")»),{ it : LatteView ->
             «FOR child : tag.childNodes»
                 «IF child instanceof TextNode»«child.text»«ENDIF»
                 «IF child instanceof Tag»

@@ -88,7 +88,7 @@ class Latte {
         }
 
         @JvmStatic
-        fun createNative(clazz: Class<*>, props: MutableMap<String, Any?>, propsSetter: (NativeView, Map<String,Any?>)->List<String>, childrenProc: (LatteView)->Unit): LatteView {
+        fun createNative(clazz: Class<*>, props: MutableMap<String, Any?>, propsOptions: Map<String,Int>, propsSetter: (NativeView, Map<String,Any?>)->List<String>, childrenProc: (LatteView)->Unit): LatteView {
             var layout: LatteView?;
             var adaptableClass = ADAPTERS.filterKeys { it.isAssignableFrom(clazz) }.keys.sortedWith(CLASS_ORDER).getOrNull(0);
             if (adaptableClass != null) {
@@ -107,6 +107,7 @@ class Latte {
             }
 
             layout!!.props = props;
+            layout!!.propsOptions = propsOptions;
             layout!!.children = mutableListOf()
             childrenProc?.invoke(layout)
 
@@ -114,7 +115,7 @@ class Latte {
         }
 
         @JvmStatic
-        fun create(clazz: Class<*>, props: MutableMap<String, Any?>, childrenProc: (LatteView)->Unit): LatteView {
+        fun create(clazz: Class<*>, props: MutableMap<String, Any?>,  propsOptions: Map<String,Int>,childrenProc: (LatteView)->Unit): LatteView {
             var layout: LatteView?;
             if (ViewGroup::class.java.isAssignableFrom(clazz)) {
                 layout = NativeViewGroup();
@@ -133,6 +134,7 @@ class Latte {
                 layout = implClass.newInstance() as LatteView;
             }
             layout.props = props;
+            layout!!.propsOptions = propsOptions;
             layout.children = mutableListOf()
             childrenProc?.invoke(layout)
 
@@ -176,7 +178,7 @@ fun parseXml(layoutXml: String): LatteView {
     while (parser.next() != XmlPullParser.END_DOCUMENT) {
         if (parser.getEventType() == XmlPullParser.START_TAG) {
             var tagName = parser.getName();
-            var myView = Latte.create(Latte.lookupClass(tagName), mutableMapOf(), {})
+            var myView = Latte.create(Latte.lookupClass(tagName), mutableMapOf(), emptyMap(), {})
             if (currentView != null) {
                 viewStack.add(currentView)
                 currentView.children.add(myView)
@@ -196,7 +198,10 @@ fun parseXml(layoutXml: String): LatteView {
     return topLevelViews[0]!!
 }
 
-
+object PropOption {
+    val NO_OPTIONS = 0;
+    val WAIT_LAYOUT = 1;
+}
 
 fun Activity.render(xml: String): LatteView {
     var latteView = Latte.render(xml)

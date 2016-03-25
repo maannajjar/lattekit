@@ -37,6 +37,7 @@ open class LatteView {
     var androidView: View? = null
 
     var props: MutableMap<String, Any?> = mutableMapOf()
+    var propsOptions: Map<String, Int> = emptyMap()
     var injectedProps: MutableMap<String,Any?> = mutableMapOf();
     var parentView: LatteView? = null
 
@@ -269,7 +270,7 @@ open class LatteView {
     }
 
     inline fun register(clazz: KClass<*>, crossinline init: LatteView.() -> Unit) : LatteView {
-        var view = Latte.create(clazz.java,mutableMapOf(), { it ->
+        var view = Latte.create(clazz.java,mutableMapOf(), emptyMap(), { it ->
             it.init()
         })
         addChild(view);
