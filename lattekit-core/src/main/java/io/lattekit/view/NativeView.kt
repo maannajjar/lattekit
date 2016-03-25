@@ -16,7 +16,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
     var nativeViewClass : Class<out View>? = null
 
-    var propsSetter : (NativeView, Map<String,Any?>)->List<String> = { view, props -> emptyList() };
+    var propsSetter : (NativeView, Map<String,Any?>)->List<String> = { view, props -> setPropsRuntime(props) };
     val methodCache = mutableMapOf<String, Method?>()
 
     open fun getViewClass() : Class<out View> {
@@ -107,46 +107,44 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     fun applyProps(propsToApply : Map<String,Any?>, onlyDelayed : Boolean ) {
         if (androidView != null) {
             androidView?.isClickable = false
-            var acceptedProps = propsSetter.invoke(this,propsToApply);
-            var remainingProps = propsToApply.filterKeys { !acceptedProps.contains(it) && it != "onTouch" && it != "onClick" };
-            if (!getViewClass().name.startsWith("android.")) {
-                setPropsRuntime(remainingProps)
-            }
+            propsSetter.invoke(this,propsToApply);
             return;
         }
     }
 
-    fun setPropsRuntime(propsToApply : Map<String,Any?>) {
+    fun setPropsRuntime(propsToApply : Map<String,Any?>) : List<String> {
+        var acceptedProps = mutableListOf<String>()
         val myCls = getViewClass()
         propsToApply.forEach { entry ->
             var it = entry.key
-                val value = propsToApply.get(it);
-                var field = if (it.startsWith("@")) {
-                    it.substring(1)
-                } else it;
-                var isFn =  value is Function0<*>
-                var setter = "set" + field.substring(0, 1).toUpperCase() + field.substring(1) + (if (isFn) "Listener" else "")
-                if (value == null) {
-                } else {
-                    var valueCls = value.javaClass
+            val value = propsToApply.get(it);
+            var field = if (it.startsWith("@")) {
+                it.substring(1)
+            } else it;
+            var isFn =  value is Function0<*>
+            var setter = "set" + field.substring(0, 1).toUpperCase() + field.substring(1) + (if (isFn) "Listener" else "")
+            if (value == null) {
+            } else {
+                var valueCls = value.javaClass
 
-                    var methodKey = myCls.toString() + ":" + field + ":" + value.javaClass
-                    var method = methodCache.get(methodKey);
-                    if (!methodCache.containsKey(methodKey)) {
-                        // This is the first time we look
+                var methodKey = myCls.toString() + ":" + field + ":" + value.javaClass
+                var method = methodCache.get(methodKey);
+                if (!methodCache.containsKey(methodKey)) {
+                    // This is the first time we look
+                    method = findSetter(setter, valueCls, isFn)
+                    if (method == null) {
+                        setter = field;
                         method = findSetter(setter, valueCls, isFn)
-                        if (method == null) {
-                            setter = field;
-                            method = findSetter(setter, valueCls, isFn)
-                        }
-                        methodCache.put(methodKey, method);
                     }
-                    if (method != null) {
-                        method.invoke(androidView, if (isFn) Latte.createLambdaProxyInstance(method.parameterTypes.get(0), value as Object) else value);
-                    }
-
+                    methodCache.put(methodKey, method);
+                }
+                if (method != null) {
+                    method.invoke(androidView, if (isFn) Latte.createLambdaProxyInstance(method.parameterTypes.get(0), value as Object) else value);
+                    acceptedProps.add(field)
+                }
             }
         }
+        return acceptedProps
     }
 
     fun findSetter(setter : String , valueType: Class<Any>, isFnValue : Boolean) : Method? {
