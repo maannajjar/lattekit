@@ -40,13 +40,13 @@ class KotlinGenerator extends BaseGenerator {
     '''
 
 
-    def String getTypeName(Class type) {
+    def String getTypeName(Class type, boolean addOptional) {
         if (type.name == "java.lang.CharSequence") {
-            return "String"
+            return "String"+(if (addOptional) "?" else "")
         } else if (type.isPrimitive) {
             return type.name.substring(0,1).toUpperCase() + type.name.substring(1)
         } else {
-            return type.name.replaceAll("\\$",".");
+            return type.name.replaceAll("\\$",".")+(if (addOptional) "?" else "")
         }
     }
     def String compileProp(Prop prop, Class clz) {
@@ -63,28 +63,32 @@ class KotlinGenerator extends BaseGenerator {
         if (methods.empty || setter == "setOnClick" || setter == "setOnTouch") {
             return "";
         }
-        return '''prop = props.get("«prop.name»");
-        if (prop != null) {'''
+        return '''if (propKey == "«prop.name»") {;
+        '''
             + methods.map['''
-            if (prop is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type)»«ENDIF») {
+            if (propValue is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type,true)»«ENDIF») {
                 «IF isFn»
-                    var listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type)»::class.java, prop as Object) as «getTypeName(it.parameters.get(0).type)»
+                    var listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type,false)»::class.java, propValue as Object) as «getTypeName(it.parameters.get(0).type,true)»
                     view.«setter»«IF isFn»Listener«ENDIF»(listener);
                 «ELSE»
-                    view.«setter»(prop as «getTypeName(it.parameters.get(0).type)»);
+                    log("Hello", "$propKey=$propValue is «getTypeName(it.parameters.get(0).type,true)»")
+                    view.«setter»(propValue as «getTypeName(it.parameters.get(0).type,true)»);
                 «ENDIF»
                 acceptedProps.add("«prop.name»");
             }
-        '''].join("else ") + "}"
+        '''].join("else ") +" }"
     }
     def String compileNative(Tag tag, Class clz) {
         '''io.lattekit.Latte.createNative(«clz.name»::class.java, io.lattekit.Latte.props(«tag.props.map[compile].join(",")»),mapOf(«tag.props.map[compilePropOption].join(",")»), { viewWrapper, props ->
             var view = viewWrapper.androidView as «clz.name»;
-            var prop : Any? = null;
             var acceptedProps = mutableListOf<String>();
-            «FOR prop : tag.props»
-                «compileProp(prop, clz)»
-            «ENDFOR»
+            props.forEach {
+                var propKey = it.key;
+                var propValue = it.value;
+                «FOR prop : tag.props»
+                    «compileProp(prop, clz)»
+                «ENDFOR»
+            }
             acceptedProps
         }, { it : LatteView ->
                 «FOR child : tag.childNodes»
