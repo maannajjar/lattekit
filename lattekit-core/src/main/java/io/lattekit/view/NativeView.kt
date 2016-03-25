@@ -29,7 +29,17 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         if (style != null && style is Int) {
             return getViewClass().constructors.find{ it.parameterTypes.size == 3 }?.newInstance(context,null,style) as View
         } else {
-            return getViewClass().constructors.find{ it.parameterTypes.size == 1 }?.newInstance(context) as View
+            var constructor = getViewClass().constructors.getOrNull(0)
+            if (constructor != null) {
+                if (constructor.parameterTypes.size == 1) {
+                    return constructor.newInstance(context) as View
+                } else if (constructor.parameterTypes.size == 2) {
+                    return constructor.newInstance(context,null) as View
+                } else if (constructor.parameterTypes.size == 3) {
+                    return constructor.newInstance(context,null,0) as View
+                }
+            }
+            throw Exception("Couldn't find suitable constructor for custom view ${getViewClass().name}")
         }
     }
 
