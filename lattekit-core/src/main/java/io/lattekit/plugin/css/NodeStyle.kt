@@ -1,6 +1,5 @@
 package io.lattekit.plugin.css
 
-import android.widget.EditText
 import io.lattekit.plugin.css.declaration.CssDeclaration
 import io.lattekit.plugin.css.declaration.RuleSet
 import io.lattekit.plugin.css.declaration.Stylesheet
@@ -57,7 +56,7 @@ class NodeStyle(nativeView : NativeView) {
     fun applyStylesheets(stylesheets : List<Stylesheet>) {
         declarations.clear()
         allDeclarations.clear()
-        var classes = view.props.get("cls")
+        var classes = view.props.get("class")
         if (classes != null && classes != currentClasses) {
             currentClasses = classes as String
             var myClasses = classes.split(" ")

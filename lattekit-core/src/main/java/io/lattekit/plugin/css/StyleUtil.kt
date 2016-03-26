@@ -75,8 +75,8 @@ fun elMatches(elName : String, view : NativeView) : Boolean {
         }
         return false;
     } else if (elName.startsWith(".")){
-        if (view.props.get("cls") != null) {
-            (view.props.get("cls") as String).split(" ").forEach {
+        if (view.props.get("class") != null) {
+            (view.props.get("class") as String).split(" ").forEach {
                 if (it.trim() == elName.substring(1)) {
                     return true;
                 }
