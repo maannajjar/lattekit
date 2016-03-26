@@ -1,4 +1,4 @@
-package io.lattekit.ui
+package io.lattekit.activity
 
 import android.os.Bundle
 import android.support.v4.app.FragmentActivity
@@ -24,7 +24,7 @@ class LatteActivity : FragmentActivity()  {
 
         if (myId != null) {
             latteView = Latte.getSavedObject(myId)
-            androidView = latteView?.buildView(this, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.MATCH_PARENT));
+            androidView = latteView?.buildView(this, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
             setContentView(androidView);
         }
     }
@@ -51,7 +51,7 @@ class LatteActivity : FragmentActivity()  {
         var myId = getIntent().getStringExtra("_LATTE_KIT_OBJ_ID");
 
         if (myId != null) {
-            Latte.Companion.SAVED_OBJECTS.remove(myId)
+            Latte.SAVED_OBJECTS.remove(myId)
         }
 
     }

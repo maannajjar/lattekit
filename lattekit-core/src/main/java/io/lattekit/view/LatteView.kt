@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import io.lattekit.Latte
 import io.lattekit.annotation.Bind
 import io.lattekit.annotation.Prop
-import io.lattekit.ui.LatteActivity
+import io.lattekit.activity.LatteActivity
 import java.lang.reflect.Field
 import kotlin.reflect.KClass
 
