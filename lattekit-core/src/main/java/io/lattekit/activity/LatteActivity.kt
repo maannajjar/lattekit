@@ -34,16 +34,9 @@ class LatteActivity : FragmentActivity()  {
             super.onBackPressed()
         }
     }
-    fun onStateChanged() {
-        latteView?.onStateChanged();
-    }
 
     fun onViewMounted() {
 
-    }
-
-    fun getCssFiles() :  List<Stylesheet> {
-        return emptyList()
     }
 
     override fun onDestroy() {

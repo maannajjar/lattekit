@@ -7,9 +7,9 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import io.lattekit.Latte
+import io.lattekit.activity.LatteActivity
 import io.lattekit.annotation.Bind
 import io.lattekit.annotation.Prop
-import io.lattekit.activity.LatteActivity
 import java.lang.reflect.Field
 import kotlin.reflect.KClass
 
@@ -127,7 +127,7 @@ open class LatteView {
         onViewMounted();
     }
 
-    fun onStateChanged() {
+    fun applyChanges() {
         this.renderTree()
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
         Latte.PLUGINS.forEach { it.onViewRendered(this) }
