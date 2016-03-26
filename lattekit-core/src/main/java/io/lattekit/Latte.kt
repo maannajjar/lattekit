@@ -38,7 +38,8 @@ class Latte {
             AdapterView::class.java to LatteListView::class.java,
             RelativeLayout::class.java to LatteRelativeLayout::class.java,
             LinearLayout::class.java to LatteLinearLayout::class.java,
-            ViewPager::class.java to LatteViewPager::class.java
+            ViewPager::class.java to LatteViewPager::class.java,
+            android.support.v7.widget.RecyclerView::class.java to LatteRecyclerView::class.java
         )
 
         @JvmStatic
