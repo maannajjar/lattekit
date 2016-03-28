@@ -74,20 +74,6 @@ class JavaGenerator extends BaseGenerator {
         })
     '''
 
-    def static void main(String... args) {
-        println(new JavaGenerator().transform("com.diggreader", '''
-            package hello.test;
-
-            public class Test extends LatteView {
-                public LatteView render() {
-                    return $(/*
-                        <RelativeLayout test={(View v)=>{System.out.println("What'sup")}}>
-                        </RelativeLayout>
-                    */);
-                }
-            }
-        '''))
-    }
 
 }
 
