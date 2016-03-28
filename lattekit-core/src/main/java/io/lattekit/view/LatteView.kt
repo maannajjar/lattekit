@@ -1,6 +1,7 @@
 package io.lattekit.view
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -159,20 +160,9 @@ open class LatteView {
         activity.startActivity(intent);
     }
 
-    fun show(caller: LatteView) {
-        var myId = "${System.currentTimeMillis()}";
-        var intent = Intent(caller.rootAndroidView?.context, LatteActivity::class.java);
-        intent.putExtra("_LATTE_KIT_OBJ_ID", myId)
-        Latte.SAVED_OBJECTS.put(myId, this)
-        caller.rootAndroidView?.context?.startActivity(intent);
-    }
+    open fun onViewMounted() {}
 
-    open fun onViewMounted() {
-    }
-
-    open fun onViewWillMount() {
-
-    }
+    open fun onViewWillMount() {}
 
     fun buildAndroidViewTree(a: Context, lp: ViewGroup.LayoutParams?): View {
         // First build my view
