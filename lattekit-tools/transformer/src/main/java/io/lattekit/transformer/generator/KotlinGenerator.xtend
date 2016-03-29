@@ -57,8 +57,8 @@ class KotlinGenerator extends BaseGenerator {
         val setter = "set" + field.substring(0, 1).toUpperCase() + field.substring(1)
         var methods = Reflection.findMethods(clz, setter);
 
-        val getter = "get" + field.substring(0, 1).toUpperCase() + field.substring(1)
-        val getterMethods = Reflection.findGetterMethods(clz, getter);
+
+        val getterMethods = Reflection.findGetterMethods(clz, "get" + field.substring(0, 1).toUpperCase() + field.substring(1)) + Reflection.findGetterMethods(clz, "is" + field.substring(0, 1).toUpperCase() + field.substring(1));
 
         val isFn = if (methods.empty) {
             methods = Reflection.findMethods(clz, setter+"Listener");
@@ -70,13 +70,13 @@ class KotlinGenerator extends BaseGenerator {
         return '''if (__propKey == "«prop.name»") {
         '''
             + methods.map['''
-            if (__propValue is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type,true)»«ENDIF»«IF getTypeName(it.parameters.get(0).type,false) == "String"» || __propValue is CharSequence?«ENDIF») {
+            if (__propValue is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type,true)»«ENDIF»«IF getTypeName(it.parameters.get(0).type,false) == "String"» || __propValue is CharSequence?«ENDIF» «IF getTypeName(it.parameters.get(0).type,false) == "Boolean"»|| __propValue == "true" || __propValue == "false"«ENDIF») {
                 «IF isFn»
                     var __listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type,false)»::class.java, __propValue as Object) as «getTypeName(it.parameters.get(0).type,true)»
                     __view.«setter»«IF isFn»Listener«ENDIF»(__listener);
                 «ELSE»
                     «IF !getterMethods.isEmpty() && (getterMethods.get(0).returnType.isAssignableFrom(it.parameters.get(0).type) || (it.parameters.get(0).type.isAssignableFrom(getterMethods.get(0).returnType)))»
-                        var __currentValue = if (__view.«getter»() == null) null else __view.«getter»()«IF getterMethods.get(0).returnType.simpleName == "CharSequence"».toString()«ENDIF»;
+                        var __currentValue = if (__view.«getterMethods.get(0).name»() == null) null else __view.«getterMethods.get(0).name»()«IF getterMethods.get(0).returnType.simpleName == "CharSequence"».toString()«ENDIF»;
                         if (__currentValue != __propValue) {
                             «IF getTypeName(it.parameters.get(0).type,false) == "String"»
                             if (__propValue is CharSequence?) {
@@ -84,12 +84,36 @@ class KotlinGenerator extends BaseGenerator {
                             } else {
                                 __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
                             }
+                            «ELSEIF getTypeName(it.parameters.get(0).type,false) == "Boolean"»
+                            if (__propValue == "true") {
+                                __view.«setter»(true);
+                            } else if (__propValue == "false") {
+                                __view.«setter»(false);
+                            } else {
+                                __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)» as Boolean);
+                            }
                             «ELSE»
                             __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
                             «ENDIF»
                         }
                     «ELSE»
-                        __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
+                            «IF getTypeName(it.parameters.get(0).type,false) == "String"»
+                            if (__propValue is CharSequence?) {
+                                __view.«setter»((__propValue as CharSequence?)?.toString());
+                            } else {
+                                __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
+                            }
+                            «ELSEIF getTypeName(it.parameters.get(0).type,false) == "Boolean"»
+                            if (__propValue == "true") {
+                                __view.«setter»(true);
+                            } else if (__propValue == "false") {
+                                __view.«setter»(false);
+                            } else {
+                                __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)» as Boolean);
+                            }
+                            «ELSE»
+                            __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
+                            «ENDIF»
                     «ENDIF»
                 «ENDIF»
                 __acceptedProps.add("«prop.name»");
