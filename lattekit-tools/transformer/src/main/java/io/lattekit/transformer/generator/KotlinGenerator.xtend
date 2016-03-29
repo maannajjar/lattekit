@@ -56,6 +56,10 @@ class KotlinGenerator extends BaseGenerator {
 
         val setter = "set" + field.substring(0, 1).toUpperCase() + field.substring(1)
         var methods = Reflection.findMethods(clz, setter);
+
+        val getter = "get" + field.substring(0, 1).toUpperCase() + field.substring(1)
+        val getterMethods = Reflection.findGetterMethods(clz, getter);
+
         val isFn = if (methods.empty) {
             methods = Reflection.findMethods(clz, setter+"Listener");
             true
@@ -63,32 +67,47 @@ class KotlinGenerator extends BaseGenerator {
         if (methods.empty || setter == "setOnClick" || setter == "setOnTouch") {
             return "";
         }
-        return '''if (propKey == "«prop.name»") {;
+        return '''if (__propKey == "«prop.name»") {
         '''
             + methods.map['''
-            if (propValue is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type,true)»«ENDIF») {
+            if (__propValue is «IF isFn»Function<*>«ELSE»«getTypeName(it.parameters.get(0).type,true)»«ENDIF»«IF getTypeName(it.parameters.get(0).type,false) == "String"» || __propValue is CharSequence?«ENDIF») {
                 «IF isFn»
-                    var listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type,false)»::class.java, propValue as Object) as «getTypeName(it.parameters.get(0).type,true)»
-                    view.«setter»«IF isFn»Listener«ENDIF»(listener);
+                    var __listener = io.lattekit.Latte.createLambdaProxyInstance(«getTypeName(it.parameters.get(0).type,false)»::class.java, __propValue as Object) as «getTypeName(it.parameters.get(0).type,true)»
+                    __view.«setter»«IF isFn»Listener«ENDIF»(__listener);
                 «ELSE»
-                    view.«setter»(propValue as «getTypeName(it.parameters.get(0).type,true)»);
+                    «IF !getterMethods.isEmpty() && (getterMethods.get(0).returnType.isAssignableFrom(it.parameters.get(0).type) || (it.parameters.get(0).type.isAssignableFrom(getterMethods.get(0).returnType)))»
+                        var __currentValue = if (__view.«getter»() == null) null else __view.«getter»()«IF getterMethods.get(0).returnType.simpleName == "CharSequence"».toString()«ENDIF»;
+                        if (__currentValue != __propValue) {
+                            «IF getTypeName(it.parameters.get(0).type,false) == "String"»
+                            if (__propValue is CharSequence?) {
+                                __view.«setter»((__propValue as CharSequence?)?.toString());
+                            } else {
+                                __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
+                            }
+                            «ELSE»
+                            __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
+                            «ENDIF»
+                        }
+                    «ELSE»
+                        __view.«setter»(__propValue as «getTypeName(it.parameters.get(0).type,true)»);
+                    «ENDIF»
                 «ENDIF»
-                acceptedProps.add("«prop.name»");
+                __acceptedProps.add("«prop.name»");
             }
         '''].join("else ") +" }"
     }
     def String compileNative(Tag tag, Class clz) {
-        '''io.lattekit.Latte.createNative(«clz.name»::class.java, io.lattekit.Latte.props(«tag.props.map[compile].join(",")»),mapOf(«tag.props.map[compilePropOption].join(",")»), { viewWrapper, props ->
-            var view = viewWrapper.androidView as «clz.name»;
-            var acceptedProps = mutableListOf<String>();
-            props.forEach {
-                var propKey = it.key;
-                var propValue = it.value;
+        '''io.lattekit.Latte.createNative(«clz.name»::class.java, io.lattekit.Latte.props(«tag.props.map[compile].join(",")»),mapOf(«tag.props.map[compilePropOption].join(",")»), { __viewWrapper, __lprops ->
+            var __view = __viewWrapper.androidView as «clz.name»;
+            var __acceptedProps = mutableListOf<String>();
+            __lprops.forEach {
+                var __propKey = it.key;
+                var __propValue = it.value;
                 «FOR prop : tag.props»
                     «compileProp(prop, clz)»
                 «ENDFOR»
             }
-            acceptedProps
+            __acceptedProps
         }, { it : LatteView ->
                 «FOR child : tag.childNodes»
                     «IF child instanceof TextNode»«child.text»«ENDIF»

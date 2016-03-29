@@ -75,6 +75,21 @@ public class Reflection {
         return null;
     }
 
+    static def List<Method> findGetterMethods(Class clazz, String fnName) {
+        var reachedEnd = false;
+        var currentCls = clazz;
+        val results = new ArrayList<Method>()
+        while(!reachedEnd) {
+            results += currentCls.declaredMethods.filter[ name == fnName  && it.parameterCount == 0]
+            currentCls = currentCls.superclass
+            if (currentCls == Object) {
+                reachedEnd = true;
+            }
+        }
+        return results;
+    }
+
+
     static def List<Method> findMethods(Class clazz, String fnName) {
         var reachedEnd = false;
         var currentCls = clazz;
