@@ -5,6 +5,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import io.lattekit.util.Values
 import java.util.*
 
 /**
@@ -62,53 +63,6 @@ open class NativeViewGroup : NativeView() {
 
     open fun onChildrenAdded() {}
 
-    fun applyChildLayoutProps(child: LatteView, params: ViewGroup.LayoutParams) {
-        child.props.forEach {
-            var keyName = it.key
-            when (keyName) {
-
-                "layout_gravity" -> {
-                    var value = child.props.get(keyName);
-                    var field = params.javaClass.getField("gravity");
-                    field.setAccessible(true);
-                    if (value is String) {
-                        var realVal = Gravity::class.java.getField(value.toUpperCase()).get(null)
-                        field.set(params, realVal)
-                    } else if (value is Integer) {
-                        field.set(params, value)
-                    }
-                }
-
-                "layout_width" -> {
-                    var value = child.props.get(keyName);
-                    params.width = if (value is String) {
-                        NativeViewGroup.Companion.parseSize(value, ViewGroup.LayoutParams.MATCH_PARENT, child.activity!!)
-                    } else { value as Int }
-                }
-
-                "layout_height" -> {
-                    var value = child.props.get(keyName);
-                    params.height = if (value is String) {
-                        NativeViewGroup.Companion.parseSize(value, ViewGroup.LayoutParams.WRAP_CONTENT, child.activity!!)
-                    } else { value as Int }
-                }
-
-                "layout_weight" -> {
-                    var value = child.props.get(keyName);
-                    if (value is String) {
-                        (params as android.widget.LinearLayout.LayoutParams).weight = value.toFloat()
-                    } else if (value is Float) {
-                        (params as android.widget.LinearLayout.LayoutParams).weight = value
-                    } else if (value is Int) {
-                        (params as android.widget.LinearLayout.LayoutParams).weight = value.toFloat()
-                    }
-
-                }
-
-            }
-
-        }
-    }
 
     fun mountChildren() {
         var newViews = ArrayList<View>();
@@ -120,7 +74,7 @@ open class NativeViewGroup : NativeView() {
 
                 var childLP = createLayoutParams();
                 var childView = v.buildAndroidViewTree(this.activity as Context, childLP);
-                applyChildLayoutProps(v, childView.layoutParams)
+                applyChildLayoutProps(v.rootNativeView!!, childView.layoutParams)
                 if (i >= managedViews.size) {
                     myContainer.addView(childView);
                 } else if (managedViews[i] != childView) {
@@ -147,4 +101,106 @@ open class NativeViewGroup : NativeView() {
         return true
     }
 
+
+    fun applyChildLayoutProps(child: LatteView, params: ViewGroup.LayoutParams) {
+        child.props.forEach {
+            var keyName = it.key
+            var value = child.props.get(keyName);
+
+            when (keyName) {
+
+                "layout_gravity" -> {
+                    var field = params.javaClass.getField("gravity");
+                    field.setAccessible(true);
+                    if (value is String) {
+                        var realVal = Gravity::class.java.getField(value.toUpperCase()).get(null)
+                        field.set(params, realVal)
+                    } else if (value is Integer) {
+                        field.set(params, value)
+                    }
+                }
+
+                "layout_width" -> {
+                    params.width = if (value is String) {
+                        NativeViewGroup.Companion.parseSize(value, ViewGroup.LayoutParams.MATCH_PARENT, child.activity!!)
+                    } else { value as Int }
+                }
+
+                "layout_height" -> {
+                    params.height = if (value is String) {
+                        NativeViewGroup.Companion.parseSize(value, ViewGroup.LayoutParams.WRAP_CONTENT, child.activity!!)
+                    } else { value as Int }
+                }
+
+                "layout_weight" -> {
+                    if (value is String) {
+                        (params as android.widget.LinearLayout.LayoutParams).weight = value.toFloat()
+                    } else if (value is Float) {
+                        (params as android.widget.LinearLayout.LayoutParams).weight = value
+                    } else if (value is Int) {
+                        (params as android.widget.LinearLayout.LayoutParams).weight = value.toFloat()
+                    }
+                }
+                "layout_margin" -> {
+                    var value = if (value is String) {
+                        Values.toInt(value, activity!!)
+                    } else if (value is Int) { value } else { 0 }
+                    var marginLp = (params as ViewGroup.MarginLayoutParams)
+                    marginLp.leftMargin = value
+                    marginLp.marginStart = value
+                    marginLp.topMargin = value
+                    marginLp.rightMargin = value
+                    marginLp.marginEnd = value
+                    marginLp.bottomMargin = value
+                }
+
+                "layout_marginTop" -> {
+                    if (value is String) {
+                        (params as ViewGroup.MarginLayoutParams).topMargin = Values.toInt(value, activity!!)
+                    } else if (value is Int) {
+                        (params as ViewGroup.MarginLayoutParams).topMargin = value
+                    }
+                }
+
+                "layout_marginLeft" -> {
+                    if (value is String) {
+                        (params as ViewGroup.MarginLayoutParams).leftMargin = Values.toInt(value, activity!!)
+                    } else if (value is Int) {
+                        (params as ViewGroup.MarginLayoutParams).leftMargin = value
+                    }
+                }
+
+                "layout_marginStart" -> {
+                    if (value is String) {
+                        (params as ViewGroup.MarginLayoutParams).marginStart = Values.toInt(value, activity!!)
+                    } else if (value is Int) {
+                        (params as ViewGroup.MarginLayoutParams).marginStart = value
+                    }
+                }
+
+                "layout_marginRight" -> {
+                    if (value is String) {
+                        (params as ViewGroup.MarginLayoutParams).rightMargin = Values.toInt(value, activity!!)
+                    } else if (value is Int) {
+                        (params as ViewGroup.MarginLayoutParams).rightMargin = value
+                    }
+                }
+                "layout_marginEnd" -> {
+                    if (value is String) {
+                        (params as ViewGroup.MarginLayoutParams).marginEnd = Values.toInt(value, activity!!)
+                    } else if (value is Int) {
+                        (params as ViewGroup.MarginLayoutParams).marginEnd = value
+                    }
+                }
+                "layout_marginBottom" -> {
+                    if (value is String) {
+                        (params as ViewGroup.MarginLayoutParams).bottomMargin = Values.toInt(value, activity!!)
+                    } else if (value is Int) {
+                        (params as ViewGroup.MarginLayoutParams).bottomMargin = value
+                    }
+                }
+            }
+
+        }
+    }
 }

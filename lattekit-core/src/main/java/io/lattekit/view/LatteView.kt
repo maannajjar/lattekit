@@ -99,6 +99,16 @@ open class LatteView {
             return map!!
         }
 
+    var rootNativeView: NativeView? = null
+        get() {
+            if (this is NativeView) {
+                return this
+            } else if (this.renderedViews[0] != null) {
+                return this.renderedViews[0].rootNativeView;
+            }
+            return null
+        }
+
     var rootAndroidView: View? = null
         get() {
             if (this.androidView != null) {

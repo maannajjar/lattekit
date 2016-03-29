@@ -3,7 +3,6 @@ package io.lattekit.view
 import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
@@ -12,6 +11,7 @@ import android.widget.Button
 import android.widget.TextView
 import io.lattekit.Latte
 import io.lattekit.PropOption
+import io.lattekit.util.Values
 import java.lang.reflect.Method
 
 /**
@@ -128,10 +128,50 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener,
                 props.filterKeys { propsOptions[it] != PropOption.WAIT_LAYOUT }
             } else props
             isApplyingProps = true
+            applyCommonProps(props)
             propsSetter.invoke(this,propsToApply);
             isApplyingProps = false
         }
     }
+
+    fun applyCommonProps(props : Map<String,Any?>) {
+        props.forEach { var (key,value) = it;
+            if (key == "paddingTop") {
+                if (value is Int) {
+                    androidView?.setPaddingRelative(androidView!!.paddingStart, value,androidView!!.paddingEnd,androidView!!.paddingBottom)
+                } else if (value is String) {
+                    androidView?.setPaddingRelative(androidView!!.paddingStart, Values.toInt(value, activity!!),androidView!!.paddingEnd,androidView!!.paddingBottom)
+                }
+            } else if (key == "paddingLeft" || key == "paddingStart") {
+                if (value is Int) {
+                    androidView?.setPaddingRelative( value,androidView!!.paddingTop,androidView!!.paddingEnd,androidView!!.paddingBottom)
+                } else if (value is String) {
+                    androidView?.setPaddingRelative( Values.toInt(value, activity!!),androidView!!.paddingTop,androidView!!.paddingEnd,androidView!!.paddingBottom)
+                }
+            } else if (key == "paddingRight" || key == "paddingEnd") {
+                if (value is Int) {
+                    androidView?.setPaddingRelative( androidView!!.paddingStart,androidView!!.paddingTop,value,androidView!!.paddingBottom)
+                } else if (value is String) {
+                    androidView?.setPaddingRelative(androidView!!.paddingStart,androidView!!.paddingTop,Values.toInt(value, activity!!),androidView!!.paddingBottom)
+                }
+            } else if (key == "paddingBottom") {
+                if (value is Int) {
+                    androidView?.setPaddingRelative( androidView!!.paddingStart,androidView!!.paddingTop,androidView!!.paddingEnd,value)
+                } else if (value is String) {
+                    androidView?.setPaddingRelative(androidView!!.paddingStart,androidView!!.paddingTop,androidView!!.paddingEnd,Values.toInt(value, activity!!))
+                }
+            } else if (key == "padding") {
+                if (value is Int) {
+                    androidView?.setPaddingRelative( value,value,value,value)
+                } else if (value is String) {
+                    var valueNum = Values.toInt(value, activity!!)
+                    androidView?.setPaddingRelative(valueNum,valueNum,valueNum,valueNum)
+                }
+            }
+
+        }
+    }
+
 
     fun setPropsRuntime(propsToApply : Map<String,Any?>) : List<String> {
         var acceptedProps = mutableListOf<String>()
@@ -226,7 +266,6 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener,
         if (isApplyingProps) {
             return
         }
-        Log.d("Latte","Text changed")
         var listener = props.get("onTextChanged");
         if (listener is kotlin.Function0<*>) {
             listener.invoke()
