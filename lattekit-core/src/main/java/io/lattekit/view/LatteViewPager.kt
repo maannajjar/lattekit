@@ -68,7 +68,7 @@ class LatteViewPager : NativeView() {
         return android.support.v4.view.ViewPager::class.java
     }
 
-    override fun onViewMounted() {
+    override fun onViewCreated() {
         this.androidView?.id = Util.makeResId("io.lattekit", "id", "viewPager")
 
         this.adapter = object : FragmentPagerAdapter((this.activity as FragmentActivity).supportFragmentManager) {
@@ -109,7 +109,7 @@ class LatteViewPager : NativeView() {
         val view = this.androidView as android.support.v4.view.ViewPager
         view.adapter = this.adapter
         this.adapter!!.notifyDataSetChanged()
-        super.onViewMounted()
+        super.onViewCreated()
     }
 
     fun isMatch(template: LatteView, item: Any, position: Int): Boolean {

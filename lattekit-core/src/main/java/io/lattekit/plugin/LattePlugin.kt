@@ -9,8 +9,5 @@ import io.lattekit.view.LatteView
 
 open abstract class LattePlugin {
     open fun onPropsUpdated(view : LatteView, oldProps: MutableMap<String,Any?>) {}
-    open fun onViewMounted(view : LatteView) {}
-    open fun onViewWillMount(view : LatteView) {}
-    open fun onViewRendered(view : LatteView) {}
-
+    open fun onViewCreated(view : LatteView) {}
 }

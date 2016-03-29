@@ -1,7 +1,6 @@
 package io.lattekit.view
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -50,7 +49,7 @@ open class LatteView {
     var dataValues = mutableMapOf<String, Any?>()
 
     var layoutFn : (LatteView.() -> Unit)? = null
-
+    var isViewCreated = false;
 
     val propFields: MutableMap<String, Field>
         get() {
@@ -118,20 +117,25 @@ open class LatteView {
         this.activity = activity;
         this.renderTree()
         this.buildAndroidViewTree(activity, lp);
+        if (!isViewCreated) {
+            // This will update properties in layout that were dependent on bound views
+            // TODO: investigate if we can only call when a bound Android view within the same layout is being used in a property value
+            applyChanges();
+            isViewCreated = true;
+        }
         return this.rootAndroidView!!;
     }
 
-    fun notifyMounted() {
+    fun notifyViewCreated() {
         isMounted = true;
         bindViews(this.renderedViews);
-        Latte.PLUGINS.forEach { it.onViewMounted(this) }
-        onViewMounted();
+        Latte.PLUGINS.forEach { it.onViewCreated(this) }
+        onViewCreated();
     }
 
     fun applyChanges() {
         this.renderTree()
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
-        Latte.PLUGINS.forEach { it.onViewRendered(this) }
     }
 
     fun data(key: String): Any? {
@@ -160,36 +164,30 @@ open class LatteView {
         activity.startActivity(intent);
     }
 
-    open fun onViewMounted() {}
-
-    open fun onViewWillMount() {}
+    open fun onViewCreated() {}
 
     fun buildAndroidViewTree(a: Context, lp: ViewGroup.LayoutParams?): View {
         // First build my view
         this.activity = a as Activity;
-        if (!isMounted) {
-            Latte.PLUGINS.forEach { it.onViewWillMount(this) }
-            this.onViewWillMount()
-        }
         if (this is NativeView) {
             if (this.androidView == null) {
                 this.androidView = this.renderNative(a);
             }
             if (this.androidView?.layoutParams == null) {
-                this.androidView?.layoutParams = lp ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                this.androidView?.layoutParams = lp ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
             if (this is NativeViewGroup) {
                 this.mountChildren()
             }
             if (!isMounted) {
-                notifyMounted();
+                notifyViewCreated();
             }
             return this.androidView!!
         } else {
             // If we don't have native android view, then we are virtual node
             var subAndroid = this.renderedViews[0].buildAndroidViewTree(a, lp);
             if (!isMounted) {
-                notifyMounted();
+                notifyViewCreated();
             }
             return subAndroid;
         }
@@ -223,8 +221,10 @@ open class LatteView {
                     if (field.getType().isAssignableFrom(entry.value?.javaClass)) {
                         injectedProps.put(entry.key,entry.value)
                         field.set(this, entry.value)
+                    } else if (field.getType() == String::class.java) {
+                        field.set(this, entry.value?.toString())
                     } else {
-                        LatteView.Companion.log("WARNING: Provided property ${entry.key} value with different type, it will be set to null")
+                        LatteView.Companion.log("WARNING: Injected property ${entry.key} has different type from the value in props, it will be set to null")
                     }
                 }
             }

@@ -1,10 +1,15 @@
 package io.lattekit.view
 
 import android.content.Context
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
 import android.widget.AdapterView
+import android.widget.Button
+import android.widget.TextView
 import io.lattekit.Latte
 import io.lattekit.PropOption
 import java.lang.reflect.Method
@@ -12,7 +17,7 @@ import java.lang.reflect.Method
 /**
  * Created by maan on 2/15/16.
  */
-open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener {
+open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener, TextWatcher {
 
     private var isAttached = false
 
@@ -20,6 +25,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
 
     var propsSetter : (NativeView, Map<String,Any?>)->List<String> = { view, props -> setPropsRuntime(props) };
     val methodCache = mutableMapOf<String, Method?>()
+    var isApplyingProps = false;
 
     open fun getViewClass() : Class<out View> {
         return if (nativeViewClass != null) {
@@ -30,17 +36,21 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
     }
 
     override fun onPropsUpdated(oldProps :Map<String, Any?>) : Boolean {
+        var changedProps = props.filter { props[it.component1()] != oldProps[it.component1()] }
         applyProps(props);
         return false
     }
 
-    override fun onViewMounted() {
+    override fun onViewCreated() {
         if (androidView != null) {
             if (!(androidView is AdapterView<*>)) {
                 androidView?.setOnClickListener(this)
             }
             androidView?.setOnTouchListener(this);
-            androidView?.isClickable = false
+            if (androidView is TextView) {
+                (androidView as TextView).addTextChangedListener(this)
+            }
+            androidView?.isClickable = androidView is Button
             applyProps(this.props)
             watchViewTree()
         }
@@ -117,7 +127,9 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
             var propsToApply =  if (!isAttached) {
                 props.filterKeys { propsOptions[it] != PropOption.WAIT_LAYOUT }
             } else props
+            isApplyingProps = true
             propsSetter.invoke(this,propsToApply);
+            isApplyingProps = false
         }
     }
 
@@ -206,5 +218,38 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener 
         return null;
     }
 
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+        (props.get("beforeTextChanged") as? Function<Any>)?.apply { }
+    }
+
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+        if (isApplyingProps) {
+            return
+        }
+        Log.d("Latte","Text changed")
+        var listener = props.get("onTextChanged");
+        if (listener is kotlin.Function0<*>) {
+            listener.invoke()
+        } else if (listener is kotlin.Function1<*,*>) {
+            (listener as kotlin.Function1<Any?,Any?>).invoke(s)
+        } else if (listener is kotlin.Function2<*,*,*>) {
+            (listener as kotlin.Function2<Any?,Any?,Any?>).invoke(s,start)
+        } else if (listener is kotlin.Function3<*,*,*,*>) {
+            (listener as kotlin.Function3<Any?,Any?,Any?,Any?>).invoke(s,start,before)
+        } else if (listener is kotlin.Function4<*,*,*,*,*>) {
+            (listener as kotlin.Function4<Any?,Any?,Any?,Any?,Any?>).invoke(s,start,before,count)
+        }
+    }
+    override fun afterTextChanged(s: Editable?) {
+        if (isApplyingProps) {
+            return
+        }
+        var listener = props.get("afterTextChanged");
+        if (listener is kotlin.Function0<*>) {
+            listener.invoke()
+        } else if (listener is kotlin.Function1<*,*>) {
+            (listener as kotlin.Function1<Any?,Any?>).invoke(s)
+        }
+    }
 }
 

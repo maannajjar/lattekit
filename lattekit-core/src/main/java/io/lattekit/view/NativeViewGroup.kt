@@ -50,14 +50,14 @@ open class NativeViewGroup : NativeView() {
     }
 
     fun createLayoutParams() : ViewGroup.LayoutParams = when (this.androidView) {
-        is android.widget.LinearLayout -> android.widget.LinearLayout.LayoutParams(-1, -1)
-        is android.widget.RelativeLayout -> android.widget.RelativeLayout.LayoutParams(-1, -1)
-        is android.widget.FrameLayout -> android.widget.FrameLayout.LayoutParams(-1, -1)
+        is android.widget.LinearLayout -> android.widget.LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        is android.widget.RelativeLayout -> android.widget.RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        is android.widget.FrameLayout -> android.widget.FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         else -> getLayoutParamsClass().constructors.find {
             it.parameterTypes.size == 2 &&
                 it.parameterTypes[0] == Integer.TYPE &&
                 it.parameterTypes[1] == Integer.TYPE
-        }?.newInstance(-1, -1) as ViewGroup.LayoutParams
+        }?.newInstance(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT) as ViewGroup.LayoutParams
     }
 
     open fun onChildrenAdded() {}
@@ -111,7 +111,6 @@ open class NativeViewGroup : NativeView() {
     }
 
     fun mountChildren() {
-        log("${this.androidView} Here about to add my children " + this.renderedViews.size)
         var newViews = ArrayList<View>();
         var myContainer = this.androidView as ViewGroup;
 
@@ -132,7 +131,7 @@ open class NativeViewGroup : NativeView() {
                 v.androidView = childView
                 newViews.add(childView);
                 if (!v.isMounted) {
-                    v.notifyMounted()
+                    v.notifyViewCreated()
                 }
             } else if (i < managedViews.size) {
                 myContainer.removeViewInLayout(managedViews.get(i))

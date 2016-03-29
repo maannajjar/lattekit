@@ -56,7 +56,7 @@ class CssPlugin : LattePlugin() {
         }
     }
 
-    override fun onViewMounted(view: LatteView) {
+    override fun onViewCreated(view: LatteView) {
         if (view is NativeView) {
             view.getStyle().applyStylesheets(GLOBAL_STYLESHEETS + getStylesheetsFor(view))
         }
