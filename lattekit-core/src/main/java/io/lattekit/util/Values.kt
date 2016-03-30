@@ -6,7 +6,7 @@ import android.util.TypedValue
 /**
  * Created by maan on 3/29/16.
  */
-val PATTERN : Regex = Regex("""(\d+(?:\.\d+)?)([^\d%]+)?""")
+val PATTERN : Regex = Regex("""(-?\d+(?:\.\d+)?)([^\d%]+)?""")
 
 object Values {
     fun toBoolean(value : String) = if (value== "true") true else false

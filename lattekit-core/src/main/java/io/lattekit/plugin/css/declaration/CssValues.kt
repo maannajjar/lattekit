@@ -87,7 +87,7 @@ data class LengthValue(val valueString : String) : CssValue {
     var unit : String? = null
     val PREDEFINED_VALUES = mapOf("match_parent" to ViewGroup.LayoutParams.MATCH_PARENT,"wrap_content" to ViewGroup.LayoutParams.WRAP_CONTENT)
     companion object {
-        val PATTERN : Regex = Regex("""(\d+(?:\.\d+)?)([^\d%]+)""")
+        val PATTERN : Regex = Regex("""(-?\d+(?:\.\d+)?)([^\d%]+)""")
     }
 
     init {
