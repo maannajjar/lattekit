@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import org.gradle.api.plugins.JavaPluginConvention
 import org.apache.commons.io.FileUtils
 import java.util.regex.Pattern
+import java.io.PrintWriter
 
 class LattePlugin implements Plugin<Project> {
 
@@ -51,39 +52,42 @@ class LattePlugin implements Plugin<Project> {
                     default: throw new GradleException('''Unknown packaging type «android.class.simpleName»''')
                 }
                 io.lattekit.Reflection.loadAndroidSdk(android.getSdkDirectory.absolutePath,android.compileSdkVersion)
-                android.sourceSets.forEach [ sourceSet |
-                    val manifestFile = sourceSet.manifest.srcFile;
-                    if(manifestFile.exists && !sourceSet.java.srcDirs.filter[it.absoluteFile.exists].empty) {
-                        var files = sourceSet.java.srcDirs.map[it.absoluteFile]
-                        val latteTargetRoot = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name)
-                        val javaTarget = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/java/")
-                        val resTarget = new File(project.buildDir.absolutePath+File.separator+"latte/"+sourceSet.name+"/res")
-                        javaTarget.mkdirs()
-                        resTarget.mkdirs()
+                variants.all [ variant |
+                    var srcTaskName = "generate"+variant.name.toFirstUpper+"LatteSources"
+                    var resTaskName = "generate"+variant.name.toFirstUpper+"LatteResources"
+                    val javaDirs = variant.sourceSets.map[javaDirectories].flatten.filter[directory]
+                    val sourceDirs = newArrayList
+                    sourceDirs += javaDirs
+                    sourceDirs += #[
+                        variant.aidlCompile.sourceOutputDir,
+                        variant.generateBuildConfig.sourceOutputDir,
+                        variant.renderscriptCompile.sourceOutputDir
+                    ]
+                    sourceDirs += variant.outputs.map[processResources.sourceOutputDir]
 
-                        val Set<File> originalJavaSet = newHashSet();
-                        val updatedJavaFolderSet = newHashSet(javaTarget)
-                        val updatedResFolderSet = newHashSet(resTarget)
+                    val srcDestination =  new File('''«project.buildDir»/generated/source/latte/«variant.getDirName»''')
+                    val resDestination =  new File('''«project.buildDir»/generated/res/latte/«variant.getDirName»''')
+                    var srcTask = project.tasks.create(srcTaskName,LatteTransform) [
+                        it.taskType = LatteTransform.TaskType.SRC_GENERATOR
+                        it.from = sourceDirs.toSet()
+                        it.outputSourceDir = srcDestination
+                        it.outputResDir = resDestination
+                        it.project = project;
+                        it.applicationId = variant.applicationId
+                    ]
+                    var resTask = project.tasks.create(resTaskName,LatteTransform) [
+                        it.taskType = LatteTransform.TaskType.RES_GENERATOR
+                        it.from = sourceDirs.toSet()
+                        it.outputSourceDir = srcDestination
+                        it.outputResDir = resDestination
+                        it.project = project;
+                        it.applicationId = variant.applicationId
+                    ]
 
-                        sourceSet.java.srcDirs.forEach[ originalJavaSet += it; updatedJavaFolderSet += it ]
-                        sourceSet.res.srcDirs.forEach[ updatedResFolderSet += it ]
-                        sourceSet.java.srcDirs = updatedJavaFolderSet;
-                        sourceSet.res.srcDirs = updatedResFolderSet;
-
-                        println("All java sources are "+sourceSet.java.srcDirs)
-                        println("All res sources are "+sourceSet.res.srcDirs)
-                        var taskName = "latteGenerateSourcesJava"+sourceSet.name.substring(0,1).toUpperCase()+sourceSet.name.substring(1)
-                        var actualTask = project.tasks.create(taskName,LatteTransform) [
-                            it.from = originalJavaSet
-                            it.into = latteTargetRoot
-                            it.project = project;
-                            it.manifestFile = manifestFile
-                        ]
-                        project.tasks.findByName("preBuild").dependsOn(actualTask)
-                        project.tasks.findByName("clean").finalizedBy(actualTask)
-
-                    }
+                    variant.registerJavaGeneratingTask(srcTask, srcDestination)
+                    variant.registerResGeneratingTask(resTask, resDestination)
                 ]
+
             } catch (Exception ex) {
                 // Java mode
                 val java = project.convention.findPlugin(JavaPluginConvention)
@@ -100,7 +104,7 @@ class LattePlugin implements Plugin<Project> {
                         var task = new LatteTransform()
                         task.from = sourceSet.java.srcDirs
                         println("New source dirs =" +javaDirs);
-                        task.into = target
+//                        task.into = target
                         task.project = project;
                         task.execute
 
@@ -117,10 +121,16 @@ class LattePlugin implements Plugin<Project> {
 public class LatteTransform extends DefaultTask {
 
     val PACKAGE_PATTERN = Pattern.compile('''package="([^"]+)"''')
-
+    public enum TaskType {
+        RES_GENERATOR, SRC_GENERATOR
+    }
     var Set<File> from;
-    var File into;
+    var File outputSourceDir;
+    var File outputResDir;
     var File manifestFile;
+    var String applicationId;
+    var TaskType taskType;
+
 
     def copy(Set<File> from, Set<File> to) {
         from.forEach [ file, i |
@@ -131,23 +141,43 @@ public class LatteTransform extends DefaultTask {
         ]
     }
 
+    def getIdsXml(Iterable<String> ids) '''
+    <?xml version="1.0" encoding="utf-8"?>
+    <resources>
+        «FOR res: ids»
+        <item name="«res»" type="id" />
+        «ENDFOR»
+    </resources>
+    '''
+
+
     @TaskAction
     def executeTask() {
-        var manifestText = FileUtils.readLines(manifestFile).join("\n")
-        var matcher = PACKAGE_PATTERN.matcher(manifestText);
-        var String packageName = null;
-        if (matcher.find) {
-            packageName = matcher.group(1)
-        }
-        val androidPackage = packageName;
-        println("Generating source dir" +from);
+        val androidPackage = applicationId;
+        println("Generating source dir" +from+" to "+outputSourceDir);
+        val List<String> allIds = newArrayList()
         from.forEach [ src, i |
-            var to = into
             if (project.file(src).exists) {
-                new Transformer().transform(androidPackage,project.file(src).absolutePath, project.file(to).absolutePath,
+                if (taskType == TaskType.RES_GENERATOR) {
+                    allIds += new Transformer().transform(androidPackage,project.file(src).absolutePath, null,
                     ".java",".kt", ".xtend","css")
+                } else {
+                    new Transformer().transform(androidPackage,project.file(src).absolutePath, project.file(outputSourceDir).absolutePath,
+                    ".java",".kt", ".xtend","css")
+
+                }
             }
         ]
+
+        var resOut = project.file(outputResDir).absolutePath;
+        if (taskType == TaskType.RES_GENERATOR) {
+            var valuesOut = new File(resOut+"/values");
+            valuesOut.mkdirs();
+            var writer = new PrintWriter(new File(resOut+"/values/latte_ids.xml"), "UTF-8");
+            writer.print(getIdsXml(allIds));
+            writer.close();
+        }
+
 
     }
 
