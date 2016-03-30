@@ -119,7 +119,6 @@ abstract class BaseGenerator {
                 var compiledCode = compile(layouCode)
                 println("Processed "+currentClass.name +" layout")
                 currentClass.hasLayout = true;
-                println("Class has a layout function :"+currentFunction.name)
                 currentFunction.append(compiledCode);
                 currentClass.append(currentFunction)
 
