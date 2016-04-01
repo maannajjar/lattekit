@@ -1,6 +1,9 @@
 package io.lattekit.view
 
+import android.content.Context
+import android.graphics.*
 import android.view.View
+import android.widget.ImageView
 import com.bumptech.glide.Glide
 
 /**
@@ -53,6 +56,27 @@ class LatteImageView : NativeView() {
     }
 
     override fun getViewClass() : Class<out View> {
-        return android.widget.ImageView::class.java;
+        return ClippableImageView::class.java;
+    }
+}
+
+class ClippableImageView(context : Context) : ImageView(context) {
+
+    var clipPath : Path? = null;
+    var pdMode : PorterDuffXfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR);
+    var paint =  Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG);
+
+    override fun draw(canvas: Canvas) {
+        if (clipPath == null) {
+            super.draw(canvas);
+        } else {
+            var saveFlags = Canvas.MATRIX_SAVE_FLAG or Canvas.CLIP_SAVE_FLAG or Canvas.HAS_ALPHA_LAYER_SAVE_FLAG or Canvas.FULL_COLOR_LAYER_SAVE_FLAG or Canvas.CLIP_TO_LAYER_SAVE_FLAG;
+            var saveCount = canvas.saveLayer(0f, 0f, getWidth().toFloat(), getHeight().toFloat(), null, saveFlags);
+            super.draw(canvas);
+            paint.setXfermode(pdMode);
+            canvas.drawPath(clipPath, paint);
+            canvas.restoreToCount(saveCount);
+            paint.setXfermode(null);
+        }
     }
 }

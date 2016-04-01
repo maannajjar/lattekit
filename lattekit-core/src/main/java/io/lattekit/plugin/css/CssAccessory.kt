@@ -2,8 +2,13 @@ package io.lattekit.plugin.css
 
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Outline
+import android.graphics.Rect
 import android.graphics.drawable.*
 import android.os.Build
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import io.lattekit.R
 import io.lattekit.drawable.BorderDrawable
 import io.lattekit.view.NativeView
@@ -51,12 +56,14 @@ inline fun NativeView.getStyle() : NodeStyle {
 //
 //
 //}
-class CssAccessory(view : NativeView) {
+class CssAccessory(view : NativeView)  {
     var style : NodeStyle = NodeStyle(view)
     var shapeDrawable : ShapeDrawable = ShapeDrawable()
     var gradientDrawable : GradientDrawable = GradientDrawable()
     var borderDrawable : BorderDrawable = BorderDrawable()
     var rippleDrawable : Drawable? = null;
+    var clipRadius : Float = 0f;
+
 
     companion object {
         fun getCssAccessory(view : NativeView) : CssAccessory {
@@ -74,11 +81,22 @@ class CssAccessory(view : NativeView) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             rippleDrawable = view.androidView!!.resources.getDrawable(R.drawable.ripple).mutate();
             var drawable =  rippleDrawable as RippleDrawable
-            drawable.setDrawableByLayerId(R.id.border_layer, borderDrawable)
             drawable.setDrawableByLayerId(R.id.background_layer, gradientDrawable)
+
+            drawable.setDrawableByLayerId(android.R.id.mask, shapeDrawable)
             if (view.androidView?.background != null) {
                 drawable.setDrawableByLayerId(R.id.native_background_layer,view.androidView?.background);
             }
+            view.androidView?.outlineProvider = object: ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline?.setRoundRect(Rect(0, 0, view.width, view.height), clipRadius)
+                }
+            }
+            view.androidView?.clipToOutline = true
+            if (view.androidView is ViewGroup) {
+                (view.androidView as ViewGroup).clipToPadding = false;
+            }
+
         } else {
             var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
             var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable,ColorDrawable()))
@@ -92,6 +110,7 @@ class CssAccessory(view : NativeView) {
             }
         }
         view.androidView?.background = rippleDrawable;
+        view.androidView?.foreground = borderDrawable;
     }
 
     fun setRippleColor(color : Int) {

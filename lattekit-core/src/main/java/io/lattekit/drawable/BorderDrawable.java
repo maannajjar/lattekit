@@ -48,7 +48,7 @@ public class BorderDrawable extends Drawable {
     private Path path;
 
     public BorderDrawable() {
-        Paint _paint = new Paint();
+        Paint _paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         this.paint = _paint;
         Path _path = new Path();
         this.path = _path;
@@ -470,7 +470,9 @@ public class BorderDrawable extends Drawable {
         this.bottomLeftRadiusH = bottomLeftRadiusH;
     }
 
-
+    public Boolean isRoundRect() {
+        return (bottomLeftRadiusH == bottomLeftRadiusV) && (bottomRightRadiusH == bottomRightRadiusV) && (topRightRadiusH ==topRightRadiusV) && (topLeftRadiusH == topRightRadiusH)  && (topLeftRadiusH == topRightRadiusH) && (topRightRadiusH == bottomRightRadiusV) && (bottomRightRadiusV == bottomLeftRadiusV);
+    }
     public float getBottomRightRadiusH() {
         return this.bottomRightRadiusH;
     }

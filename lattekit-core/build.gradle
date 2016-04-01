@@ -1,10 +1,11 @@
 buildscript {
-  ext.kotlin_version = '1.0.0'
+    ext.kotlin_version = '1.0.1-2'
   repositories {
     jcenter()
     maven {
       url "https://plugins.gradle.org/m2/"
     }
+      mavenCentral()
   }
   dependencies {
     classpath 'com.android.tools.build:gradle:2.0.0-beta6'
@@ -22,6 +23,7 @@ repositories {
     maven {
       url uri('/Users/maan/.m2/repository')
     }
+    mavenCentral()
 }
 
 group='io.lattekit' 
@@ -42,6 +44,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
         incremental false
     }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 
 }
 
@@ -52,6 +57,7 @@ dependencies {
     compile 'com.github.bumptech.glide:glide:3.7.0'
     provided "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'com.google.guava:guava:19.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
 }
 

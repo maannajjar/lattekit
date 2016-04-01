@@ -1,13 +1,17 @@
 package io.lattekit.plugin.css.property
 
 import android.content.Context
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.drawable.shapes.RoundRectShape
+import android.os.Build
+import io.lattekit.drawable.BorderDrawable
 import io.lattekit.plugin.css.CssAccessory
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.BorderRadius
 import io.lattekit.plugin.css.declaration.LengthValue
 import io.lattekit.plugin.css.declaration.SingleCornerBorderRadius
-import io.lattekit.drawable.BorderDrawable
+import io.lattekit.view.ClippableImageView
 import io.lattekit.view.NativeView
 
 /**
@@ -100,6 +104,48 @@ open class BorderRadiusCssProperty : CssProperty("border-radius") {
         cssAccessory.shapeDrawable.shape = RoundRectShape(cornerRadii, null, null);
         cssAccessory.gradientDrawable.setCornerRadii(cornerRadii)
 
+        if (borderDrawable.isRoundRect) {
+            if (!view.isAttached) {
+                view.onLayout  {
+                    cssAccessory.clipRadius = borderDrawable.bottomLeftRadiusH;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        view.androidView?.invalidateOutline()
+                    }
+                }
+            } else {
+                view.onLayout  {
+                    cssAccessory.clipRadius = borderDrawable.bottomLeftRadiusH;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        view.androidView?.invalidateOutline()
+                    }
+                }
+            }
+        } else {
+            cssAccessory.clipRadius = 0f;
+        }
+        if (view.androidView is ClippableImageView) {
+            if (!view.isAttached) {
+                view.onLayout  {
+                    var clipPath =  getOuterPath(RectF(0f,0f,view.androidView!!.width.toFloat(),view.androidView!!.height.toFloat()),borderDrawable.topLeftRadiusH,borderDrawable.topLeftRadiusV,borderDrawable.topRightRadiusH,borderDrawable.topLeftRadiusV,
+                        borderDrawable.bottomRightRadiusH, borderDrawable.bottomRightRadiusV, borderDrawable.bottomLeftRadiusH, borderDrawable.bottomLeftRadiusV
+                    )
+
+                    clipPath?.fillType = Path.FillType.INVERSE_WINDING
+                    (view.androidView as ClippableImageView).clipPath = clipPath
+                    (view.androidView as ClippableImageView).invalidate()
+                }
+            } else {
+                var clipPath = getOuterPath(RectF(0f,0f,view.androidView!!.width.toFloat(),view.androidView!!.height.toFloat()),borderDrawable.topLeftRadiusH,borderDrawable.topLeftRadiusV,borderDrawable.topRightRadiusH,borderDrawable.topLeftRadiusV,
+                    borderDrawable.bottomRightRadiusH, borderDrawable.bottomRightRadiusV, borderDrawable.bottomLeftRadiusH, borderDrawable.bottomLeftRadiusV
+                )
+                clipPath?.fillType = Path.FillType.INVERSE_WINDING
+                (view.androidView as ClippableImageView).clipPath = clipPath
+                (view.androidView as ClippableImageView).invalidate()
+            }
+        }
+
+
+
     }
 
     fun getCornerRadii(borderDrawable : BorderDrawable) : FloatArray {
@@ -109,5 +155,35 @@ open class BorderRadiusCssProperty : CssProperty("border-radius") {
         var bottomRight = borderDrawable.bottomRightRadiusH
         return floatArrayOf(topLeft,topLeft,topRight,topRight,bottomRight,bottomRight,bottomLeft,bottomLeft);
     }
+
+    fun arcTo(path: Path, left: Float, top: Float, right: Float, bottom: Float, startAngle: Float, sweepAngle: Float, forceMoveTo: Boolean) {
+        val rect = RectF(left, top, right, bottom)
+        path.arcTo(rect, startAngle, sweepAngle, forceMoveTo)
+    }
+
+    fun getOuterPath(bounds : RectF, topLeftRadiusH : Float, topLeftRadiusV : Float, topRightRadiusH : Float, topRightRadiusV : Float, bottomRightRadiusH : Float, bottomRightRadiusV : Float, bottomLeftRadiusH : Float, bottomLeftRadiusV : Float): Path {
+        val outerPath = Path()
+        if (topLeftRadiusH > 0 || topLeftRadiusV > 0) {
+            arcTo(outerPath, bounds.left.toFloat(), bounds.top.toFloat(), bounds.left + topLeftRadiusH * 2, bounds.top + topLeftRadiusV * 2, (-180).toFloat(), 90f, true)
+        } else {
+            outerPath.moveTo(bounds.left.toFloat(), bounds.top.toFloat())
+        }
+        outerPath.lineTo(bounds.right - topRightRadiusH, bounds.top.toFloat())
+        if (topRightRadiusH > 0 || topRightRadiusV > 0) {
+            arcTo(outerPath, bounds.right - topRightRadiusH * 2, bounds.top.toFloat(), bounds.right.toFloat(), bounds.top + topRightRadiusV * 2, (-90).toFloat(), 90f, false)
+        }
+        outerPath.lineTo(bounds.right.toFloat(), bounds.bottom - bottomRightRadiusV)
+        if (bottomRightRadiusH > 0 || bottomRightRadiusV > 0) {
+            arcTo(outerPath, bounds.right - bottomRightRadiusH * 2, bounds.bottom - bottomRightRadiusV * 2, bounds.right.toFloat(), bounds.bottom.toFloat(), 0f, 90f, false)
+        }
+        outerPath.lineTo(bounds.left + bottomLeftRadiusH, bounds.bottom.toFloat())
+        if (bottomLeftRadiusH > 0) {
+            arcTo(outerPath, bounds.left.toFloat(), bounds.bottom - bottomLeftRadiusV * 2, bounds.left + bottomLeftRadiusH * 2, bounds.bottom.toFloat(), 90f, 90f, false)
+        }
+        outerPath.lineTo(bounds.left.toFloat(), bounds.top + topLeftRadiusV)
+        return outerPath
+    }
+
 }
+
 

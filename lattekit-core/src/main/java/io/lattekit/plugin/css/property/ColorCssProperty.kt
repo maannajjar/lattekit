@@ -3,6 +3,7 @@ package io.lattekit.plugin.css.property
 import android.content.Context
 import android.graphics.Color
 import android.widget.TextView
+import android.widget.Toolbar
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.ColorValue
 import io.lattekit.view.NativeView
@@ -27,6 +28,10 @@ class ColorCssProperty : CssProperty("color") {
     override fun apply(view: NativeView, style: NodeStyle) {
         if (view.androidView is TextView) {
             (view.androidView as TextView).setTextColor(color)
+        } else if (view.androidView is Toolbar) {
+            (view.androidView as Toolbar).setTitleTextColor(color)
+        } else if (view.androidView is android.support.v7.widget.Toolbar) {
+            (view.androidView as android.support.v7.widget.Toolbar).setTitleTextColor(color)
         }
     }
 }

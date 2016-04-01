@@ -19,13 +19,14 @@ import java.lang.reflect.Method
  */
 open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener, TextWatcher {
 
-    private var isAttached = false
+    var isAttached = false
 
     var nativeViewClass : Class<out View>? = null
 
     var propsSetter : (NativeView, Map<String,Any?>)->List<String> = { view, props -> setPropsRuntime(props) };
     val methodCache = mutableMapOf<String, Method?>()
     var isApplyingProps = false;
+    var onLayoutListeners : MutableList<()->Unit> = mutableListOf()
 
     open fun getViewClass() : Class<out View> {
         return if (nativeViewClass != null) {
@@ -36,7 +37,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener,
     }
 
     override fun onPropsUpdated(oldProps :Map<String, Any?>) : Boolean {
-        var changedProps = props.filter { props[it.component1()] != oldProps[it.component1()] }
+        props.filter { props[it.component1()] != oldProps[it.component1()] }
         applyProps(props);
         return false
     }
@@ -55,13 +56,16 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener,
             watchViewTree()
         }
     }
-
+    fun onLayout(listener : ()->Unit) {
+        onLayoutListeners.add(listener);
+    }
     fun watchViewTree() {
         androidView?.viewTreeObserver?.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 isAttached = true;
                 applyProps(props.filterKeys { propsOptions[it] == PropOption.WAIT_LAYOUT })
                 androidView?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
+                onLayoutListeners.forEach { it.invoke() }
             }
         })
     }
