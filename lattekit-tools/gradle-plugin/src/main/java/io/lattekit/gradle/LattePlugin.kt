@@ -79,7 +79,7 @@ open class LatteTransform : DefaultTask() {
     val PACKAGE_PATTERN = Regex("""package="([^"]+)"""")
 
     object TaskType {
-        val RES_GENERATOR = 1; val SRC_GENERATOR = 1
+        val RES_GENERATOR = 1; val SRC_GENERATOR = 2
     }
     var from : Set<File>? = null;
     var outputSourceDir : File? = null;

@@ -67,12 +67,15 @@ class Transformer {
                 println("Processing ${file.absolutePath}")
                 val results = this.kotlinCompiler!!.transform(code)
                 if (generateSources && outDir != null) {
+                    println("Hmm classes ? " + results.classes.size)
                     results.classes.forEach { it ->
                         if (!outDir.exists()) {
                             outDir.mkdirs()
                         }
                         val writer = PrintWriter(File(outDir.absolutePath + File.separator + it.className + ".kt"), "UTF-8")
-                        writer.print(it.toString())
+                        println("Wrote ${outDir.absolutePath + File.separator + it.className + ".kt"}")
+
+                        writer.print(it.output)
                         writer.close()
                     }
                 }
@@ -161,8 +164,7 @@ class Transformer {
             val watcher = _fileSystem.newWatchService()
             val _kotlinTransformer = KotlinTransformer(androidPackageName)
             this.kotlinCompiler = _kotlinTransformer
-            val _notEquals_1 = !Objects.equal(srcOut, null)
-            this.transformDir(androidPackageName, source, srcOut, watcher, _notEquals_1)
+            this.transformDir(androidPackageName, source, srcOut, watcher, srcOut != null)
             val _resourceIds = this.kotlinCompiler!!.resourceIds
             return IterableExtensions.toSet(_resourceIds)
         } catch (_e: Throwable) {

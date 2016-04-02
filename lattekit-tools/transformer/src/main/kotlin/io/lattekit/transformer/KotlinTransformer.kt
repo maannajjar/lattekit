@@ -57,7 +57,7 @@ class KotlinTransformer(androidPackageId: String) : LatteBaseVisitor<String>() {
         var transformedClass = TransformedClass();
         var output = StringBuilder();
         var clsName = CLASS_NAME_RE.matchEntire(ctx.LAYOUT_CLASS().text)!!.groupValues[1]
-        transformedClass.className = clsName;
+        transformedClass.className = clsName+"Impl";
         output.append("""package $packageName;
 
 ${imports.map {"import $it"}.joinToString("\n")}
@@ -111,7 +111,7 @@ class ${clsName}Impl : $clsName() {
             __current.addChild(Latte.create(Latte.lookupClass("${clsName}"), mutableMapOf(${ctx.layoutProp().map {visit(it)}.joinToString(",")}), mutableMapOf(), { it : LatteView ->
                 __current = it;
                 ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { visit(it) }?.joinToString("") else ""}
-            })
+            }))
         """
 
         return output.toString()
@@ -119,7 +119,7 @@ class ${clsName}Impl : $clsName() {
 
     fun visitXmlTagNative( ctx : LatteParser.XmlTagContext, clz : Class<*>) : String {
         var output = """
-        __current.addChild(Latte.createNative(${clz.name}::class.java, mapOf(${ctx.layoutProp().map {visit(it)}.joinToString(",")}), { __viewWrapper, __lprops ->
+        __current.addChild(Latte.createNative(${clz.name}::class.java, mutableMapOf(${ctx.layoutProp().map {visit(it)}.joinToString(",")}),  mutableMapOf(), { __viewWrapper, __lprops ->
             var __view = __viewWrapper.androidView as ${clz.name};
             var __acceptedProps = mutableListOf<String>();
             __lprops.forEach {
@@ -128,6 +128,7 @@ class ${clsName}Impl : $clsName() {
                 ${ctx.layoutProp().map{
                     getPropValueSetter(it, clz)
                 }.joinToString("\n")}
+            }
             __acceptedProps
         }, { __it : LatteView ->
             ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { visit(it) }?.joinToString("") else ""}
