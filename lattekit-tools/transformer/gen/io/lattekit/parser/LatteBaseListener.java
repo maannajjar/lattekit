@@ -136,6 +136,18 @@ public class LatteBaseListener implements LatteListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterCodeBase(LatteParser.CodeBaseContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCodeBase(LatteParser.CodeBaseContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterInlineCodeContent(LatteParser.InlineCodeContentContext ctx) { }
 	/**
 	 * {@inheritDoc}

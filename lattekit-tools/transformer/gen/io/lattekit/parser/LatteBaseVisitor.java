@@ -87,6 +87,13 @@ public class LatteBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements 
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitCodeBase(LatteParser.CodeBaseContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitInlineCodeContent(LatteParser.InlineCodeContentContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

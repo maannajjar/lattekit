@@ -71,6 +71,12 @@ public interface LatteVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInlineCode(LatteParser.InlineCodeContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link LatteParser#codeBase}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCodeBase(LatteParser.CodeBaseContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link LatteParser#inlineCodeContent}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

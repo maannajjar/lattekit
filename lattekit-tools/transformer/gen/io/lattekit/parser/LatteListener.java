@@ -108,6 +108,16 @@ public interface LatteListener extends ParseTreeListener {
 	 */
 	void exitInlineCode(LatteParser.InlineCodeContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link LatteParser#codeBase}.
+	 * @param ctx the parse tree
+	 */
+	void enterCodeBase(LatteParser.CodeBaseContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link LatteParser#codeBase}.
+	 * @param ctx the parse tree
+	 */
+	void exitCodeBase(LatteParser.CodeBaseContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link LatteParser#inlineCodeContent}.
 	 * @param ctx the parse tree
 	 */
