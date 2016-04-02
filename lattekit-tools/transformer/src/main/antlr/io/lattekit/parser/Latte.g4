@@ -20,9 +20,8 @@ layoutString    : '"""' layoutBody '"""';
 layoutBody  : (xmlTag|inlineCode|CHAR|WS)*;
 inlineCode  : '$'? '{' inlineCodeContent '}';
 
-codeBase         : layoutString | codeChar+ | STRING_LITERAL | WS+;
 inlineCodeContent: codeBase+ | codeBase* '{' inlineCodeContent* '}';
-
+codeBase         : layoutString | codeChar+ | STRING_LITERAL | WS+;
 
 codeChar        : CHAR|'<'|'>'|'/>'|'/'|'('|')'|'"'|'='|'\'' | '@' |'$'| ':'|'lxml'|'"""'|XML_TAG_OPEN;
 
