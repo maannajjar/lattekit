@@ -132,11 +132,11 @@ class KotlinGenerator extends BaseGenerator {
                 «ENDFOR»
             }
             __acceptedProps
-        }, { it : LatteView ->
+        }, { __it : LatteView ->
                 «FOR child : tag.childNodes»
                     «IF child instanceof TextNode»«child.text»«ENDIF»
                     «IF child instanceof Tag»
-                        it.addChild(«child.compile»);
+                        __it.addChild(«child.compile»);
                     «ENDIF»
                 «ENDFOR»
             })
