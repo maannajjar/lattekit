@@ -45,6 +45,7 @@ class XmlTag extends LayoutNode {
     String tagName;
     List<Prop> props = newArrayList();
     List<LayoutNode> children = newArrayList();
+
     Class<?> nativeClass;
 }
 
