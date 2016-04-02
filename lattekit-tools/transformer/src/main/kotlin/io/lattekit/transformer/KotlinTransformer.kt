@@ -252,9 +252,6 @@ class ${clsName}Impl : $clsName() {
         var tree = parser.unit(); // begin parsing at query rule
 
         var result = transformUnit(tree)
-        result.classes.forEach {
-            println(it.output)
-        }
         return result;
     }
 

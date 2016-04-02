@@ -62,32 +62,19 @@ class Transformer {
             val _path = file.toPath()
             val _readAllBytes = Files.readAllBytes(_path)
             val code = String(_readAllBytes)
-            var _xifexpression: String? = null
-            val _absolutePath_3 = file.absolutePath
-            val _endsWith_3 = _absolutePath_3.endsWith(".xtend")
-            if (_endsWith_3) {
-                _xifexpression = ".xtend"
-            } else {
-                var _xifexpression_1: String? = null
-                val _absolutePath_4 = file.absolutePath
-                val _endsWith_4 = _absolutePath_4.endsWith(".kt")
-                if (_endsWith_4) {
-                    _xifexpression_1 = ".kt"
-                } else {
-                    _xifexpression_1 = ".java"
-                }
-                _xifexpression = _xifexpression_1
-            }
-            val ext = _xifexpression
-            val results = this.kotlinCompiler!!.transform(code)
-            if (generateSources && outDir != null) {
-                results.classes.forEach { it ->
-                    if (!outDir.exists()) {
-                        outDir.mkdirs()
+
+            if (file.absolutePath.endsWith(".kt")) {
+                println("Processing ${file.absolutePath}")
+                val results = this.kotlinCompiler!!.transform(code)
+                if (generateSources && outDir != null) {
+                    results.classes.forEach { it ->
+                        if (!outDir.exists()) {
+                            outDir.mkdirs()
+                        }
+                        val writer = PrintWriter(File(outDir.absolutePath + File.separator + it.className + ".kt"), "UTF-8")
+                        writer.print(it.toString())
+                        writer.close()
                     }
-                    val writer = PrintWriter(File(outDir.absolutePath + File.separator + it.className + ext), "UTF-8")
-                    writer.print(it.toString())
-                    writer.close()
                 }
             }
         } else {
@@ -157,7 +144,7 @@ class Transformer {
             var _xifexpression: List<String>? = null
             val _isEmpty = (Conversions.doWrapArray(extensions) as List<String>).isEmpty()
             if (_isEmpty) {
-                _xifexpression = Collections.unmodifiableList(CollectionLiterals.newArrayList(".css", ".xtend", ".kt", ".java"))
+                _xifexpression = Collections.unmodifiableList(CollectionLiterals.newArrayList(".css", ".kt"))
             } else {
                 _xifexpression = Conversions.doWrapArray(extensions) as List<String>
             }

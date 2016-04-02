@@ -23,6 +23,7 @@ object Reflection {
     private var CLASSLOADER: URLClassLoader? = null
 
     fun loadJar(filePath: String) {
+        println("LOADING $filePath")
         if (CLASSLOADER == null) {
             CLASSLOADER =  URLClassLoader(emptyArray(), Reflection::class.java.classLoader)
         }
@@ -95,6 +96,7 @@ object Reflection {
     }
 
     fun loadAndroidSdk(path: String, version: String)  {
+        println("LOADING $path/platforms/$version/android.jar")
         Reflection.loadJar("$path/platforms/$version/android.jar")
         Reflection.loadJar(path + "/extras/android/support/v4/android-support-v4.jar")
         Reflection.loadJar(path + "/extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar")
