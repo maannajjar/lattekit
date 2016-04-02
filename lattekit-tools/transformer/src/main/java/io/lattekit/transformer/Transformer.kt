@@ -1,6 +1,7 @@
 package io.lattekit.transformer
 
 import com.google.common.base.Objects
+import io.lattekit.css.CssCompiler
 import java.io.File
 import java.io.PrintWriter
 import java.nio.file.FileSystem
@@ -23,7 +24,7 @@ class Transformer {
 
     private var kotlinCompiler: KotlinTransformer? = null
 
-//    private val cssCompiler = CssCompiler()
+    private val cssCompiler = CssCompiler()
 
     private var rootDir: Path? = null
 
@@ -95,27 +96,28 @@ class Transformer {
                 val _path_1 = file.toPath()
                 val _readAllBytes_1 = Files.readAllBytes(_path_1)
                 val code_1 = String(_readAllBytes_1)
-//                    val out = this.cssCompiler.compile(packageName, fileName, code_1)
-                if (generateSources) {
-//                        val _absolutePath_6 = outDir.absolutePath
-//                        val _plus = _absolutePath_6 + File.separator
-//                        val _class = CssCompiler.toClass(fileName)
-//                        val _plus_1 = _plus + _class
-//                        val outFileJava = _plus_1 + ".java"
-//                        val _exists = outDir.exists()
-//                        val _not = !_exists
-//                        if (_not) {
-//                            outDir.mkdirs()
-//                        }
-//                        val _file = File(outFileJava)
-//                        val writer = PrintWriter(_file, "UTF-8")
-//                        val _absolutePath_7 = file.absolutePath
-//                        val _plus_2 = "Complied " + _absolutePath_7
-//                        val _plus_3 = _plus_2 + " to "
-//                        val _plus_4 = _plus_3 + outFileJava
-//                        InputOutput.println(_plus_4)
-//                        writer.print(out)
-//                        writer.close()
+
+                if (generateSources && outDir != null) {
+                    val out = this.cssCompiler.compile(packageName, fileName, code_1)
+                    val _absolutePath_6 = outDir.absolutePath
+                    val _plus = _absolutePath_6 + File.separator
+                    val _class = CssCompiler.toClass(fileName)
+                    val _plus_1 = _plus + _class
+                    val outFileJava = _plus_1 + ".java"
+                    val _exists = outDir.exists()
+                    val _not = !_exists
+                    if (_not) {
+                        outDir.mkdirs()
+                    }
+                    val _file = File(outFileJava)
+                    val writer = PrintWriter(_file, "UTF-8")
+                    val _absolutePath_7 = file.absolutePath
+                    val _plus_2 = "Complied " + _absolutePath_7
+                    val _plus_3 = _plus_2 + " to "
+                    val _plus_4 = _plus_3 + outFileJava
+                    InputOutput.println(_plus_4)
+                    writer.print(out)
+                    writer.close()
                 }
             }
         }
