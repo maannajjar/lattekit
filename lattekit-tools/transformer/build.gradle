@@ -18,8 +18,9 @@ buildscript {
         mavenCentral()
     }
   dependencies {
-    classpath "org.xtext:xtext-gradle-plugin:1.0.2"
-      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath "org.xtext:xtext-gradle-plugin:1.0.4"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+      classpath 'org.xtext:xtext-gradle-plugin:1.0.2'
   }
 }
 
@@ -27,7 +28,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: "org.xtext.xtend"
 apply plugin: 'maven'
-//apply plugin: 'antlr'
+apply plugin: 'antlr'
 
 
 group='io.lattekit.tools'
@@ -39,8 +40,9 @@ repositories {
 }
 
 dependencies {
-    compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.1'
-    compile "org.antlr:antlr4:4.5"
+    compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.2'
+    antlr "org.antlr:antlr4:4.5.1"
+    compile "org.antlr:antlr4:4.5.1"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
@@ -53,11 +55,11 @@ uploadArchives {
 }
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
-    main.java.srcDirs += 'gen'
+//    main.java.srcDirs += 'gen'
 }
-//generateGrammarSource {
-//    maxHeapSize = "64m"
-//    arguments += ["-visitor", "-long-messages"]
-//}
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ["-visitor", "-long-messages", "-package", "io.lattekit.parser"]
+}
 
-
+apply plugin: 'org.xtext.xtend'
