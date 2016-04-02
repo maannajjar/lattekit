@@ -106,7 +106,21 @@ class ${clsName}Impl : $clsName() {
         return result;
     }
 
-    override fun visitInlineCode(ctx: LatteParser.InlineCodeContext): String = ctx.inlineCodeContent().text
+    override fun visitInlineCode(ctx: LatteParser.InlineCodeContext): String {
+        return visitInlineCodeContent(ctx.inlineCodeContent());
+    }
+
+    override fun visitInlineCodeContent(ctx: LatteParser.InlineCodeContentContext): String {
+        var output = "";
+        ctx.children.forEach {
+            output += visit(it);
+        }
+        return output;
+    }
+    override fun visitCodeBase(ctx: LatteParser.CodeBaseContext): String? {
+        if (ctx.layoutString() != null) return visitLayoutString(ctx.layoutString())
+        else return ctx.text
+    }
     override fun visitXmlTag(ctx: LatteParser.XmlTagContext): String {
         var clsName = ctx.XML_TAG_OPEN().text.substring(1);
         var clz = Reflection.lookupClass(clsName)
@@ -116,7 +130,7 @@ class ${clsName}Impl : $clsName() {
 
         var output = """
             __current.addChild(Latte.create(Latte.lookupClass("${clsName}"), mutableMapOf(${ctx.layoutProp().map {visit(it)}.joinToString(",")}), mutableMapOf(), { it : LatteView ->
-                ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { (if (it is LatteParser.XmlTagContext) "\n__current = it\n" else "") + visit(it)  }?.joinToString("") else ""}
+                ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { "\n__current = __it\n"  + visit(it)  }?.joinToString("") else ""}
             }))
         """
 
@@ -137,7 +151,7 @@ class ${clsName}Impl : $clsName() {
             }
             __acceptedProps
         }, { __it : LatteView ->
-            ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { (if (it is LatteParser.XmlTagContext) "\n__current = __it\n" else "") + visit(it) }?.joinToString("") else ""}
+            ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { "\n__current = __it\n"  + visit(it)  }?.joinToString("") else ""}
         }))
         """
         return output
@@ -270,56 +284,11 @@ val MQ = "\"\"\"";
 
 fun main(args : Array<String>) {
     Reflection.loadAndroidSdk("/Users/maan/Library/Android/sdk","android-23");
-    KotlinTransformer("mobi.yummyfood.android").transform("""
+    println ("X:" + KotlinTransformer("mobi.yummyfood.android").transform("""
 package mobi.yummyfood.android
-
-import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.text.Html
-import io.lattekit.annotation.Prop
-import io.lattekit.lxml
-import io.lattekit.plugin.css.declaration.*
-import io.lattekit.render
-import io.lattekit.view.LatteView
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
-
-class MainActivity : AppCompatActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        render("<mobi.yummyfood.android.MyApp />")
-    }
-}
 
 open class MyApp : LatteView() {
 
-    var text :String? = null;
-    var data : List<FeedObject<Dish>> = emptyList()
-
-    override fun onViewCreated() {
-        super.onViewCreated()
-
-        ApiManager.api.getFeed()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {  response ->
-                data = response
-                applyChanges()
-            }
-
-    }
-    init {
-        css {
-            block(".container")  {
-                backgroundColor("#ffffff")
-            }
-            block(".toolbar") {
-                color("#FFFFFF")
-                elevation("10dp")
-            }
-        }
-    }
     override fun layout() = lxml($MQ
         <ListView data=$DOLLAR{data} id="@+id/hello" layout_width="match_parent" layout_height="match_parent" dividerHeight={0}>
             <mobi.yummyfood.android.FoodItem defaultView="true" />
@@ -329,5 +298,5 @@ open class MyApp : LatteView() {
 
 
 
-    """)
+    """).classes.map { it.output }.joinToString { "\n" })
 }
