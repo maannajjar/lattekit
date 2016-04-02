@@ -109,7 +109,7 @@ class ${clsName}Impl : $clsName() {
 
         var output = """
             __current.addChild(Latte.create(Latte.lookupClass("${clsName}"), mutableMapOf(${ctx.layoutProp().map {visit(it)}.joinToString(",")}), mutableMapOf(), { it : LatteView ->
-                __current = it;
+                    __current = it;
                 ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { visit(it) }?.joinToString("") else ""}
             }))
         """
@@ -131,6 +131,7 @@ class ${clsName}Impl : $clsName() {
             }
             __acceptedProps
         }, { __it : LatteView ->
+            __current = __it;
             ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { visit(it) }?.joinToString("") else ""}
         }))
         """
