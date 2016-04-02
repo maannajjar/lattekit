@@ -11,7 +11,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
  */
 class TransformOutput {
     var packageName : String? = null;
-    var imports = mutableListOf("io.lattekit.view.*")
+    var imports = mutableSetOf("io.lattekit.Latte")
     var resourceIds = mutableListOf<String>();
     var classes = mutableListOf<TransformedClass>();
 }
@@ -19,13 +19,14 @@ class TransformOutput {
 class TransformedClass {
     var className : String? = null;
     var output : String ? = null;
+    var containsLayout = false;
 }
 
 class KotlinTransformer(androidPackageId: String) : LatteBaseVisitor<String>() {
 
     var packageName : String? = null;
     var applicationId : String? = androidPackageId;
-    var imports = mutableListOf("io.lattekit.view.*","io.lattekit.Latte")
+    var imports = mutableSetOf("io.lattekit.view.*","io.lattekit.Latte")
     var resourceIds = mutableListOf<String>();
 
     var ANDROID_RES_RE = Regex("""@(?:([^:\/]+):)?\+?([^:\/]+)\/(.*)""")
@@ -39,7 +40,7 @@ class KotlinTransformer(androidPackageId: String) : LatteBaseVisitor<String>() {
         if (packageDeclaration != null) {
             packageName = packageDeclaration.text.split(" ").last()
         }
-
+        imports = mutableSetOf("io.lattekit.view.*","io.lattekit.Latte")
         // Find imports name
         ctx.importStatement()?.forEach {
             imports.add(it.text.split(" ").last());
@@ -48,7 +49,10 @@ class KotlinTransformer(androidPackageId: String) : LatteBaseVisitor<String>() {
         output.imports = imports;
 
         ctx.classDeclaration().forEach {
-            output.classes.add(transformLayoutClass(it));
+            var transformedCls = transformLayoutClass(it);
+            if (transformedCls.containsLayout) {
+                output.classes.add(transformedCls);
+            }
         }
         output.resourceIds = resourceIds;
         return output;
@@ -64,6 +68,9 @@ ${imports.map {"import $it"}.joinToString("\n")}
 
 class ${clsName}Impl : $clsName() {
         """)
+        if (ctx.classBody().layoutFunction().size > 0) {
+            transformedClass.containsLayout = true;
+        }
         ctx.classBody().layoutFunction().forEach {
             var funWords = if (it.LAYOUT_FUN() != null) {
                 it.LAYOUT_FUN()
@@ -109,8 +116,7 @@ class ${clsName}Impl : $clsName() {
 
         var output = """
             __current.addChild(Latte.create(Latte.lookupClass("${clsName}"), mutableMapOf(${ctx.layoutProp().map {visit(it)}.joinToString(",")}), mutableMapOf(), { it : LatteView ->
-                    __current = it;
-                ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { visit(it) }?.joinToString("") else ""}
+                ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { (if (it is LatteParser.XmlTagContext) "\n__current = it\n" else "") + visit(it)  }?.joinToString("") else ""}
             }))
         """
 
@@ -131,8 +137,7 @@ class ${clsName}Impl : $clsName() {
             }
             __acceptedProps
         }, { __it : LatteView ->
-            __current = __it;
-            ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { visit(it) }?.joinToString("") else ""}
+            ${ if (ctx.layoutBody() != null) ctx.layoutBody()?.children?.map { (if (it is LatteParser.XmlTagContext) "\n__current = __it\n" else "") + visit(it) }?.joinToString("") else ""}
         }))
         """
         return output
@@ -224,10 +229,11 @@ class ${clsName}Impl : $clsName() {
             propName.substring(1)
         } else propName;
         var value = if (ctx.inlineCode() != null) {
-            visitInlineCode(ctx.inlineCode())
+            "("+visitInlineCode(ctx.inlineCode())+")"
         } else {
-
-            var matcher = ANDROID_RES_RE.matchEntire(ctx.strPropValue().text)
+            var stringLiteral = ctx.STRING_LITERAL().text;
+            var stringValue = stringLiteral.substring(1,stringLiteral.length-1)
+            var matcher = ANDROID_RES_RE.matchEntire(stringValue)
             if(matcher != null) {
                 val resPackageName = if(matcher.groupValues.getOrNull(1) != null && matcher.groupValues[1] != "") {
                     matcher.groupValues[1]
@@ -237,7 +243,7 @@ class ${clsName}Impl : $clsName() {
                 }
                 """${resPackageName}.R.${matcher.groupValues[2]}.${matcher.groupValues[3]}"""
             } else {
-                '"' + ctx.strPropValue().text + '"'
+                stringLiteral
             }
         }
         output += """"$propName" to $value""";

@@ -5,7 +5,7 @@ unit :  (packageDeclaration|importStatement|classDeclaration|code)*;
 classDeclaration: LAYOUT_CLASS '{' classBody '}';
 classBody: (layoutFunction|code)*;
 
-code: codeChar+
+code: codeChar+ | STRING_LITERAL | WS+
     | codeChar* '{' code* '}';
 
 packageDeclaration: PACKAGE_DECLARATION;
@@ -17,18 +17,18 @@ layoutFunction: LAYOUT_FUN '(' layoutString ')'
 
 layoutString    : '"""' layoutBody '"""';
 
-layoutBody  : (xmlTag|inlineCode|CHAR+)*;
+layoutBody  : (xmlTag|inlineCode|CHAR|WS)*;
 inlineCode  : '$'? '{' inlineCodeContent '}';
 inlineCodeContent: (layoutString|code)*;
 codeChar        : CHAR|'<'|'>'|'/>'|'/'|'('|')'|'"'|'='|'\'' | '@' |'$'| ':'|'lxml'|'"""'|XML_TAG_OPEN;
 
 
-xmlTag      : XML_TAG_OPEN layoutProp* '/>'
-            | XML_TAG_OPEN layoutProp* '>' layoutBody XML_TAG_CLOSE
+xmlTag      : XML_TAG_OPEN WS* layoutProp* WS* '/>'
+            | XML_TAG_OPEN WS* layoutProp* WS*'>' layoutBody XML_TAG_CLOSE
             ;
-propName    : CHAR+;
-layoutProp  :   propName '='  '"' strPropValue '"'
-            |   propName '=' inlineCode
+propName    : '@'? CHAR+;
+layoutProp  :   propName '='  STRING_LITERAL WS*
+            |   propName '=' inlineCode WS*
             ;
 
 strPropValue:  (CHAR|inlineCode|'\''|'@'|'/')*;
@@ -48,4 +48,12 @@ XML_TAG_CLOSE :  '</' CHAR+ '>';
 PACKAGE_DECLARATION: {getCharPositionInLine() == 0}? WS* 'package' WS+ ~[;\r\n ]+;
 IMPORT_STMT: {getCharPositionInLine() == 0}? WS* 'import' WS+ ~[;\r\n ]+;
 
-WS  :  [ \t\u000C]+ -> skip;
+WS  :  [ \t\u000C]+;
+
+STRING_LITERAL
+  : UnterminatedStringLiteral '"'
+  ;
+
+UnterminatedStringLiteral
+  : '"' (~["\\\r\n] | '\\' (. | EOF))*
+  ;
