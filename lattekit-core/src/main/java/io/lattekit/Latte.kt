@@ -197,6 +197,10 @@ fun lxml(layoutXml: String) {
     throw Exception("Using LXML requires gradle plugin")
 }
 
+fun lcss(css: String) {
+    throw Exception("Using LCSS requires gradle plugin")
+}
+
 fun parseXml(layoutXml: String): LatteView {
     var currentView: LatteView? = null
     var topLevelViews = mutableListOf<LatteView>()

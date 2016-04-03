@@ -46,7 +46,26 @@ class KotlinParser : AstVisitor {
             var layoutFunction = visitLayoutFunction(it)
             latteClass.layoutFunctions.add(layoutFunction);
         }
+
+        ctx.classBody().cssFunction().forEach {
+            var cssFunction = visitCssFunction(it)
+            latteClass.cssFunctions.add(cssFunction);
+        }
+
         return latteClass
+    }
+    fun visitCssFunction(ctx : LatteParser.CssFunctionContext) : CssFunction {
+        var cssFunction = CssFunction();
+        var funWords = ctx.CSS_FUN().text.replace(Regex("\\s+")," ").split(" ");
+        var keywords = mutableListOf<String>()
+        var functionNameWithParams = funWords.find { if (!it.contains("(")) { keywords.add(it); false } else true; }
+        cssFunction.functionModifiers = keywords;
+        cssFunction.functionName = functionNameWithParams!!.split("(")[0]
+        cssFunction.functionParams = functionNameWithParams.substring(cssFunction.functionName.length)
+
+        cssFunction.definitions = CssParser().parse(ctx.cssString().cssBody().text)
+
+        return cssFunction;
     }
 
     fun visitLayoutFunction(ctx : LatteParser.LayoutFunctionContext) : LayoutFunction {

@@ -4,6 +4,7 @@ import java.util.List
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.lang.reflect.Method
 import java.util.Set
+import io.lattekit.css.CssDefinition
 
 /**
  * Created by maan on 4/2/16.
@@ -27,6 +28,7 @@ class LatteClass {
     String className;
     String classNameImpl;
     List<LayoutFunction> layoutFunctions = newArrayList();
+    List<CssFunction> cssFunctions = newArrayList();
 
     String generatedSource;
 }
@@ -38,6 +40,15 @@ class LayoutFunction {
     String functionName;
     String functionParams;
     List<LayoutNode> children = newArrayList();
+}
+
+@Accessors
+class CssFunction {
+    LatteClass latteClass;
+    List<String> functionModifiers;
+    String functionName;
+    String functionParams;
+    List<CssDefinition> definitions = newArrayList();
 }
 
 @Accessors

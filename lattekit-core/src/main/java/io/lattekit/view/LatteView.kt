@@ -32,6 +32,8 @@ open class LatteView {
         }
     }
 
+
+
     var renderedViews: MutableList<LatteView> = mutableListOf()
     var newRenderedViews = mutableListOf<LatteView>()
     var androidView: View? = null
@@ -123,6 +125,10 @@ open class LatteView {
 
     var id: Int = 0
         get() = this.props.get("id") as Int
+
+    init {
+        css();
+    }
 
     fun buildView(activity: Activity, lp: ViewGroup.LayoutParams?): View {
         this.activity = activity;
@@ -311,6 +317,10 @@ open class LatteView {
 
     fun prop(str : String, value : Any) {
         this.props.put(str,value)
+    }
+
+    open fun css() {
+
     }
 
     open fun layout() {

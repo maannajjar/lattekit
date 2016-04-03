@@ -19,11 +19,33 @@ class KotlinTemplate {
     «IF !file.imports.contains("io.lattekit.Latte")»
     import io.lattekit.Latte;
     «ENDIF»
+    «IF !file.imports.contains("io.lattekit.plugin.css.declaration.block")»
+    import io.lattekit.plugin.css.declaration.block;
+    «ENDIF»
+    «IF !file.imports.contains("io.lattekit.plugin.css.declaration.css")»
+    import io.lattekit.plugin.css.declaration.css;
+    «ENDIF»
+
     «FOR importCls : file.imports»
     import «importCls»
     «ENDFOR»
 
     class «cls.classNameImpl» : «cls.className»() {
+
+        «FOR cssFn: cls.cssFunctions»
+            override fun «cssFn.functionName»«cssFn.functionParams» {
+                css {
+                    «FOR definition: cssFn.definitions»
+                        block("«definition.selector»") {
+                            «FOR child: definition.childNodes»
+                                add("«child.name»", «IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»);
+                            «ENDFOR»
+                        }
+                    «ENDFOR»
+                }
+            }
+        «ENDFOR»
+
         «FOR layoutFn: cls.layoutFunctions»
             override fun «layoutFn.functionName»«layoutFn.functionParams» {
                 «FOR child : layoutFn.children»
@@ -46,9 +68,7 @@ class KotlinTemplate {
             }
         }
     }
-    def renderPropOptions(XmlTag node) '''
-    mutableMapOf(«FOR prop : node.props SEPARATOR ','» "«prop.propName»" to «IF prop.propModifier == "@"»Latte.PropOption.WAIT_LAYOUT«ELSE»Latte.PropOption.NO_OPTIONS«ENDIF»«ENDFOR»)
-    '''
+    def renderPropOptions(XmlTag node) '''mutableMapOf(«FOR prop : node.props SEPARATOR ','» "«prop.propName»" to «IF prop.propModifier == "@"»Latte.PropOption.WAIT_LAYOUT«ELSE»Latte.PropOption.NO_OPTIONS«ENDIF»«ENDFOR»)'''
 
     def renderVirtualNode(XmlTag node) '''
         __current.addChild(Latte.create(Latte.lookupClass("«node.tagName»"), «renderPropsMap(node)», «renderPropOptions(node)», { __it : LatteView ->
@@ -139,9 +159,7 @@ class KotlinTemplate {
         }
     }
 
-    def renderPropsMap(XmlTag node) '''
-    mutableMapOf(«FOR prop : node.props SEPARATOR ","»"«prop.propName»" to «getPropValue(prop)»«ENDFOR»)
-    '''
+    def renderPropsMap(XmlTag node) '''mutableMapOf(«FOR prop : node.props SEPARATOR ","»"«prop.propName»" to «getPropValue(prop)»«ENDFOR»)'''
 
     def getKotlinTypeName(PropSetter propSetter) {
         if (propSetter.paramType.name == "java.lang.CharSequence") {
