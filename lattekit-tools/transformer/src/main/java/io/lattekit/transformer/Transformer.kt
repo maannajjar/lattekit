@@ -22,7 +22,7 @@ import org.eclipse.xtext.xbase.lib.IterableExtensions
 @SuppressWarnings("all")
 class Transformer {
 
-    private var kotlinCompiler: KotlinTransformer? = null
+    private var kotlinCompiler: KotlinTransformer2? = null
 
     private val cssCompiler = CssCompiler()
 
@@ -73,10 +73,10 @@ class Transformer {
                         if (!outDir.exists()) {
                             outDir.mkdirs()
                         }
-                        val writer = PrintWriter(File(outDir.absolutePath + File.separator + it.className + ".kt"), "UTF-8")
-                        println("Wrote ${outDir.absolutePath + File.separator + it.className + ".kt"}")
+                        val writer = PrintWriter(File(outDir.absolutePath + File.separator + it.classNameImpl + ".kt"), "UTF-8")
+                        println("Wrote ${outDir.absolutePath + File.separator + it.classNameImpl + ".kt"}")
 
-                        writer.print(it.output)
+                        writer.print(it.generatedSource)
                         writer.close()
                     }
                 }
@@ -164,7 +164,7 @@ class Transformer {
             this.rootDir = sourceDir
             val _fileSystem = sourceDir.fileSystem
             val watcher = _fileSystem.newWatchService()
-            val _kotlinTransformer = KotlinTransformer(androidPackageName)
+            val _kotlinTransformer = KotlinTransformer2(androidPackageName)
             this.kotlinCompiler = _kotlinTransformer
             this.transformDir(androidPackageName, source, srcOut, watcher, srcOut != null)
             val _resourceIds = this.kotlinCompiler!!.resourceIds

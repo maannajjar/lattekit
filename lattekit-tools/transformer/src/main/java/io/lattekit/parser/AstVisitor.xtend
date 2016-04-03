@@ -27,6 +27,8 @@ class LatteClass {
     String className;
     String classNameImpl;
     List<LayoutFunction> layoutFunctions = newArrayList();
+
+    String generatedSource;
 }
 
 @Accessors
@@ -77,7 +79,8 @@ class Prop {
 @Accessors
 class PropSetter {
     var Class paramType;
-    var String paramTypeName;
+    var Method setterMethod;
+    var Method getterMethod;
     var boolean primitiveType;
     var boolean hasGetter;
 }

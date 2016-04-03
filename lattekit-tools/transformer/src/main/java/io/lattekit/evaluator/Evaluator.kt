@@ -7,9 +7,11 @@ import io.lattekit.transformer.Reflection
  * Created by maan on 4/2/16.
  */
 class Evaluator(var androidPackage: String) {
+    var latteFile : LatteFile? = null;
 
     fun evaluate(file : LatteFile) {
         file.androidPackageName = androidPackage;
+        latteFile = file;
         file.classes.forEach {
             it.classNameImpl = it.className+"Impl"
             it.layoutFunctions.forEach { evaluateLayoutFunction(it); }
@@ -23,6 +25,11 @@ class Evaluator(var androidPackage: String) {
 
     fun evaluateXmlTag(tag : XmlTag) {
         tag.viewClass = Reflection.lookupClass(tag.tagName)
+        tag.props.forEach { prop ->
+            if (prop.valueType == Prop.ValueType.RESOURCE_REF) {
+                prop.resourcePackage = prop.resourcePackage ?: latteFile?.androidPackageName
+            }
+        }
         if (tag.viewClass != null) {
             tag.isNativeView = true;
             tag.props.forEach {
@@ -33,18 +40,8 @@ class Evaluator(var androidPackage: String) {
     }
 
 
-    fun getKotlinTypeName( type : Class<*>) : String{
-        if (type.name == "java.lang.CharSequence") {
-            return "String"
-        } else if (type.isPrimitive) {
-            return type.name.substring(0,1).toUpperCase() + type.name.substring(1)
-        } else {
-            return type.name.replace(Regex("\\$"),".")
-        }
-    }
 
     fun evaluateProperty(prop : Prop, tag: XmlTag) {
-
         var propName = prop.propName;
         var field = if (propName.startsWith("@")) {
             propName.substring(1)
@@ -65,15 +62,16 @@ class Evaluator(var androidPackage: String) {
         val getterMethods = Reflection.findGetterMethods(tag.viewClass,getter) + Reflection.findGetterMethods(tag.viewClass, getterBoolean);
         setterMethods.forEach { setterMethod ->
             var propSetter = PropSetter();
+            propSetter.setterMethod = setterMethod;
             propSetter.paramType = setterMethod.parameters[0].type
-            propSetter.paramTypeName = getKotlinTypeName(setterMethod.parameters[0].type)
             propSetter.isPrimitiveType = setterMethod.parameters[0].type.isPrimitive;
             if (setterMethod.parameters[0].type == String::class.java || setterMethod.parameters[0].type == CharSequence::class.java) {
                 prop.isHasStringSetter = true;
             }
-            var getter = getterMethods.find { it.name == setterMethod.name && ( (it.returnType.isAssignableFrom(propSetter.paramType) || propSetter.paramType.isAssignableFrom(it.returnType))) }
-            if (getter != null) {
+            var getterMethod = getterMethods.find { it.name == getter && ( (it.returnType.isAssignableFrom(propSetter.paramType) || propSetter.paramType.isAssignableFrom(it.returnType))) }
+            if (getterMethod != null) {
                 propSetter.isHasGetter = true;
+                propSetter.getterMethod = getterMethod;
             }
             prop.propSetters.add(propSetter);
         }

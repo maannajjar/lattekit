@@ -18,8 +18,8 @@ import org.antlr.v4.runtime.tree.TerminalNode
  * Created by maan on 4/2/16.
  */
 val CLASS_NAME_RE = Regex(""".*class\s+([^ :]+).*""")
-var ANDROID_RES_RE = Regex("""@(?:([^:\/]+):)?\+?([^:\/]+)\/(.*)""")
-
+val ANDROID_RES_RE = Regex("""@(?:([^:\/]+):)?\+?([^:\/]+)\/(.*)""")
+val WS             = Regex("""[\r\n ]+""")
 class KotlinParser : AstVisitor {
     var latteFile : LatteFile = LatteFile();
 
@@ -43,8 +43,9 @@ class KotlinParser : AstVisitor {
         }
     }
     fun visitClass(ctx: LatteParser.ClassDeclarationContext) : LatteClass {
-        var clsName = CLASS_NAME_RE.matchEntire(ctx.LAYOUT_CLASS().text)!!.groupValues[1]
+
         var latteClass = LatteClass();
+        latteClass.className = CLASS_NAME_RE.matchEntire(ctx.LAYOUT_CLASS().text)!!.groupValues[1]
         ctx.classBody().layoutFunction().forEach {
             var layoutFunction = visitLayoutFunction(it)
             latteClass.layoutFunctions.add(layoutFunction);
@@ -86,7 +87,7 @@ class KotlinParser : AstVisitor {
                 currentNode!!.code += it.text
             }
         }
-        return result;
+        return result.filter { it is XmlTag || (it is NativeCode && it.code.replace(WS,"") != "") };
     }
 
     fun visitXmlTag(ctx : LatteParser.XmlTagContext) : XmlTag {
@@ -113,6 +114,10 @@ class KotlinParser : AstVisitor {
                     if(matcher.groupValues.getOrNull(2) == "id" && resPackageName == null) {
                         latteFile.resourceIds.add(matcher.groupValues[3])
                     }
+                    prop.valueType = Prop.ValueType.RESOURCE_REF
+                    prop.resourcePackage = resPackageName;
+                    prop.resourceType = matcher.groupValues[2]
+                    prop.resourceName = matcher.groupValues[3];
                     """${resPackageName}.R.${matcher.groupValues[2]}.${matcher.groupValues[3]}"""
                 } else {
                     stringLiteral
@@ -152,7 +157,8 @@ class KotlinParser : AstVisitor {
                 currentNode!!.code += it.text
             }
         }
-        return result;
+
+        return result.filter { it is XmlTag || (it is NativeCode && it.code.replace(WS,"") != "") };
     }
 
 
