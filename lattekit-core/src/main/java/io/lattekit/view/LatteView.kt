@@ -35,6 +35,7 @@ open class LatteView {
     var renderedViews: MutableList<LatteView> = mutableListOf()
     var newRenderedViews = mutableListOf<LatteView>()
     var androidView: View? = null
+    var __current : LatteView = this;
 
     var props: MutableMap<String, Any?> = mutableMapOf()
     var propsOptions: Map<String, Int> = emptyMap()
@@ -312,26 +313,26 @@ open class LatteView {
         this.props.put(str,value)
     }
 
-    open fun layout() : LatteView? {
+    open fun layout() {
         if (this.layoutFn != null) {
             this.children.clear()
             this.layoutFn!!()
-            return this.children.get(0)
         }
-        return null
     }
 
     fun renderTree() {
         newRenderedViews = mutableListOf()
         injectProps()
-        var layoutView = this.layout();
-        if (layoutView != null) {
-            render(layoutView)
+        if (this !is NativeView) {
+            // Virtual view:
+            __current = this;
+            this.children.clear()
+            this.layout();
+        } else {
+            this.layout();
         }
-        if (this is NativeViewGroup) {
-            for (child in this.children) {
-                render(child)
-            }
+        for (child in this.children) {
+            render(child)
         }
         this.renderedViews = newRenderedViews;
     }

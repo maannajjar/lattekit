@@ -29,6 +29,11 @@ import kotlin.jvm.functions.Function0
  */
 
 object Latte {
+    object PropOption {
+        val NO_OPTIONS = 0;
+        val WAIT_LAYOUT = 1;
+    }
+
     var CLASS_ORDER = Comparator<Class<out View>> { p0, p1 ->
         if (p0.isAssignableFrom(p1)) 1 else -1
     }
@@ -188,7 +193,7 @@ object Latte {
 
 
 
-fun lxml(layoutXml: String): LatteView {
+fun lxml(layoutXml: String) {
     throw Exception("Using LXML requires gradle plugin")
 }
 
@@ -223,13 +228,13 @@ fun parseXml(layoutXml: String): LatteView {
     return topLevelViews[0]!!
 }
 
-object PropOption {
-    val NO_OPTIONS = 0;
-    val WAIT_LAYOUT = 1;
-}
 
 fun Activity.render(xml: String, props : MutableMap<String,Any?> = mutableMapOf()): LatteView {
     var latteView = Latte.render(xml,props)
     setContentView(latteView.buildView(this,WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT,WindowManager.LayoutParams.MATCH_PARENT)))
     return latteView;
 }
+fun IF(condition : Boolean, result  :()->Unit ) : Unit  {
+    if(condition) result.invoke() else ""
+    return;
+};
