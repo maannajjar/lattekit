@@ -76,19 +76,14 @@ open class LattePlugin: Plugin<Project> {
 
 open class LatteTransform : DefaultTask() {
 
-    val PACKAGE_PATTERN = Regex("""package="([^"]+)"""")
-
     object TaskType {
         val RES_GENERATOR = 1; val SRC_GENERATOR = 2
     }
     var from : Set<File>? = null;
     var outputSourceDir : File? = null;
     var outputResDir : File? = null;
-    var manifestFile : File? = null;
     var applicationId : String? = null;
     var taskType : Int? = TaskType.RES_GENERATOR;
-
-
 
     fun getIdsXml(ids : Iterable<String> ) = """<?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -100,16 +95,14 @@ ${ids.map{ """<item name="$it" type="id" />"""}.joinToString("\n")}
     @TaskAction
     open fun executeTask() {
         val androidPackage = applicationId;
-        println("Generating source dir" +from+" to "+outputSourceDir);
+        println("Generating source dir $from to $outputSourceDir");
         val  allIds = mutableListOf<String>()
         from!!.forEachIndexed { i, src ->
             if (project.file(src).exists()) {
                 if (taskType == TaskType.RES_GENERATOR) {
-                    allIds += io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, null,
-                            ".java", ".kt", ".xtend", "css")
+                    allIds += io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, null)
                 } else {
-                    io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, project.file(outputSourceDir).absolutePath,
-                            ".java", ".kt", ".xtend", "css")
+                    io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, project.file(outputSourceDir).absolutePath)
 
                 }
             }
