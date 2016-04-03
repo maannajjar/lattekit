@@ -25,6 +25,7 @@ class LatteFile {
 class LatteClass {
     LatteFile latteFile;
     String className;
+    String classNameImpl;
     List<LayoutFunction> layoutFunctions = newArrayList();
 }
 
@@ -45,8 +46,8 @@ class XmlTag extends LayoutNode {
     String tagName;
     List<Prop> props = newArrayList();
     List<LayoutNode> children = newArrayList();
-
-    Class<?> nativeClass;
+    boolean nativeView;
+    Class<?> viewClass;
 }
 
 @Accessors
@@ -57,12 +58,26 @@ class NativeCode extends LayoutNode {
 @Accessors
 class Prop {
     enum ValueType {
-        LITERAL, INLINE_CODE
+        LITERAL, INLINE_CODE, RESOURCE_REF
     }
     ValueType valueType;
     String propName;
     String value;
 
-    List<Method> setterMethods;
-    List<Method> getterMethods;
+    // When valueType is RESOURCE_RF
+    String resourcePackage;
+    String resourceType;
+    String resourceName;
+
+    boolean listenerProp;
+    boolean hasStringSetter;
+    List<PropSetter> propSetters = newArrayList();
+}
+
+@Accessors
+class PropSetter {
+    var Class paramType;
+    var String paramTypeName;
+    var boolean primitiveType;
+    var boolean hasGetter;
 }

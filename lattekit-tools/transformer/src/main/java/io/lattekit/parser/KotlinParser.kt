@@ -3,9 +3,11 @@
  */
 package io.lattekit.parser
 
+import io.lattekit.evaluator.Evaluator
 import io.lattekit.parser.LatteBaseVisitor
 import io.lattekit.parser.LatteLexer
 import io.lattekit.parser.LatteParser;
+import io.lattekit.template.KotlinTemplate
 import io.lattekit.transformer.KotlinTransformer
 import io.lattekit.transformer.Reflection
 import org.antlr.v4.runtime.ANTLRInputStream
@@ -16,6 +18,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
  * Created by maan on 4/2/16.
  */
 val CLASS_NAME_RE = Regex(""".*class\s+([^ :]+).*""")
+var ANDROID_RES_RE = Regex("""@(?:([^:\/]+):)?\+?([^:\/]+)\/(.*)""")
 
 class KotlinParser : AstVisitor {
     var latteFile : LatteFile = LatteFile();
@@ -100,7 +103,21 @@ class KotlinParser : AstVisitor {
                 prop.value = visitInlineCodeContent(it.inlineCode().inlineCodeContent()).map { if (it is NativeCode) it.code else null }.filterNotNull().joinToString("")
             } else if (it.STRING_LITERAL() != null) {
                 prop.valueType = Prop.ValueType.LITERAL
-                prop.value = it.STRING_LITERAL().text
+                var stringLiteral = it.STRING_LITERAL().text;
+                var stringValue = stringLiteral.substring(1,stringLiteral.length-1)
+                var matcher = ANDROID_RES_RE.matchEntire(stringValue)
+                prop.value = if(matcher != null) {
+                    val resPackageName = if(matcher.groupValues.getOrNull(1) != null && matcher.groupValues[1] != "") {
+                        matcher.groupValues[1]
+                    } else { null }
+                    if(matcher.groupValues.getOrNull(2) == "id" && resPackageName == null) {
+                        latteFile.resourceIds.add(matcher.groupValues[3])
+                    }
+                    """${resPackageName}.R.${matcher.groupValues[2]}.${matcher.groupValues[3]}"""
+                } else {
+                    stringLiteral
+                }
+
             }
             result.props.add(prop);
         }
@@ -190,15 +207,21 @@ open class MyApp : LatteView() {
     $MQ)
 }
     """)
+    Evaluator("mobi.yummyfood.android").evaluate(parsed);
 
-    println(parsed.packageName)
-    println("IMPORTS = "+ parsed.imports.joinToString(","))
     parsed.classes.forEach {
-        println("\tClass $it");
-        it.layoutFunctions.forEach {
-            print("\t${it.functionModifiers.joinToString(" ")} ${it.functionName}${it.functionParams} {")
-            it.children.forEach { printLayout(it) }
-            print("}")
-        }
+        print( KotlinTemplate().renderClass(it, parsed))
     }
+
+
+//    println(parsed.packageName)
+//    println("IMPORTS = "+ parsed.imports.joinToString(","))
+//    parsed.classes.forEach {
+//        println("\tClass $it");
+//        it.layoutFunctions.forEach {
+//            print("\t${it.functionModifiers.joinToString(" ")} ${it.functionName}${it.functionParams} {")
+//            it.children.forEach { printLayout(it) }
+//            print("}")
+//        }
+//    }
 }
