@@ -4,15 +4,10 @@
 package io.lattekit.parser
 
 import io.lattekit.evaluator.Evaluator
-import io.lattekit.parser.LatteBaseVisitor
-import io.lattekit.parser.LatteLexer
-import io.lattekit.parser.LatteParser;
 import io.lattekit.template.KotlinTemplate
-import io.lattekit.transformer.KotlinTransformer
 import io.lattekit.transformer.Reflection
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.TerminalNode
 
 /**
  * Created by maan on 4/2/16.
@@ -20,6 +15,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 val CLASS_NAME_RE = Regex(""".*class\s+([^ :]+).*""")
 val ANDROID_RES_RE = Regex("""@(?:([^:\/]+):)?\+?([^:\/]+)\/(.*)""")
 val WS             = Regex("""[\r\n ]+""")
+
 class KotlinParser : AstVisitor {
     var latteFile : LatteFile = LatteFile();
 
@@ -98,7 +94,23 @@ class KotlinParser : AstVisitor {
         }
         ctx.layoutProp().forEach {
             var prop = Prop();
-            prop.propName = it.propName().text
+            var propName = it.propName().text
+
+            if (propName.contains(":")) {
+                prop.namespace = propName.split(":",limit=2)[0]
+                if (prop.namespace.startsWith("@")) {
+                    prop.propModifier = "@";
+                    prop.namespace = prop.namespace.substring(1)
+                }
+                prop.propName = propName.split(":",limit=2).get(1)
+            } else {
+                prop.propName = propName;
+                if (propName.startsWith("@")) {
+                    prop.propModifier = "@";
+                    prop.propName = propName.substring(1)
+                }
+            }
+
             if (it.inlineCode() != null) {
                 prop.valueType = Prop.ValueType.INLINE_CODE
                 prop.value = visitInlineCodeContent(it.inlineCode().inlineCodeContent()).map { if (it is NativeCode) it.code else null }.filterNotNull().joinToString("")
@@ -161,9 +173,6 @@ class KotlinParser : AstVisitor {
         return result.filter { it is XmlTag || (it is NativeCode && it.code.replace(WS,"") != "") };
     }
 
-
-
-
     override fun parseSource( source : String) : LatteFile {
         var inputStream = ANTLRInputStream(source);
         var lexer = LatteLexer(inputStream);
@@ -176,18 +185,18 @@ class KotlinParser : AstVisitor {
 
 }
 
-fun printLayout(layoutCode : LayoutNode) {
-    if (layoutCode is NativeCode) {
-        print(layoutCode.code)
-    } else if (layoutCode is XmlTag) {
-        print("<${layoutCode.tagName} ${layoutCode.props.map { it.propName +"="+it.value }.joinToString(" ")}>");
-
-        layoutCode.children.forEach { printLayout(it) }
-        print("</${layoutCode.tagName}>");
-    }
-}
-
-
+//
+//fun printLayout(layoutCode : LayoutNode) {
+//    if (layoutCode is NativeCode) {
+//        print(layoutCode.code)
+//    } else if (layoutCode is XmlTag) {
+//        print("<${layoutCode.tagName} ${layoutCode.props.map { it.propName +"="+it.value }.joinToString(" ")}>");
+//
+//        layoutCode.children.forEach { printLayout(it) }
+//        print("</${layoutCode.tagName}>");
+//    }
+//}
+//
 val DOLLAR = "$";
 val MQ = "\"\"\"";
 
@@ -198,19 +207,20 @@ package mobi.yummyfood.android
 import io.lattekit.hello;
 
 open class MyApp : LatteView() {
+    init {
+        css("com.myapp.style/main.css")
+    }
+
+    fun shouldAddToolbarBorder () = Build.VERSION.SDK_INT < 21
 
     override fun layout() = lxml($MQ
-        <LinearLayout class="container" orientation="vertical">
-            <RelativeLayout clickable="true" orientation="vertical" class="card">
-                <ImageView id="@+id/foodImage" src=$DOLLAR{model?.`object`?.photoUrl+"?s=1000"} class="img" scaleType="centerCrop"/>
-                <ImageView id="@+id/userAvatar" below="@id/foodImage" src=$DOLLAR{model?.userInfo?.avatarUrl} class="avatar" scaleType="centerCrop"/>
-                <TextView id="@+id/userName" below="@id/foodImage" toEndOf="@id/userAvatar" text=$DOLLAR{model?.userInfo?.displayName} class="username"/>
-                <TextView below="@id/userName" toEndOf="@id/userAvatar" text=$DOLLAR{Html.fromHtml(model?.`object`?.text ?: "SS")} class="text"/>
-            </RelativeLayout>
-            $DOLLAR{model?.comments?.forEach { $MQ<mobi.yummyfood.android.CommentItem comment=$DOLLAR{it} />$MQ }}
-        </LinearLayout>
-        $DOLLAR{println("Hello")}
+        <LinearLayout orientation="vertical" layout_width="match_parent" layout_height="match_parent">
+            <android.support.v7.widget.Toolbar class="toolbar" logo="@drawable/home_logo" layout_width="match_parent" layout_height="wrap_content"/>
+            $DOLLAR{IF (shouldAddToolbarBorder()) { $MQ<View class="toolbar_border" />$MQ }}
+            <my.HomeFeed />
+         </LinearLayout>
     $MQ)
+
 }
     """)
     Evaluator("mobi.yummyfood.android").evaluate(parsed);

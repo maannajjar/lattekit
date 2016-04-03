@@ -63,6 +63,8 @@ class Prop {
         LITERAL, INLINE_CODE, RESOURCE_REF
     }
     ValueType valueType;
+    String propModifier;
+    String namespace;
     String propName;
     String value;
 

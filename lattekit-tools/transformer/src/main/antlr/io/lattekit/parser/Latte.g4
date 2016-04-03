@@ -29,7 +29,7 @@ codeChar        : CHAR|'<'|'>'|'/>'|'/'|'('|')'|'"'|'='|'\'' | '@' |'$'| ':'|'lx
 xmlTag      : XML_TAG_OPEN WS* layoutProp* WS* '/>'
             | XML_TAG_OPEN WS* layoutProp* WS*'>' layoutBody XML_TAG_CLOSE
             ;
-propName    : '@'? CHAR+;
+propName    : '@'? (CHAR+ ':')? CHAR+;
 layoutProp  :   propName '='  STRING_LITERAL WS*
             |   propName '=' inlineCode WS*
             ;

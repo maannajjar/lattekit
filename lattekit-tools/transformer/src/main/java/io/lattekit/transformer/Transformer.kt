@@ -1,6 +1,9 @@
 package io.lattekit.transformer
 
 import io.lattekit.css.CssCompiler
+import io.lattekit.evaluator.Evaluator
+import io.lattekit.parser.KotlinParser
+import io.lattekit.template.KotlinTemplate
 import java.io.File
 import java.io.PrintWriter
 import java.nio.file.Files
@@ -8,12 +11,9 @@ import java.nio.file.Path
 
 class Transformer {
 
-    private var kotlinCompiler: KotlinTransformer = KotlinTransformer()
-
+    private var kotlinTransformer: SourceTransformer = SourceTransformer(KotlinParser(), KotlinTemplate())
     private val cssCompiler = CssCompiler()
-
     private var rootDir: Path? = null
-
     private var extensions: List<String> = listOf(".css", ".kt")
 
 
@@ -21,11 +21,10 @@ class Transformer {
         if (this.extensions.filter { it -> file.absolutePath.endsWith(it) }.isEmpty()) {
             return
         }
-
         if (file.absolutePath.endsWith(".kt")) {
             val code = String(Files.readAllBytes(file.toPath()))
             println("Processing ${file.absolutePath}")
-            val results = this.kotlinCompiler.transform(androidPackageName, code);
+            val results = this.kotlinTransformer.transform(androidPackageName, code);
             if (generateSources && outDir != null) {
                 results.classes.forEach { it ->
                     if (!outDir.exists()) {
@@ -77,17 +76,15 @@ class Transformer {
         val sourceDir = File(source).toPath()
         this.rootDir = sourceDir
         this.transformDir(androidPackageName, source, srcOut, srcOut != null)
-        return this.kotlinCompiler.resourceIds.toSet()
+        return this.kotlinTransformer.resourceIds.toSet()
     }
 
     companion object {
-
         @JvmStatic fun main(args: Array<String>) {
             if (args.size < 3) {
                 println("Usage: java Main PACKAGE_NAME SRC_DIR OUT_DIR")
                 return
             }
-
             Transformer().transform(args[0], args[1], args[2]);
         }
     }
