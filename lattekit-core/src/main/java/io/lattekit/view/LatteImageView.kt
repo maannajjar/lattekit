@@ -84,6 +84,20 @@ class ClippableImageView(context : Context) : ImageView(context) {
             invalidate();
         }
 
+    override fun setImageDrawable(drawable: Drawable?) {
+        clipPath = null;
+        super.setImageDrawable(drawable)
+    }
+
+    override fun setImageResource(resId: Int) {
+        clipPath = null;
+        super.setImageResource(resId)
+    }
+
+    override fun setImageBitmap(bm: Bitmap?) {
+        clipPath = null;
+        super.setImageBitmap(bm)
+    }
 
     override fun draw(canvas: Canvas) {
         if (clipPath == null) {

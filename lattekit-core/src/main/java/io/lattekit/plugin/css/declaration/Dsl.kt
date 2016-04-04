@@ -41,7 +41,7 @@ inline fun LatteView.css(initStyle: Stylesheet.() -> Unit)  {
 }
 
 
-inline fun Stylesheet.select(selector : String, init: RuleSet.() -> Unit): RuleSet {
+inline fun Stylesheet.selector(selector : String, init: RuleSet.() -> Unit): RuleSet {
     var ruleSet = RuleSet(selector)
     ruleSet.init()
     addRuleSet(ruleSet)
