@@ -344,5 +344,9 @@ open class LatteView {
         return true;
     }
 
+    fun xml(layoutXml: String) {
+        throw Exception("Using XML requires gradle plugin")
+    }
+
 }
 

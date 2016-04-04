@@ -192,12 +192,6 @@ object Latte {
 }
 
 
-
-fun xml(layoutXml: String) {
-    throw Exception("Using LXML requires gradle plugin")
-}
-
-
 fun parseXml(layoutXml: String): LatteView {
     var currentView: LatteView? = null
     var topLevelViews = mutableListOf<LatteView>()

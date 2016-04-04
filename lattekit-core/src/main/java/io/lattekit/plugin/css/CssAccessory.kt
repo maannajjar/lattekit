@@ -1,6 +1,7 @@
 package io.lattekit.plugin.css
 
 import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Rect
@@ -103,6 +104,21 @@ class CssAccessory(view : NativeView)  {
                 drawable.setDrawableByLayerId(R.id.border_layer, borderDrawable)
             }
 
+            var backgroundOverride = view.props["background"];
+            if (backgroundOverride is Int) {
+                try {
+                    drawable.setDrawableByLayerId(R.id.native_background_layer, view.androidView!!.resources.getDrawable(backgroundOverride))
+                } catch(nfe : Resources.NotFoundException) {
+                    try {
+                        drawable.setDrawableByLayerId(R.id.native_background_layer, ColorDrawable(view.androidView!!.resources.getColor(backgroundOverride)))
+                    } catch (nfe2: Resources.NotFoundException) {
+                        //TODO: Warn
+                    }
+                }
+            } else if (backgroundOverride is Drawable) {
+                drawable.setDrawableByLayerId(R.id.native_background_layer, backgroundOverride)
+            }
+
         } else {
             var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
             var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), ColorDrawable(),borderDrawable))
@@ -114,6 +130,21 @@ class CssAccessory(view : NativeView)  {
             if (view.androidView?.background != null) {
                 layerDrawable.setDrawableByLayerId(2,view.androidView?.background);
             }
+            var backgroundOverride = view.props["background"];
+            if (backgroundOverride is Int) {
+                try {
+                    layerDrawable.setDrawableByLayerId(2, view.androidView!!.resources.getDrawable(backgroundOverride))
+                } catch(nfe : Resources.NotFoundException) {
+                    try {
+                        layerDrawable.setDrawableByLayerId(2, ColorDrawable(view.androidView!!.resources.getColor(backgroundOverride)))
+                    } catch (nfe2: Resources.NotFoundException) {
+                        //TODO: Warn
+                    }
+                }
+            } else if (backgroundOverride is Drawable) {
+                layerDrawable.setDrawableByLayerId(2, backgroundOverride)
+            }
+
         }
         view.androidView?.background = rippleDrawable;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
