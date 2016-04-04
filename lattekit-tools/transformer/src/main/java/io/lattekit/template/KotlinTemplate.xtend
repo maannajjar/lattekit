@@ -19,8 +19,8 @@ class KotlinTemplate {
     «IF !file.imports.contains("io.lattekit.Latte")»
     import io.lattekit.Latte;
     «ENDIF»
-    «IF !file.imports.contains("io.lattekit.plugin.css.declaration.block")»
-    import io.lattekit.plugin.css.declaration.block;
+    «IF !file.imports.contains("io.lattekit.plugin.css.declaration.select")»
+    import io.lattekit.plugin.css.declaration.select;
     «ENDIF»
     «IF !file.imports.contains("io.lattekit.plugin.css.declaration.css")»
     import io.lattekit.plugin.css.declaration.css;
