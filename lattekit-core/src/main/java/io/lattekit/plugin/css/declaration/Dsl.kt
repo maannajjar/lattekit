@@ -41,7 +41,7 @@ fun stylesheet(init: Stylesheet.() -> Unit): Stylesheet {
     return re
 }
 
-inline fun Stylesheet.block(selector : String, init: RuleSet.() -> Unit): RuleSet {
+inline fun Stylesheet.select(selector : String, init: RuleSet.() -> Unit): RuleSet {
     var ruleSet = RuleSet(selector)
     ruleSet.init()
     addRuleSet(ruleSet)

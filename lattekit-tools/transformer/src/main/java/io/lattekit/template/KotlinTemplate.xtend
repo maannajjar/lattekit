@@ -36,7 +36,7 @@ class KotlinTemplate {
             override fun «cssFn.functionName»«cssFn.functionParams» {
                 css {
                     «FOR definition: cssFn.definitions»
-                        block("«definition.selector»") {
+                        select("«definition.selector»") {
                             «FOR child: definition.childNodes»
                                 add("«child.name»", «IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»);
                             «ENDFOR»
