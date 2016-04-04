@@ -127,7 +127,7 @@ open class LatteView {
         get() = this.props.get("id") as Int
 
     init {
-        css();
+        style();
     }
 
     fun buildView(activity: Activity, lp: ViewGroup.LayoutParams?): View {
@@ -319,7 +319,7 @@ open class LatteView {
         this.props.put(str,value)
     }
 
-    open fun css() {
+    open fun style() {
 
     }
 
