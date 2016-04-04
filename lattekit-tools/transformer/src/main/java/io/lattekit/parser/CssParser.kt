@@ -9,22 +9,11 @@ import io.lattekit.css.CssProperty
 
 class CssParser {
     var BLOCKS_REGEX = Regex("""([^\{]+)\s*\{([^\}]+)\}""").toPattern()
-    var TOKENS = Regex(
-            // Group 1:captures selectors
-            """((?:(?:\.|#)?[^,> \n]+)(?:\s*[,> ]\s*(?:\.|#)?[^,> \n]+)*)\s+(?=\{)"""
-    // Group 2: captures {
-    +"""|(\{)"""
-    // Group 3: captures property name
-    // Group 4: captures property value
-    +"""|\s*([^\n:]+):\s*([^\n;]+)(?:;|\s*\n\s*(?=\}))"""
-    // Group 5: captures }
-    +"""|(\})""").toPattern()
-
 
     fun acceptDefinition(selector: String , body: String) : CssDefinition {
         val definition = CssDefinition(selector, body)
         definition.selector = selector;
-        body.split(Regex("\r?\n")).forEach { line ->
+        body.split(Regex("\r?\n|;")).forEach { line ->
             var trimmedLine = line.trim();
             if (trimmedLine.endsWith(";")) {
                 trimmedLine = trimmedLine.substring(0, trimmedLine.length - 1)
