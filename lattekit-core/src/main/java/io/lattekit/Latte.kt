@@ -193,11 +193,11 @@ object Latte {
 
 
 
-fun lxml(layoutXml: String) {
+fun xml(layoutXml: String) {
     throw Exception("Using LXML requires gradle plugin")
 }
 
-fun lcss(css: String) {
+fun css(css: String) {
     throw Exception("Using LCSS requires gradle plugin")
 }
 

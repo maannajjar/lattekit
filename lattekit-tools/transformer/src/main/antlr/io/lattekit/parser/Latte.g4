@@ -28,7 +28,7 @@ inlineCode  : '$'? '{' inlineCodeContent '}';
 inlineCodeContent: codeBase+ | codeBase* '{' inlineCodeContent* '}';
 codeBase         : layoutString | codeChar+ | STRING_LITERAL | WS+;
 
-codeChar        : CHAR|'<'|'>'|'/>'|'/'|'('|')'|'"'|'='|'\'' | '@' |'$'| ':'|'lxml'|'"""'|XML_TAG_OPEN;
+codeChar        : CHAR|'<'|'>'|'/>'|'/'|'('|')'|'"'|'='|'\'' | '@' |'$'| ':'|'xml'|'"""'|XML_TAG_OPEN;
 
 
 xmlTag      : XML_TAG_OPEN WS* layoutProp* WS* '/>'
@@ -44,9 +44,9 @@ strPropValue:  (CHAR|inlineCode|'\''|'@'|'/')*;
 
 LAYOUT_CLASS : ('open'|'abstract') WS+ (('abstract'|'open') WS+)? 'class' WS+ ~[;{:,]+ WS* ':' WS* ~[;{:]+ WS*;
 
-CSS_FUN: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '=' WS* 'lcss';
-LAYOUT_FUN: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '=' WS* 'lxml';
-LAYOUT_FUN_BLOCK: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '{' WS* 'lxml';
+CSS_FUN: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '=' WS* 'css';
+LAYOUT_FUN: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '=' WS* 'xml';
+LAYOUT_FUN_BLOCK: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '{' WS* 'xml';
 BRACE_OPEN : '{';
 BRACE_CLOSE : '}';
 PAREN_OPEN : '(';
