@@ -126,10 +126,6 @@ open class LatteView {
     var id: Int = 0
         get() = this.props.get("id") as Int
 
-    init {
-        style();
-    }
-
     fun buildView(activity: Activity, lp: ViewGroup.LayoutParams?): View {
         this.activity = activity;
         this.renderTree()
@@ -164,11 +160,12 @@ open class LatteView {
         return value
     }
 
-    fun dataOrPut(key: String, defaultValue: Any?): Any? {
-        var originalValue = dataValues.get(key)
+    fun dataOrPut(key: String, defaultValue: ()->Any?): Any? {
+        var originalValue = dataValues[key]
         if (originalValue == null) {
-            dataValues.put(key, defaultValue)
-            return defaultValue
+            var default = defaultValue.invoke();
+            dataValues.put(key, default)
+            return default
         }
         return originalValue
     }
@@ -317,10 +314,6 @@ open class LatteView {
 
     fun prop(str : String, value : Any) {
         this.props.put(str,value)
-    }
-
-    open fun style() {
-
     }
 
     open fun layout() {

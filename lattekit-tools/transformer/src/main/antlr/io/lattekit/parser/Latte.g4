@@ -3,7 +3,7 @@ grammar Latte;
 unit :  (packageDeclaration|importStatement|classDeclaration|code)*;
 
 classDeclaration: LAYOUT_CLASS '{' classBody '}';
-classBody: (layoutFunction|cssFunction|code)*;
+classBody: (layoutFunction|code)*;
 
 code: codeChar+ | STRING_LITERAL | WS+
     | codeChar* '{' code* '}';
@@ -11,16 +11,11 @@ code: codeChar+ | STRING_LITERAL | WS+
 packageDeclaration: PACKAGE_DECLARATION;
 importStatement: IMPORT_STMT;
 
-cssFunction: CSS_FUN '(' cssString ')';
-
 layoutFunction: LAYOUT_FUN '(' layoutString ')'
               | LAYOUT_FUN_BLOCK '(' layoutString ')' '}';
 
 
 layoutString    : '"""' layoutBody '"""';
-cssString       : '"""' cssBody '"""';
-cssBody         :  cssChar+ | cssChar* '{' cssChar* '}' cssBody*;
-cssChar         : CHAR|':'|WS;
 
 layoutBody  : (xmlTag|inlineCode|CHAR|WS)*;
 inlineCode  : '$'? '{' inlineCodeContent '}';
@@ -44,7 +39,6 @@ strPropValue:  (CHAR|inlineCode|'\''|'@'|'/')*;
 
 LAYOUT_CLASS : ('open'|'abstract') WS+ (('abstract'|'open') WS+)? 'class' WS+ ~[;{:,]+ WS* ':' WS* ~[;{:]+ WS*;
 
-CSS_FUN: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '=' WS* 'css';
 LAYOUT_FUN: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '=' WS* 'xml';
 LAYOUT_FUN_BLOCK: ('override' WS)? 'fun' WS+ ~[{=]+ WS* '{' WS* 'xml';
 BRACE_OPEN : '{';

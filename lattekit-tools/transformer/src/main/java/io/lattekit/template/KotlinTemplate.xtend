@@ -19,32 +19,12 @@ class KotlinTemplate {
     «IF !file.imports.contains("io.lattekit.Latte")»
     import io.lattekit.Latte;
     «ENDIF»
-    «IF !file.imports.contains("io.lattekit.plugin.css.declaration.select")»
-    import io.lattekit.plugin.css.declaration.select;
-    «ENDIF»
-    «IF !file.imports.contains("io.lattekit.plugin.css.declaration.css")»
-    import io.lattekit.plugin.css.declaration.css;
-    «ENDIF»
-
+    
     «FOR importCls : file.imports»
     import «importCls»
     «ENDFOR»
 
     class «cls.classNameImpl» : «cls.className»() {
-
-        «FOR cssFn: cls.cssFunctions»
-            override fun «cssFn.functionName»«cssFn.functionParams» {
-                css {
-                    «FOR definition: cssFn.definitions»
-                        select("«definition.selector»") {
-                            «FOR child: definition.childNodes»
-                                add("«child.name»", «IF child.value.startsWith('"') && child.value.endsWith('"')»«child.value»«ELSE»"«child.value»"«ENDIF»);
-                            «ENDFOR»
-                        }
-                    «ENDFOR»
-                }
-            }
-        «ENDFOR»
 
         «FOR layoutFn: cls.layoutFunctions»
             override fun «layoutFn.functionName»«layoutFn.functionParams» {

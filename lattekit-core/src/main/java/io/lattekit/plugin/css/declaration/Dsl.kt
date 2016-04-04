@@ -1,6 +1,6 @@
 package io.lattekit.plugin.css.declaration
 
-import io.lattekit.Latte
+import io.lattekit.plugin.css.CssParser
 import io.lattekit.view.LatteView
 
 /**
@@ -16,30 +16,30 @@ inline fun css( init: Stylesheet.() -> Unit)  : Stylesheet {
     return stylesheet
 }
 
+var CSS_FILE_PATH_RE = Regex("""([a-zA-Z0-9]+)(\.[a-zA-Z0-9]+)*\/([a-zA-Z0-9]+)\.css""")
 
 inline fun LatteView.css(stylesheet : Stylesheet)  {
-    var css = dataOrPut("css", mutableListOf<Any>()) as MutableList<Any>
+    var css = dataOrPut("css", { mutableListOf<Any>() }) as MutableList<Any>
     css.add(stylesheet)
 }
 
 inline fun LatteView.css(stylesheet : String)  {
-    var css = dataOrPut("css", mutableListOf<Any>()) as MutableList<Any>
-    css.add(stylesheet)
+    var isFile = CSS_FILE_PATH_RE.matches(stylesheet.trim())
+    var cssList = dataOrPut("css", { mutableListOf<Any>() }) as MutableList<Any>
+    if (isFile) {
+        cssList.add(stylesheet)
+    } else {
+        cssList.add(CssParser.parse(stylesheet))
+    }
 }
 
 inline fun LatteView.css(init: Stylesheet.() -> Unit)  {
     val re = Stylesheet()
     re.init()
-    var css = dataOrPut("css", mutableListOf<Any>()) as MutableList<Any>
+    var css = dataOrPut("css", { mutableListOf<Any>() }) as MutableList<Any>
     css.add(re)
 }
 
-
-fun stylesheet(init: Stylesheet.() -> Unit): Stylesheet {
-    val re = Stylesheet()
-    re.init()
-    return re
-}
 
 inline fun Stylesheet.select(selector : String, init: RuleSet.() -> Unit): RuleSet {
     var ruleSet = RuleSet(selector)

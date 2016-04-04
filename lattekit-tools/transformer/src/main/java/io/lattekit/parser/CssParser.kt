@@ -39,6 +39,4 @@ class CssParser {
         }
         return results;
     }
-
-
 }
