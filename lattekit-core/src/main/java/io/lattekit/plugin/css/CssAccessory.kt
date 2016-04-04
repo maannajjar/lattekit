@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import io.lattekit.R
 import io.lattekit.drawable.BorderDrawable
+import io.lattekit.view.ClippableImageView
 import io.lattekit.view.NativeView
 
 /**
@@ -97,20 +98,30 @@ class CssAccessory(view : NativeView)  {
                 (view.androidView as ViewGroup).clipToPadding = false;
             }
 
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M && view.androidView !is ClippableImageView) {
+                // Foreground is not supported for this view, we will have to use it as background layer
+                drawable.setDrawableByLayerId(R.id.border_layer, borderDrawable)
+            }
+
         } else {
             var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
-            var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable,ColorDrawable()))
+            var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), ColorDrawable(),borderDrawable))
             layerDrawable.setId(0, 0)
             layerDrawable.setId(1, 1)
             layerDrawable.setId(2, 2)
             layerDrawable.setId(3,3)
             rippleDrawable = codetail.graphics.drawables.RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
             if (view.androidView?.background != null) {
-                layerDrawable.setDrawableByLayerId(3,view.androidView?.background);
+                layerDrawable.setDrawableByLayerId(2,view.androidView?.background);
             }
         }
         view.androidView?.background = rippleDrawable;
-        view.androidView?.foreground = borderDrawable;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            view.androidView?.foreground = borderDrawable;
+        } else if (view.androidView is ClippableImageView) {
+            (view.androidView as ClippableImageView).foregroundDrawable = borderDrawable;
+        }
+
     }
 
     fun setRippleColor(color : Int) {
