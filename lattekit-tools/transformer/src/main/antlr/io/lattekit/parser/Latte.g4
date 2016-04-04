@@ -17,21 +17,21 @@ layoutFunction: LAYOUT_FUN '(' layoutString ')'
 
 layoutString    : '"""' layoutBody '"""';
 
-layoutBody  : (xmlTag|inlineCode|CHAR|WS)*;
+layoutBody  : (xmlTag|inlineCode|CHAR|'\r'|'\n'|WS)*;
 inlineCode  : '$'? '{' inlineCodeContent '}';
 
 inlineCodeContent: codeBase+ | codeBase* '{' inlineCodeContent* '}';
 codeBase         : layoutString | codeChar+ | STRING_LITERAL | WS+;
 
-codeChar        : CHAR|'<'|'>'|'/>'|'/'|'('|')'|'"'|'='|'\'' | '@' |'$'| ':'|'xml'|'"""'|XML_TAG_OPEN;
+codeChar        : CHAR|'<'|'>'|'/>'|'/'|'('|')'|'"'|'='|'\''|'\r'|'\n'| '@' |'$'| ':'|'xml'|'"""'|XML_TAG_OPEN;
 
 
-xmlTag      : XML_TAG_OPEN WS* layoutProp* WS* '/>'
-            | XML_TAG_OPEN WS* layoutProp* WS*'>' layoutBody XML_TAG_CLOSE
+xmlTag      : XML_TAG_OPEN (WS|'\r'|'\n')* layoutProp* (WS|'\r'|'\n')* '/>'
+            | XML_TAG_OPEN (WS|'\r'|'\n')* layoutProp* (WS|'\r'|'\n')*'>' layoutBody XML_TAG_CLOSE
             ;
 propName    : '@'? (CHAR+ ':')? CHAR+;
-layoutProp  :   propName '='  STRING_LITERAL WS*
-            |   propName '=' inlineCode WS*
+layoutProp  :   propName '='  STRING_LITERAL (WS|'\r'|'\n')*
+            |   propName '=' inlineCode (WS|'\r'|'\n')*
             ;
 
 strPropValue:  (CHAR|inlineCode|'\''|'@'|'/')*;
@@ -45,7 +45,7 @@ BRACE_OPEN : '{';
 BRACE_CLOSE : '}';
 PAREN_OPEN : '(';
 PAREN_CLOSE : ')';
-CHAR: ~[<>/{}"= ];
+CHAR: ~[<>/{}"=\r\n ];
 XML_TAG_OPEN : '<' CHAR+;
 XML_TAG_CLOSE :  '</' CHAR+ '>';
 PACKAGE_DECLARATION: {getCharPositionInLine() == 0}? WS* 'package' WS+ ~[;\r\n ]+;
