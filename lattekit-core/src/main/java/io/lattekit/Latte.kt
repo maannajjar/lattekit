@@ -197,9 +197,6 @@ fun xml(layoutXml: String) {
     throw Exception("Using LXML requires gradle plugin")
 }
 
-fun css(css: String) {
-    throw Exception("Using LCSS requires gradle plugin")
-}
 
 fun parseXml(layoutXml: String): LatteView {
     var currentView: LatteView? = null

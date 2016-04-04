@@ -33,9 +33,9 @@ inline fun LatteView.css(stylesheet : String)  {
     }
 }
 
-inline fun LatteView.css(init: Stylesheet.() -> Unit)  {
+inline fun LatteView.css(initStyle: Stylesheet.() -> Unit)  {
     val re = Stylesheet()
-    re.init()
+    re.initStyle()
     var css = dataOrPut("css", { mutableListOf<Any>() }) as MutableList<Any>
     css.add(re)
 }
