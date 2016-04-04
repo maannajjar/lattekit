@@ -21,7 +21,7 @@ class KotlinParser : AstVisitor {
 
     var errorListener = object : BaseErrorListener() {
         override fun syntaxError(recognizer: Recognizer<*, *>?, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String?, e: RecognitionException?) {
-            errors.add("($line, $charPositionInLine): $msg")
+            errors.add("($line, $charPositionInLine): $msg at  ($line,$charPositionInLine) ")
         }
     }
 
