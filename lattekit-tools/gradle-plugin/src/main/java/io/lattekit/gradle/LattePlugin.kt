@@ -5,6 +5,7 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.api.BaseVariant
 import io.lattekit.transformer.Reflection
+import io.lattekit.transformer.TransformerException
 import org.gradle.api.*
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.tasks.TaskAction
@@ -97,26 +98,34 @@ ${ids.map{ """<item name="$it" type="id" />"""}.joinToString("\n")}
         val androidPackage = applicationId;
         println("Generating source dir $from to $outputSourceDir");
         val  allIds = mutableListOf<String>()
-        from!!.forEachIndexed { i, src ->
-            if (project.file(src).exists()) {
-                if (taskType == TaskType.RES_GENERATOR) {
-                    allIds += io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, null)
-                } else {
-                    io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, project.file(outputSourceDir).absolutePath)
+        try {
+            from!!.forEachIndexed { i, src ->
+                if (project.file(src).exists()) {
+                    if (taskType == TaskType.RES_GENERATOR) {
+                        allIds += io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, null)
+                    } else {
+                        io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, project.file(outputSourceDir).absolutePath)
 
+                    }
                 }
             }
-        }
 
-        var resOut = project.file(outputResDir).absolutePath;
-        if (taskType == TaskType.RES_GENERATOR) {
-            var valuesOut = File(resOut+"/values");
-            valuesOut.mkdirs();
-            var writer = PrintWriter(File(resOut + "/values/latte_ids.xml"), "UTF-8");
-            writer.print(getIdsXml(allIds));
-            writer.close();
-        }
 
+            var resOut = project.file(outputResDir).absolutePath;
+            if (taskType == TaskType.RES_GENERATOR) {
+                var valuesOut = File(resOut+"/values");
+                valuesOut.mkdirs();
+                var writer = PrintWriter(File(resOut + "/values/latte_ids.xml"), "UTF-8");
+                writer.print(getIdsXml(allIds));
+                writer.close();
+            }
+        } catch (e: TransformerException) {
+            e.errors.forEach {
+                System.err.println("e: ${e.filePath}: $it")
+            }
+            throw InvalidLayoutException();
+        }
 
     }
 }
+class InvalidLayoutException : Exception();

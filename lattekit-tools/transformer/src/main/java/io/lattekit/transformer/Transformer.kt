@@ -24,7 +24,7 @@ class Transformer {
         if (file.absolutePath.endsWith(".kt")) {
             val code = String(Files.readAllBytes(file.toPath()))
             println("Processing ${file.absolutePath}")
-            val results = this.kotlinTransformer.transform(androidPackageName, code);
+            val results = this.kotlinTransformer.transform(file.absolutePath, androidPackageName, code);
             if (generateSources && outDir != null) {
                 results.classes.forEach { it ->
                     if (!outDir.exists()) {

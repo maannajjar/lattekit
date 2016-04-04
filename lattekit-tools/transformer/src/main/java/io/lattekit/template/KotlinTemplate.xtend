@@ -19,7 +19,7 @@ class KotlinTemplate {
     «IF !file.imports.contains("io.lattekit.Latte")»
     import io.lattekit.Latte;
     «ENDIF»
-    
+
     «FOR importCls : file.imports»
     import «importCls»
     «ENDFOR»

@@ -6,8 +6,7 @@ package io.lattekit.parser
 import io.lattekit.evaluator.Evaluator
 import io.lattekit.template.KotlinTemplate
 import io.lattekit.transformer.Reflection
-import org.antlr.v4.runtime.ANTLRInputStream
-import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.*
 
 /**
  * Created by maan on 4/2/16.
@@ -18,6 +17,13 @@ val WS             = Regex("""[\r\n ]+""")
 
 class KotlinParser : AstVisitor {
     var latteFile : LatteFile = LatteFile();
+    var errors = mutableListOf<String>();
+
+    var errorListener = object : BaseErrorListener() {
+        override fun syntaxError(recognizer: Recognizer<*, *>?, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String?, e: RecognitionException?) {
+            errors.add("($line, $charPositionInLine): $msg")
+        }
+    }
 
     fun visitUnit(ctx: LatteParser.UnitContext ) {
         // Find package name
@@ -179,8 +185,14 @@ class KotlinParser : AstVisitor {
         var lexer = LatteLexer(inputStream);
         var tokens = CommonTokenStream(lexer);
         var parser = LatteParser(tokens)
-        latteFile = LatteFile();
-        visitUnit(parser.unit())
+        parser.removeErrorListeners()
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(errorListener);
+        parser.addErrorListener(errorListener);
+        try {
+            latteFile = LatteFile();
+            visitUnit(parser.unit())
+        } catch (e : Exception) {}
         return latteFile;
     }
 
@@ -215,7 +227,7 @@ open class MyApp : LatteView() {
     fun shouldAddToolbarBorder () = Build.VERSION.SDK_INT < 21
 
     override fun layout() = lxml($MQ
-        <LinearLayout orientation="vertical" layout_width="match_parent" layout_height="match_parent">
+        <LinearLayout orientation="vertical" layout_width=match_parent" layout_height="match_parent">
             <android.support.v7.widget.Toolbar class="toolbar" logo="@drawable/home_logo" layout_width="match_parent" layout_height="wrap_content"/>
             $DOLLAR{IF (shouldAddToolbarBorder()) { $MQ<View class="toolbar_border" />$MQ }}
             <my.HomeFeed />
