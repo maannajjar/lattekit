@@ -89,10 +89,8 @@ class KotlinTemplate {
             if (__propKey == "«prop.propName»") {
                 «FOR propSetter : prop.propSetters»
                     «IF prop.isListenerProp»
-                        if (__propValue is «propSetter.kotlinTypeName») {
-                            var __listener = Latte.createLambdaProxyInstance(«propSetter.kotlinTypeName»::class.java, __propValue as Object) as «propSetter.kotlinTypeName»
-                            __view.«propSetter.setterMethod.name»(__listener);
-                        }
+                        var __listener = Latte.createLambdaProxyInstance(«propSetter.kotlinTypeName»::class.java, __propValue as Object) as «propSetter.kotlinTypeName»
+                        __view.«propSetter.setterMethod.name»(__listener);
                     «ELSE»
                         if (!__valueAccepted  && __propValue is «propSetter.kotlinTypeName»«IF !propSetter.primitiveType»?«ENDIF» ) {
                             «IF propSetter.hasGetter»
