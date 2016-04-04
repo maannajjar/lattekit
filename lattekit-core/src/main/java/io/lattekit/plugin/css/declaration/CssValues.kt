@@ -44,6 +44,7 @@ fun getCssValue(propertyName : String, valueString : String) : CssValue = when(p
     "font-family" -> FontFamilyValue(valueString)
     "color" -> ColorValue(valueString)
     "background-color" -> ColorValue(valueString)
+    "ripple-color" -> ColorValue(valueString)
     "elevation" -> LengthValue(valueString)
     "height" ->  LengthValue(valueString)
     "width" ->  LengthValue(valueString)

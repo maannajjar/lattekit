@@ -29,7 +29,7 @@ class BackgroundCssProperty : CssProperty("background") {
         if (bgDeclaration != null) {
             backgroundColor = (bgDeclaration.value as ColorValue).color
         }
-        var rippleDeclaration = style.getDeclaration("background-color")
+        var rippleDeclaration = style.getDeclaration("ripple-color")
         if (rippleDeclaration != null) {
             rippleColor = (rippleDeclaration.value as ColorValue).color
         }
