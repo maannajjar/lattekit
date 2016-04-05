@@ -68,9 +68,9 @@ open class NativeViewGroup : NativeView() {
         var newViews = ArrayList<View>();
         var myContainer = this.androidView as ViewGroup;
 
-        for(i in 0..Math.max(managedViews.size,renderedViews.size)-1) {
-            if (i < renderedViews.size) {
-                var v = renderedViews[i]
+        for(i in 0..Math.max(managedViews.size, subViews.size)-1) {
+            if (i < subViews.size) {
+                var v = subViews[i]
 
                 var childLP = createLayoutParams();
                 var childView = v.buildAndroidViewTree(this.activity as Context, childLP);

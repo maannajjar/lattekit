@@ -34,7 +34,7 @@ open class LatteView {
 
 
 
-    var renderedViews: MutableList<LatteView> = mutableListOf()
+    var subViews: MutableList<LatteView> = mutableListOf()
     var newRenderedViews = mutableListOf<LatteView>()
     var androidView: View? = null
     var __current : LatteView = this;
@@ -106,8 +106,8 @@ open class LatteView {
         get() {
             if (this is NativeView) {
                 return this
-            } else if (this.renderedViews[0] != null) {
-                return this.renderedViews[0].rootNativeView;
+            } else if (this.subViews[0] != null) {
+                return this.subViews[0].rootNativeView;
             }
             return null
         }
@@ -116,8 +116,8 @@ open class LatteView {
         get() {
             if (this.androidView != null) {
                 return this.androidView
-            } else if (this.renderedViews.get(0) != null) {
-                return this.renderedViews.get(0).rootAndroidView;
+            } else if (this.subViews.get(0) != null) {
+                return this.subViews.get(0).rootAndroidView;
             }
             return null
         }
@@ -141,7 +141,7 @@ open class LatteView {
 
     fun notifyViewCreated() {
         isMounted = true;
-        bindViews(this.renderedViews);
+        bindViews(this.subViews);
         Latte.PLUGINS.forEach { it.onViewCreated(this) }
         onViewCreated();
     }
@@ -199,7 +199,7 @@ open class LatteView {
             return this.androidView!!
         } else {
             // If we don't have native android view, then we are virtual node
-            var subAndroid = this.renderedViews[0].buildAndroidViewTree(a, lp);
+            var subAndroid = this.subViews[0].buildAndroidViewTree(a, lp);
             if (!isMounted) {
                 notifyViewCreated();
             }
@@ -287,8 +287,8 @@ open class LatteView {
 
     fun render(newView : LatteView) {
         var i = newRenderedViews.size
-        if (i < renderedViews.size) {
-            var oldView: LatteView = renderedViews[i]
+        if (i < subViews.size) {
+            var oldView: LatteView = subViews[i]
             if (sameView(oldView, newView)) {
                 var oldProps = oldView.props
                 oldView.children = newView.children
@@ -337,7 +337,7 @@ open class LatteView {
         for (child in this.children) {
             render(child)
         }
-        this.renderedViews = newRenderedViews;
+        this.subViews = newRenderedViews;
     }
 
     open fun onPropsUpdated(props: Map<String, Any?>): Boolean {
