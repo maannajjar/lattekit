@@ -126,6 +126,10 @@ open class LatteView {
     var id: Int = 0
         get() = this.props.get("id") as Int
 
+    fun findViewById(id: Int) : View? {
+        return rootAndroidView?.findViewById(id);
+    }
+
     fun buildView(activity: Activity, lp: ViewGroup.LayoutParams?): View {
         this.activity = activity;
         this.renderTree()

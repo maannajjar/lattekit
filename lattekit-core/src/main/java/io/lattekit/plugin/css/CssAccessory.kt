@@ -10,6 +10,7 @@ import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
+import android.widget.Button
 import io.lattekit.R
 import io.lattekit.drawable.BorderDrawable
 import io.lattekit.view.ClippableImageView
@@ -67,6 +68,7 @@ class CssAccessory(view : NativeView)  {
     var clipRadius : Float = 0f;
 
 
+
     companion object {
         fun getCssAccessory(view : NativeView) : CssAccessory {
             var accessory = view.data("css:accessory")
@@ -86,12 +88,23 @@ class CssAccessory(view : NativeView)  {
             drawable.setDrawableByLayerId(R.id.background_layer, gradientDrawable)
 
             drawable.setDrawableByLayerId(android.R.id.mask, shapeDrawable)
+            var nativeBackground = view.androidView?.background;
             if (view.androidView?.background != null) {
                 drawable.setDrawableByLayerId(R.id.native_background_layer,view.androidView?.background);
             }
             view.androidView?.outlineProvider = object: ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    outline?.setRoundRect(Rect(0, 0, view.width, view.height), clipRadius)
+                override fun getOutline(v: View, outline: Outline) {
+                    var padding = Rect(0,0,0,0);
+                    if (v is Button) {
+                        nativeBackground?.current?.getPadding(padding);
+                        nativeBackground?.getPadding(padding);
+                    }
+                    outline?.setRoundRect(Rect(padding.left,
+                        padding.top,
+                        v.width - padding.right,
+                        v.height - padding.bottom), clipRadius)
+
+
                 }
             }
             view.androidView?.clipToOutline = true
