@@ -32,7 +32,7 @@ apply plugin: 'antlr'
 
 
 group='io.lattekit.tools'
-version='1.1-SNAPSHOT'
+version='0.9.1-SNAPSHOT'
 
 repositories {
     jcenter()
