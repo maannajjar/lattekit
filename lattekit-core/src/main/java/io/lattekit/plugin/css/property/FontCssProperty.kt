@@ -19,15 +19,16 @@ import io.lattekit.view.NativeView
 class FontCssProperty : CssProperty("font-family") {
 
     var typeface : Typeface? = Typeface.DEFAULT
-    var fontStyle : String? = "normal"
-    var fontWeight : String? = "normal"
-    var fontSize : FontSizeValue = FontSizeValue("18sp")
+    var fontStyle : String? = null
+    var fontWeight : String? = null
+    var fontSize : Float? = null
     var lineHeight : LengthValue? = null;
     var letterSpacing : LengthValue? = null;
 
     override fun computeValue(context: Context, view: NativeView, style : NodeStyle) {
         initFonts(view.activity!!)
-        typeface = Typeface.DEFAULT
+        typeface = if ( view.androidView is TextView ) (view.androidView as TextView).typeface else Typeface.DEFAULT
+        fontSize = if ( view.androidView is TextView ) (view.androidView as TextView).textSize else FontSizeValue("18sp").inPixels(view.activity!!)
         lineHeight= null;
         letterSpacing = null;
         var declarations = style.getDeclarations("font","font-family","font-style","font-weight","font-size","line-height","letter-spacing")
@@ -39,7 +40,7 @@ class FontCssProperty : CssProperty("font-family") {
             } else if (it.propertyName == "font-style") {
                 fontStyle = (it.value as StringValue).valueString
             } else if (it.propertyName == "font-size") {
-                fontSize = it.value as FontSizeValue
+                fontSize = (it.value as FontSizeValue).inPixels(view.activity!!)
             } else if (it.propertyName == "line-height") {
                 lineHeight = it.value as LengthValue;
             } else if (it.propertyName == "letter-spacing") {
@@ -64,14 +65,14 @@ class FontCssProperty : CssProperty("font-family") {
         if (view.androidView is TextView) {
             var textView = view.androidView as TextView
             textView.setTypeface(typeface,getStyle())
-            textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize.inPixels(view.androidView!!.context))
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize!!)
             if (lineHeight != null) {
-                textView.setLineSpacing(lineHeight!!.inPixels(view.androidView!!.context)-fontSize.inPixels(view.androidView!!.context).toInt(),1f);
+                textView.setLineSpacing(lineHeight!!.inPixels(view.androidView!!.context)-fontSize!!,1f);
             } else {
                 textView.setLineSpacing(0f,1f);
             }
             if (letterSpacing != null) {
-                textView.letterSpacing = letterSpacing!!.inPixels(view.androidView!!.context)-fontSize.inPixels(view.androidView!!.context);
+                textView.letterSpacing = letterSpacing!!.inPixels(view.androidView!!.context)-fontSize!!;
             }
         }
     }
