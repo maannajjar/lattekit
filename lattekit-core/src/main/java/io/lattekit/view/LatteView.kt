@@ -133,7 +133,7 @@ open class LatteView {
         if (!isViewCreated) {
             // This will update properties in layout that were dependent on bound views
             // TODO: investigate if we can only call when a bound Android view within the same layout is being used in a property value
-            applyChanges();
+            notifyStateChanged();
             isViewCreated = true;
         }
         return this.rootAndroidView!!;
@@ -146,7 +146,7 @@ open class LatteView {
         onViewCreated();
     }
 
-    fun applyChanges() {
+    fun notifyStateChanged() {
         this.renderTree()
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
     }
@@ -184,9 +184,6 @@ open class LatteView {
         // First build my view
         this.activity = a as Activity;
         if (this is NativeView) {
-            if (this.androidView == null) {
-                this.androidView = this.renderNative(a);
-            }
             if (this.androidView?.layoutParams == null) {
                 this.androidView?.layoutParams = lp ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
@@ -299,14 +296,15 @@ open class LatteView {
                 }
                 newRenderedViews.add(oldView)
             } else {
-                // Try find recycled view
                 newView.parentView = this
+                newView.activity = activity;
                 newView.renderTree()
                 newRenderedViews.add(newView)
 
             }
         } else {
             newView.parentView = this
+            newView.activity = activity;
             newView.renderTree()
             newRenderedViews.add(newView)
         }
@@ -332,6 +330,9 @@ open class LatteView {
             this.children.clear()
             this.layout();
         } else {
+            if (this.androidView == null) {
+                this.androidView = this.renderNative(this.activity!!);
+            }
             this.layout();
         }
         for (child in this.children) {

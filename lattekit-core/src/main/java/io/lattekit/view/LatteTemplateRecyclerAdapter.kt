@@ -101,7 +101,7 @@ class LatteNullSafeViewHolder(template : LatteView) : LatteViewHolder(template.b
     override fun bindView(model : Any, modelIndex : Int) {
         template.props.put("model", model);
         template.props.put("modelIndex", modelIndex);
-        template.applyChanges();
+        template.notifyStateChanged();
     }
 }
 
@@ -122,7 +122,7 @@ class LatteNullUnsafeViewHolder(template : LatteView) : LatteViewHolder(FrameLay
             isAttached = true;
             (itemView as FrameLayout).addView(template.buildView(template.parentView?.activity!!, null))
         } else {
-            template.applyChanges();
+            template.notifyStateChanged();
         }
 
     }
