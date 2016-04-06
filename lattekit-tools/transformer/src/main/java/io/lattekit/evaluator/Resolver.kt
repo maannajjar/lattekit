@@ -6,7 +6,7 @@ import io.lattekit.transformer.Reflection
 /**
  * Created by maan on 4/2/16.
  */
-class Evaluator(var androidPackage: String) {
+class Resolver(var androidPackage: String) {
     var latteFile : LatteFile? = null;
 
     fun evaluate(file : LatteFile) {
@@ -76,8 +76,11 @@ class Evaluator(var androidPackage: String) {
             prop.propSetters.add(propSetter);
         }
         if (setterMethods.isEmpty()) {
-            // TODO: Warn no setter for property
-            println("Warning: couldn't recognized property $propName for ${tag.tagName}");
+            // TODO: Handle this properly when BindingMethods/Blueprints is implemented
+            if (!(propName.startsWith("layout_") || propName == "class" || (propName == "src" && tag.tagName == "ImageView"))
+               || (propName == "data" && (tag.tagName == "android.support.v7.widget.RecyclerView" || tag.tagName == "ListView")) || propName.startsWith("on")) {
+                latteFile?.warnings?.add("Warning: couldn't recognize property $propName for ${tag.tagName}");
+            }
         }
 
     }

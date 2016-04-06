@@ -1,7 +1,7 @@
 package io.lattekit.transformer
 
 import io.lattekit.css.CssCompiler
-import io.lattekit.evaluator.Evaluator
+import io.lattekit.evaluator.Resolver
 import io.lattekit.parser.KotlinParser
 import io.lattekit.template.KotlinTemplate
 import java.io.File
@@ -15,6 +15,7 @@ class Transformer {
     private val cssCompiler = CssCompiler()
     private var rootDir: Path? = null
     private var extensions: List<String> = listOf(".css", ".kt")
+    var warningLogger : (String)->Unit = {};
 
 
     fun transformFile(androidPackageName: String, file: File, outDir: File?, generateSources: Boolean) {
@@ -26,6 +27,7 @@ class Transformer {
             println("Processing ${file.absolutePath}")
             val results = this.kotlinTransformer.transform(file.absolutePath, androidPackageName, code);
             if (generateSources && outDir != null) {
+                results.warnings.forEach { warningLogger.invoke(it) }
                 results.classes.forEach { it ->
                     if (!outDir.exists()) {
                         outDir.mkdirs()

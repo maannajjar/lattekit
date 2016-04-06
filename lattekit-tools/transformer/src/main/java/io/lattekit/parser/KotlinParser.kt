@@ -3,7 +3,7 @@
  */
 package io.lattekit.parser
 
-import io.lattekit.evaluator.Evaluator
+import io.lattekit.evaluator.Resolver
 import io.lattekit.template.KotlinTemplate
 import io.lattekit.transformer.Reflection
 import org.antlr.v4.runtime.*
@@ -236,7 +236,7 @@ open class MyApp : LatteView() {
 
 }
     """)
-    Evaluator("mobi.yummyfood.android").evaluate(parsed);
+    Resolver("mobi.yummyfood.android").evaluate(parsed);
 
     parsed.classes.forEach {
         print( KotlinTemplate().renderClass(it, parsed))

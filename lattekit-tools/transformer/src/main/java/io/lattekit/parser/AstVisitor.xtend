@@ -5,6 +5,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import java.lang.reflect.Method
 import java.util.Set
 import io.lattekit.css.CssDefinition
+import org.antlr.v4.runtime.misc.OrderedHashSet
 
 /**
  * Created by maan on 4/2/16.
@@ -20,6 +21,8 @@ class LatteFile {
     Set<String> imports = newHashSet();
     List<LatteClass> classes = newArrayList();
     List<String> resourceIds = newArrayList();
+
+    Set<String> warnings = new OrderedHashSet();
 }
 
 @Accessors

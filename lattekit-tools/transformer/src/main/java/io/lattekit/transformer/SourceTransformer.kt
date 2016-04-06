@@ -1,6 +1,6 @@
 package io.lattekit.transformer
 
-import io.lattekit.evaluator.Evaluator
+import io.lattekit.evaluator.Resolver
 import io.lattekit.parser.AstVisitor
 import io.lattekit.parser.KotlinParser
 import io.lattekit.parser.LatteFile
@@ -19,7 +19,7 @@ class SourceTransformer(var parser : AstVisitor, var template: KotlinTemplate) {
         if (!parser.errors.isEmpty()) {
             throw TransformerException(filePath, parser.errors)
         }
-        Evaluator(androidPackageId).evaluate(latteFile);
+        Resolver(androidPackageId).evaluate(latteFile);
         latteFile.classes.forEach {
             it.generatedSource = template.renderClass(it, latteFile).toString()
         }

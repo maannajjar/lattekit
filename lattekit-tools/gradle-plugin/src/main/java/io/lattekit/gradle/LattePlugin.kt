@@ -101,10 +101,13 @@ ${ids.map{ """<item name="$it" type="id" />"""}.joinToString("\n")}
         try {
             from!!.forEachIndexed { i, src ->
                 if (project.file(src).exists()) {
+                    var transformer = io.lattekit.transformer.Transformer();
+                    transformer.warningLogger = { logger.warn(it) }
+
                     if (taskType == TaskType.RES_GENERATOR) {
-                        allIds += io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, null)
+                        allIds += transformer.transform(androidPackage!!, project.file(src).absolutePath, null)
                     } else {
-                        io.lattekit.transformer.Transformer().transform(androidPackage!!, project.file(src).absolutePath, project.file(outputSourceDir).absolutePath)
+                        transformer.transform(androidPackage!!, project.file(src).absolutePath, project.file(outputSourceDir).absolutePath)
 
                     }
                 }
