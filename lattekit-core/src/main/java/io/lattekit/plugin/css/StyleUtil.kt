@@ -92,7 +92,7 @@ fun elMatches(elName : String, view : NativeView) : Boolean {
 
 fun getDirectChildren(view : NativeView) : List<NativeView> {
     if (view is NativeViewGroup) {
-        return view.renderedViews.map { getNativeView(it) }
+        return view.subViews.map { getNativeView(it) }
     }
     return emptyList()
 }
@@ -119,7 +119,7 @@ fun query(selector : List<String>, views : List<NativeView>) : List<NativeView> 
                 if (elMatches(el, native)) {
                     selectedViews.add(native)
                 }
-                native.renderedViews.forEach {
+                native.subViews.forEach {
                     query(listOf(el), listOf(getNativeView(it))).forEach {
                         selectedViews.add(it)
                     }
@@ -136,5 +136,5 @@ fun getNativeView(view : LatteView) : NativeView {
     if (view is NativeView) {
         return view
     }
-    return getNativeView(view.renderedViews[0])
+    return getNativeView(view.subViews[0])
 }

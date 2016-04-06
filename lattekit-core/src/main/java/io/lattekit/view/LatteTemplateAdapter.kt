@@ -57,7 +57,7 @@ class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
             template = convertView.getTag() as LatteView;
             template.props.put("model", getItem(position));
             template.props.put("modelIndex", position);
-            template.applyChanges();
+            template.notifyStateChanged();
             return convertView;
         }
 

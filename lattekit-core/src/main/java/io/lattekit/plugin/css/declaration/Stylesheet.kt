@@ -40,6 +40,5 @@ open class Stylesheet {
         ruleSets.add(ruleSet)
     }
 
-
 }
 

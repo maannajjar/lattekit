@@ -28,9 +28,9 @@ class ColorCssProperty : CssProperty("color") {
     override fun apply(view: NativeView, style: NodeStyle) {
         if (view.androidView is TextView) {
             (view.androidView as TextView).setTextColor(color)
-        } else if (view.androidView is Toolbar) {
+        } else if (view.androidView!!.javaClass.name == "android.widget.Toolbar") {
             (view.androidView as Toolbar).setTitleTextColor(color)
-        } else if (view.androidView is android.support.v7.widget.Toolbar) {
+        } else if (view.androidView!!.javaClass.name == "android.support.v7.widget.Toolbar") {
             (view.androidView as android.support.v7.widget.Toolbar).setTitleTextColor(color)
         }
     }

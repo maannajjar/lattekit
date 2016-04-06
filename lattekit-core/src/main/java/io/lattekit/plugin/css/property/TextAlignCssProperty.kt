@@ -23,18 +23,21 @@ class TextAlignCssProperty : CssProperty("text-align") {
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "start"
 
-    var textAlign : String = "start"
+    var textAlign : Int = Gravity.START
 
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
+        if (view.androidView is TextView) {
+            textAlign = (view.androidView as TextView).gravity
+        }
         var declaration = style.getDeclaration("text-align")
         if (declaration != null) {
-            textAlign = (declaration.value as StringValue).valueString
+            textAlign = VALUES[(declaration.value as StringValue).valueString] ?: textAlign
         }
     }
 
     override fun apply(view: NativeView, style: NodeStyle) {
         if (view.androidView is TextView) {
-            (view.androidView as TextView).gravity = VALUES[textAlign] ?: Gravity.START
+            (view.androidView as TextView).gravity = textAlign
         }
     }
 }

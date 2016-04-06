@@ -1,6 +1,7 @@
 package io.lattekit.plugin.css
 
 import android.content.res.ColorStateList
+import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Rect
@@ -9,8 +10,10 @@ import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
+import android.widget.Button
 import io.lattekit.R
 import io.lattekit.drawable.BorderDrawable
+import io.lattekit.view.ClippableImageView
 import io.lattekit.view.NativeView
 
 /**
@@ -65,6 +68,7 @@ class CssAccessory(view : NativeView)  {
     var clipRadius : Float = 0f;
 
 
+
     companion object {
         fun getCssAccessory(view : NativeView) : CssAccessory {
             var accessory = view.data("css:accessory")
@@ -81,15 +85,30 @@ class CssAccessory(view : NativeView)  {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             rippleDrawable = view.androidView!!.resources.getDrawable(R.drawable.ripple).mutate();
             var drawable =  rippleDrawable as RippleDrawable
-            drawable.setDrawableByLayerId(R.id.background_layer, gradientDrawable)
+            if (view.androidView is Button) {
+                drawable.setDrawableByLayerId(R.id.button_bg_layer, gradientDrawable)
+            } else {
+                drawable.setDrawableByLayerId(R.id.background_layer, gradientDrawable)
+            }
 
             drawable.setDrawableByLayerId(android.R.id.mask, shapeDrawable)
+            var nativeBackground = view.androidView?.background;
             if (view.androidView?.background != null) {
                 drawable.setDrawableByLayerId(R.id.native_background_layer,view.androidView?.background);
             }
             view.androidView?.outlineProvider = object: ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    outline?.setRoundRect(Rect(0, 0, view.width, view.height), clipRadius)
+                override fun getOutline(v: View, outline: Outline) {
+                    var padding = Rect(0,0,0,0);
+                    if (v is Button) {
+                        nativeBackground?.getOutline(outline);
+                    } else {
+                        outline?.setRoundRect(Rect(padding.left,
+                            padding.top,
+                            v.width - padding.right,
+                            v.height - padding.bottom), clipRadius)
+                    }
+
+
                 }
             }
             view.androidView?.clipToOutline = true
@@ -97,20 +116,60 @@ class CssAccessory(view : NativeView)  {
                 (view.androidView as ViewGroup).clipToPadding = false;
             }
 
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M && view.androidView !is ClippableImageView) {
+                // Foreground is not supported for this view, we will have to use it as background layer
+                drawable.setDrawableByLayerId(R.id.border_layer, borderDrawable)
+            }
+
+            var backgroundOverride = view.props["background"];
+            if (backgroundOverride is Int) {
+                try {
+                    drawable.setDrawableByLayerId(R.id.native_background_layer, view.androidView!!.resources.getDrawable(backgroundOverride))
+                } catch(nfe : Resources.NotFoundException) {
+                    try {
+                        drawable.setDrawableByLayerId(R.id.native_background_layer, ColorDrawable(view.androidView!!.resources.getColor(backgroundOverride)))
+                    } catch (nfe2: Resources.NotFoundException) {
+                        //TODO: Warn
+                    }
+                }
+            } else if (backgroundOverride is Drawable) {
+                drawable.setDrawableByLayerId(R.id.native_background_layer, backgroundOverride)
+            }
+
         } else {
             var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(Color.TRANSPARENT));
-            var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), borderDrawable,ColorDrawable()))
+            var layerDrawable : LayerDrawable = LayerDrawable(arrayOf(gradientDrawable, ColorDrawable(), ColorDrawable(),borderDrawable))
             layerDrawable.setId(0, 0)
             layerDrawable.setId(1, 1)
             layerDrawable.setId(2, 2)
             layerDrawable.setId(3,3)
             rippleDrawable = codetail.graphics.drawables.RippleDrawable(rippleColor, layerDrawable, shapeDrawable);
             if (view.androidView?.background != null) {
-                layerDrawable.setDrawableByLayerId(3,view.androidView?.background);
+                layerDrawable.setDrawableByLayerId(2,view.androidView?.background);
             }
+            var backgroundOverride = view.props["background"];
+            if (backgroundOverride is Int) {
+                try {
+                    layerDrawable.setDrawableByLayerId(2, view.androidView!!.resources.getDrawable(backgroundOverride))
+                } catch(nfe : Resources.NotFoundException) {
+                    try {
+                        layerDrawable.setDrawableByLayerId(2, ColorDrawable(view.androidView!!.resources.getColor(backgroundOverride)))
+                    } catch (nfe2: Resources.NotFoundException) {
+                        //TODO: Warn
+                    }
+                }
+            } else if (backgroundOverride is Drawable) {
+                layerDrawable.setDrawableByLayerId(2, backgroundOverride)
+            }
+
         }
         view.androidView?.background = rippleDrawable;
-        view.androidView?.foreground = borderDrawable;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            view.androidView?.foreground = borderDrawable;
+        } else if (view.androidView is ClippableImageView) {
+            (view.androidView as ClippableImageView).foregroundDrawable = borderDrawable;
+        }
+
     }
 
     fun setRippleColor(color : Int) {

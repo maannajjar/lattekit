@@ -10,7 +10,6 @@ import android.widget.AdapterView
 import android.widget.Button
 import android.widget.TextView
 import io.lattekit.Latte
-import io.lattekit.PropOption
 import io.lattekit.util.Values
 import java.lang.reflect.Method
 
@@ -63,7 +62,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener,
         androidView?.viewTreeObserver?.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 isAttached = true;
-                applyProps(props.filterKeys { propsOptions[it] == PropOption.WAIT_LAYOUT })
+                applyProps(props.filterKeys { propsOptions[it] == Latte.PropOption.WAIT_LAYOUT })
                 androidView?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
                 onLayoutListeners.forEach { it.invoke() }
             }
@@ -129,7 +128,7 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener,
     open fun applyProps(props : Map<String,Any?>) {
         if (androidView != null) {
             var propsToApply =  if (!isAttached) {
-                props.filterKeys { propsOptions[it] != PropOption.WAIT_LAYOUT }
+                props.filterKeys { propsOptions[it] != Latte.PropOption.WAIT_LAYOUT }
             } else props
             isApplyingProps = true
             applyCommonProps(props)

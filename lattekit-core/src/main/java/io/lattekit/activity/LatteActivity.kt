@@ -11,7 +11,7 @@ import io.lattekit.view.LatteView
 /**
  * Created by maan on 2/15/16.
  */
-class LatteActivity : FragmentActivity()  {
+open class LatteActivity : FragmentActivity()  {
 
     var latteView : LatteView? = null;
     var androidView  : View? = null;

@@ -2,6 +2,7 @@ package io.lattekit.view
 
 import android.content.Context
 import android.graphics.*
+import android.graphics.drawable.Drawable
 import android.view.View
 import android.widget.ImageView
 import com.bumptech.glide.Glide
@@ -65,6 +66,38 @@ class ClippableImageView(context : Context) : ImageView(context) {
     var clipPath : Path? = null;
     var pdMode : PorterDuffXfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR);
     var paint =  Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG);
+    var foregroundDrawable : Drawable? = null
+        set(drawable : Drawable?) {
+            if (foregroundDrawable != null) {
+                foregroundDrawable!!.setCallback(null);
+                unscheduleDrawable(foregroundDrawable);
+            }
+
+            field = drawable;
+            if (drawable != null) {
+                drawable.setCallback(this);
+                if (drawable.isStateful()) {
+                    drawable.setState(getDrawableState());
+                }
+            }
+            requestLayout();
+            invalidate();
+        }
+
+    override fun setImageDrawable(drawable: Drawable?) {
+        clipPath = null;
+        super.setImageDrawable(drawable)
+    }
+
+    override fun setImageResource(resId: Int) {
+        clipPath = null;
+        super.setImageResource(resId)
+    }
+
+    override fun setImageBitmap(bm: Bitmap?) {
+        clipPath = null;
+        super.setImageBitmap(bm)
+    }
 
     override fun draw(canvas: Canvas) {
         if (clipPath == null) {
@@ -78,5 +111,43 @@ class ClippableImageView(context : Context) : ImageView(context) {
             canvas.restoreToCount(saveCount);
             paint.setXfermode(null);
         }
+        if (foregroundDrawable != null) {
+            foregroundDrawable!!.draw(canvas);
+        }
+    }
+
+
+    override fun verifyDrawable(who: Drawable?): Boolean {
+        return super.verifyDrawable(who) || who == foregroundDrawable
+    }
+
+    override fun jumpDrawablesToCurrentState() {
+        super.jumpDrawablesToCurrentState();
+
+        if (foregroundDrawable != null) foregroundDrawable!!.jumpToCurrentState();
+    }
+
+    override fun drawableStateChanged() {
+        super.drawableStateChanged()
+        if (foregroundDrawable != null && foregroundDrawable!!.isStateful()) {
+            foregroundDrawable!!.setState(getDrawableState());
+        }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (foregroundDrawable != null) {
+            foregroundDrawable!!.setBounds(0, 0, getMeasuredWidth(), getMeasuredHeight());
+            invalidate();
+        }
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (foregroundDrawable != null) {
+            foregroundDrawable!!.setBounds(0, 0, w, h);
+            invalidate();
+        }
+
     }
 }

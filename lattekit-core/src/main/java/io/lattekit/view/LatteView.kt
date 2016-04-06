@@ -32,9 +32,12 @@ open class LatteView {
         }
     }
 
-    var renderedViews: MutableList<LatteView> = mutableListOf()
+
+
+    var subViews: MutableList<LatteView> = mutableListOf()
     var newRenderedViews = mutableListOf<LatteView>()
     var androidView: View? = null
+    var __current : LatteView = this;
 
     var props: MutableMap<String, Any?> = mutableMapOf()
     var propsOptions: Map<String, Int> = emptyMap()
@@ -103,8 +106,8 @@ open class LatteView {
         get() {
             if (this is NativeView) {
                 return this
-            } else if (this.renderedViews[0] != null) {
-                return this.renderedViews[0].rootNativeView;
+            } else if (this.subViews[0] != null) {
+                return this.subViews[0].rootNativeView;
             }
             return null
         }
@@ -113,8 +116,8 @@ open class LatteView {
         get() {
             if (this.androidView != null) {
                 return this.androidView
-            } else if (this.renderedViews.get(0) != null) {
-                return this.renderedViews.get(0).rootAndroidView;
+            } else if (this.subViews.get(0) != null) {
+                return this.subViews.get(0).rootAndroidView;
             }
             return null
         }
@@ -123,6 +126,10 @@ open class LatteView {
     var id: Int = 0
         get() = this.props.get("id") as Int
 
+    fun findViewById(id: Int) : View? {
+        return rootAndroidView?.findViewById(id);
+    }
+
     fun buildView(activity: Activity, lp: ViewGroup.LayoutParams?): View {
         this.activity = activity;
         this.renderTree()
@@ -130,7 +137,7 @@ open class LatteView {
         if (!isViewCreated) {
             // This will update properties in layout that were dependent on bound views
             // TODO: investigate if we can only call when a bound Android view within the same layout is being used in a property value
-            applyChanges();
+            notifyStateChanged();
             isViewCreated = true;
         }
         return this.rootAndroidView!!;
@@ -138,12 +145,12 @@ open class LatteView {
 
     fun notifyViewCreated() {
         isMounted = true;
-        bindViews(this.renderedViews);
+        bindViews(this.subViews);
         Latte.PLUGINS.forEach { it.onViewCreated(this) }
         onViewCreated();
     }
 
-    fun applyChanges() {
+    fun notifyStateChanged() {
         this.renderTree()
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
     }
@@ -157,11 +164,12 @@ open class LatteView {
         return value
     }
 
-    fun dataOrPut(key: String, defaultValue: Any?): Any? {
-        var originalValue = dataValues.get(key)
+    fun dataOrPut(key: String, defaultValue: ()->Any?): Any? {
+        var originalValue = dataValues[key]
         if (originalValue == null) {
-            dataValues.put(key, defaultValue)
-            return defaultValue
+            var default = defaultValue.invoke();
+            dataValues.put(key, default)
+            return default
         }
         return originalValue
     }
@@ -180,9 +188,6 @@ open class LatteView {
         // First build my view
         this.activity = a as Activity;
         if (this is NativeView) {
-            if (this.androidView == null) {
-                this.androidView = this.renderNative(a);
-            }
             if (this.androidView?.layoutParams == null) {
                 this.androidView?.layoutParams = lp ?: ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             }
@@ -195,7 +200,7 @@ open class LatteView {
             return this.androidView!!
         } else {
             // If we don't have native android view, then we are virtual node
-            var subAndroid = this.renderedViews[0].buildAndroidViewTree(a, lp);
+            var subAndroid = this.subViews[0].buildAndroidViewTree(a, lp);
             if (!isMounted) {
                 notifyViewCreated();
             }
@@ -283,8 +288,8 @@ open class LatteView {
 
     fun render(newView : LatteView) {
         var i = newRenderedViews.size
-        if (i < renderedViews.size) {
-            var oldView: LatteView = renderedViews[i]
+        if (i < subViews.size) {
+            var oldView: LatteView = subViews[i]
             if (sameView(oldView, newView)) {
                 var oldProps = oldView.props
                 oldView.children = newView.children
@@ -295,14 +300,15 @@ open class LatteView {
                 }
                 newRenderedViews.add(oldView)
             } else {
-                // Try find recycled view
                 newView.parentView = this
+                newView.activity = activity;
                 newView.renderTree()
                 newRenderedViews.add(newView)
 
             }
         } else {
             newView.parentView = this
+            newView.activity = activity;
             newView.renderTree()
             newRenderedViews.add(newView)
         }
@@ -312,32 +318,39 @@ open class LatteView {
         this.props.put(str,value)
     }
 
-    open fun layout() : LatteView? {
+    open fun layout() {
         if (this.layoutFn != null) {
             this.children.clear()
             this.layoutFn!!()
-            return this.children.get(0)
         }
-        return null
     }
 
     fun renderTree() {
         newRenderedViews = mutableListOf()
         injectProps()
-        var layoutView = this.layout();
-        if (layoutView != null) {
-            render(layoutView)
-        }
-        if (this is NativeViewGroup) {
-            for (child in this.children) {
-                render(child)
+        if (this !is NativeView) {
+            // Virtual view:
+            __current = this;
+            this.children.clear()
+            this.layout();
+        } else {
+            if (this.androidView == null) {
+                this.androidView = this.renderNative(this.activity!!);
             }
+            this.layout();
         }
-        this.renderedViews = newRenderedViews;
+        for (child in this.children) {
+            render(child)
+        }
+        this.subViews = newRenderedViews;
     }
 
     open fun onPropsUpdated(props: Map<String, Any?>): Boolean {
         return true;
+    }
+
+    fun xml(layoutXml: String) {
+        throw Exception("Using XML requires gradle plugin")
     }
 
 }
