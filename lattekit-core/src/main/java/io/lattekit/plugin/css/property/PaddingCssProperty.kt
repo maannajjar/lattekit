@@ -1,7 +1,6 @@
 package io.lattekit.plugin.css.property
 
 import android.content.Context
-import android.widget.EditText
 import io.lattekit.plugin.css.NodeStyle
 import io.lattekit.plugin.css.declaration.LengthValue
 import io.lattekit.plugin.css.declaration.PaddingValue
@@ -14,6 +13,12 @@ open class PaddingCssProperty : CssProperty("padding") {
 
     override val INHERITED = true
     override val INITIAL_VALUE: String? = "0px"
+
+
+    var defaultPaddingLeft : Int? = null;
+    var defaultPaddingTop : Int?  = null;
+    var defaultPaddingRight : Int?  = null;
+    var defaultPaddingBottom : Int?  = null;
 
     var paddingLeft : Int? = 0
     var paddingTop : Int? = 0
@@ -45,10 +50,17 @@ open class PaddingCssProperty : CssProperty("padding") {
     }
 
     override fun computeValue(context: Context, view: NativeView, style : NodeStyle) {
-        paddingLeft = null
-        paddingTop = null
-        paddingRight = null
-        paddingBottom = null
+        if (defaultPaddingLeft == null) {
+            defaultPaddingLeft = view.androidView!!.paddingLeft;
+            defaultPaddingTop = view.androidView!!.paddingTop;
+            defaultPaddingRight = view.androidView!!.paddingRight;
+            defaultPaddingBottom = view.androidView!!.paddingBottom;
+        }
+
+        paddingLeft = defaultPaddingLeft
+        paddingTop = defaultPaddingTop
+        paddingRight = defaultPaddingRight
+        paddingBottom = defaultPaddingBottom
 
         var declarations = style.getDeclarations("padding", "padding-top", "padding-right", "padding-bottom", "padding-left")
         declarations.forEach {

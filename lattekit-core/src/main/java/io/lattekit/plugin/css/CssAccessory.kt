@@ -85,7 +85,11 @@ class CssAccessory(view : NativeView)  {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             rippleDrawable = view.androidView!!.resources.getDrawable(R.drawable.ripple).mutate();
             var drawable =  rippleDrawable as RippleDrawable
-            drawable.setDrawableByLayerId(R.id.background_layer, gradientDrawable)
+            if (view.androidView is Button) {
+                drawable.setDrawableByLayerId(R.id.button_bg_layer, gradientDrawable)
+            } else {
+                drawable.setDrawableByLayerId(R.id.background_layer, gradientDrawable)
+            }
 
             drawable.setDrawableByLayerId(android.R.id.mask, shapeDrawable)
             var nativeBackground = view.androidView?.background;
@@ -96,13 +100,13 @@ class CssAccessory(view : NativeView)  {
                 override fun getOutline(v: View, outline: Outline) {
                     var padding = Rect(0,0,0,0);
                     if (v is Button) {
-                        nativeBackground?.current?.getPadding(padding);
-                        nativeBackground?.getPadding(padding);
+                        nativeBackground?.getOutline(outline);
+                    } else {
+                        outline?.setRoundRect(Rect(padding.left,
+                            padding.top,
+                            v.width - padding.right,
+                            v.height - padding.bottom), clipRadius)
                     }
-                    outline?.setRoundRect(Rect(padding.left,
-                        padding.top,
-                        v.width - padding.right,
-                        v.height - padding.bottom), clipRadius)
 
 
                 }

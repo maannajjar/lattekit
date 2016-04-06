@@ -4,6 +4,7 @@
           android:drawable="@android:color/white" />
     <item android:id="@+id/background_layer" android:drawable="@android:color/transparent"/>
     <item android:id="@+id/native_background_layer" android:drawable="@android:color/transparent"/>
+    <item android:id="@+id/button_bg_layer" android:drawable="@android:color/transparent"/>
     <item android:id="@+id/border_layer" android:drawable="@android:color/transparent"/>
 </ripple>
 
