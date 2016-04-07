@@ -96,10 +96,10 @@ Those views have special treatment inside the layout definition. LatteKit will c
 ```kotlin
 
 open class MyListView : LatteView() {
- 	 var myData : List<Any>? = ...
+ 	 var myData : List<Any> = listOf(...)
  	 
     override fun layout() = xml("""
-        <android.support.v7.widget.RecyclerView data=${myData} layout_width="match_parent" layout_height="match_parent" dividerHeight="0">
+        <android.support.v7.widget.RecyclerView data=${myData} layout_width="match_parent" layout_height="match_parent">
 			<views.AdItemView when=${{ it is AdData }} />        
 			<views.FoodItemView when=${{ it is FoodData }} defaultView="true" />
         </android.support.v7.widget.RecyclerView>
@@ -117,6 +117,32 @@ open class AdItemView : LatteView() {
 Here, the recycler view will render myData dataset. The dataset contains two different kinds of objects. Either AdData or FoodData, each has their own template view (FoodItem or AdItem). The adapter will determine which template to use by calling the lambda specified via **when** property.  If none of the template matches, it will fallback to the first template that has defaultView=true. It will then render the template and pass the property **model** which will contain the corrospending item in the myData.
 
 Notice how templates use *model* property to render the layout, this is passed by the Adapter
+
+### Lifecycle
+
+If you need to initialize your component, or need to initialize Android views outside the layout. You can override onViewCreated.
+
+```kotlin
+open class MyListView : LatteView() {
+	var myData : List<Any> = emptyList();
+	override fun onViewCreated() {
+        ApiManager.getFeed()
+			  .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {  response ->
+                myData = response
+                notifyStateChanged()
+            }
+	}
+	
+    override fun layout() = xml("""
+        <ListView data=${myData} layout_width="match_parent" layout_height="match_parent" dividerHeight="0">
+			<views.AdItemView when=${{ it is AdData }} />        
+			<views.FoodItemView when=${{ it is FoodData }} defaultView="true" />
+        </ListView>
+    """)
+}
+```
 
 
 ### CSS Styling
