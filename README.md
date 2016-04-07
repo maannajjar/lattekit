@@ -1,7 +1,7 @@
 ## What is LatteKit
-It's a gradle plugin + library that allows you to create a virtual Android views *component and manage Android Views in your Kotlin code  without having to create XML files
+It's a gradle plugin + library that allows you to create virtual Android views components and manage Android Views in your Kotlin code  without having to create XML files
 
-### Example
+### Quick Example
 
 ![Demo](http://i.imgur.com/g5vPDZF.gif)
 
@@ -28,10 +28,10 @@ open class MyApp : LatteView() {
 
     override fun layout() = xml("""
         <LinearLayout padding="30dp" orientation="vertical">
-            <TextView class="question" text="What's your name?" />
-            <EditText class="input" id="@+id/myText" hint="Type your name here"
+            <TextView text="What's your name?" />
+            <EditText id="@+id/myText" hint="Type your name here"
                 onTextChanged=${{ notifyStateChanged() }}/>
-            <TextView class="answer" text=${"Hello ${myText?.text}"}
+            <TextView text=${"Hello ${myText?.text}"}
                 visibility=${if (myText?.text?.toString() == "") View.GONE else View.VISIBLE} />
         </LinearLayout>
     """)
@@ -40,3 +40,150 @@ open class MyApp : LatteView() {
 ```
 
 
+## How It Works
+
+### 1- Virtual LatteViews
+The core concept of LatteKit is to define virtual views. They are subclasses of LatteView that encapsulate their own layout. They also take properties passed to them from other virtual views in their layout. For example
+
+```kotlin
+open class MyApp : LatteView() {
+    var currentUser : User? = null;
+    override fun layout() = xml("""
+        <LinearLayout padding="30dp" orientation="vertical">
+            <views.UserDetailsView username=${currentUser} />
+        </LinearLayout>
+    """)
+}
+
+open class UserDetailsView : LatteView() {
+    @Prop var user : User? = null;
+    // Or @Prop("propertyName")
+
+    override fun layout() = xml("""
+        <LinearLayout orientation="horizontal" paddingTop="10dp" paddingBottom="10dp">
+            <ImageView src=${user?.avatarUrl} layout_width="50dp" layout_height="50dp" />
+            <TextView text=${user?.username} layout_gravity="center_vertical" layout_height="wrap_content"/>
+        </LinearLayout>
+    """)
+}
+```
+
+Here UserDetailsView has its own layout and expects property *user*. Properties are automatically assigned to variables with *@Prop* annotation. In the above example, MyApp assigned user property to **currentUser** in UserDetailsView. 
+
+### 2- Maintaining View States
+
+Virtual views react to state changes which propagate down the virtual view tree. In the previous example, if the MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update it's layout. You can have as many nested virtual views and update as many states. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state from the perspecitve of the calling view.
+
+
+### Binding Views
+You can bind views in your layout code by using @Bind annotation. By default, **@Bind** annotation will look for view with the same id as the variable name. But you can specify the id in the annotation too:
+
+```kotlin
+@Bind var saveButton : Button? = null;
+// Or
+// @Bind("@id/saveButton")  saveButton : Button? = null;
+
+override fun layout() = xml("""
+	<Button id="@+id/saveButton" />
+""")
+
+```
+You can also refernece those views inside your layout, as demonstrated in the first example.
+
+### ListView/RecyclerView/ViewPager
+Those views have special treatment inside the layout definition. LatteKit will create an adapter that will give you flexibility to define the views. You can basically think of them as a for loop that iterate through data set (it's not though, it just implements an Adapter behind the scene). For example:
+
+```kotlin
+
+open class MyListView : LatteView() {
+ 	 var myData : List<Any>? = ...
+ 	 
+    override fun layout() = xml("""
+        <android.support.v7.widget.RecyclerView data=${myData} layout_width="match_parent" layout_height="match_parent" dividerHeight="0">
+			<views.AdItemView when=${{ it is AdData }} />        
+			<views.FoodItemView when=${{ it is FoodData }} defaultView="true" />
+        </android.support.v7.widget.RecyclerView>
+    """)
+}
+open class FoodItemView : LatteView() {
+	@Prop("model") var foodDeatils: FoodData? = null;
+   override fun layout() = xml("""<TextView text=${foodDeatils?.title} />""")
+}
+open class AdItemView : LatteView() {
+	@Prop("model") var foodDeatils: FoodData? = null;
+   override fun layout() = xml(""" .... """)
+}
+```
+Here, the recycler view will render myData dataset. The dataset contains two different kinds of objects. Either AdData or FoodData, each has their own template view (FoodItem or AdItem). The adapter will determine which template to use by calling the lambda specified via **when** property.  If none of the template matches, it will fallback to the first template that has defaultView=true. It will then render the template and pass the property **model** which will contain the corrospending item in the myData.
+
+Notice how templates use *model* property to render the layout, this is passed by the Adapter
+
+
+### CSS Styling
+TBD
+
+## Getting Started
+
+1- Add the gradle plugin class path to buildscript 
+
+```
+buildscript {
+    dependencies {
+        classpath 'io.lattekit.tools:gradle-plugin:0.9.1'
+    }
+}
+```
+
+2- Apply the plugin 
+
+```kotlin
+// The plugins must be in that order
+apply plugin: 'com.android.application'
+apply plugin: 'lattekit' 
+apply plugin: 'kotlin-android'
+
+```
+3- Add runtime lib to dependency to build.gradle
+```
+    compile 'io.lattekit:lattekit-core:0.9.1'
+```
+
+4- Define your virtual views as explained above
+
+**it's important that LatteView subclasses are declared open class**. Gradle plugin will throw an error if it sees layout code inside non-open (final) class.
+
+5- To render LatteView within activity:
+
+```kotlin
+import io.lattekit.render 
+
+class MyActivity : Activity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Note: props here are passed as map and not in xml
+        render("<com.package.MyView />",props=mutableMapOf("title" to "MyApp"))
+    }
+}
+```
+
+6- If you just want the native View object, you can call buildView().
+
+```kotlin
+var virtualView = Latte.render("<com.package.MyView />",props=mutableMapOf("title" to "MyApp"));
+virtualView(myActivity,LayoutParams)
+// You can later update props using:
+virtualView.props.put("prop",value);
+virtualView.notifyStateChanged();
+```
+
+7- To show LatteView as an activity form another LatteView
+
+```kotlin
+Latte.showActivity(this,"<com.package.UserProfile />", mutableMapOf("user" to user))
+```
+
+8- To show LatteView as a Dialog form another LatteView
+
+```kotlin
+Latte.showDialog(this,"<com.package.UserProfile />", mutableMapOf("user" to user))
+```
