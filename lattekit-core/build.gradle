@@ -1,33 +1,50 @@
 buildscript {
-    ext.kotlin_version = '1.0.1-2'
+  ext.kotlin_version = '1.0.1-2'
   repositories {
     jcenter()
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
-      mavenCentral()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:2.0.0-beta6'
+    classpath 'com.android.tools.build:gradle:2.1.0-alpha4'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
+    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
   }
 }
 
 // Apply the java plugin to add support for Java
+apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'maven'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'lattekit'
+
+    publishedGroupId = 'io.lattekit'
+    libraryName = 'LatteKit'
+    artifact = 'lattekit-core'
+
+    libraryDescription = 'Android framework for building UI quickly in Kotlin, inspired by React'
+
+    siteUrl = 'https://github.com/maannajjar/lattekit'
+    gitUrl = 'https://github.com/maannajjar/lattekit.git'
+
+    libraryVersion = '0.9.1'
+
+    developerId = 'maannajjar'
+    developerName = 'Maan Najjar'
+    developerEmail = 'maan.najjar@gmail.com'
+
+    licenseName = 'The MIT License (MIT)'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+}
 
 repositories {
     jcenter()
-    maven {
-      url uri('/Users/maan/.m2/repository')
-    }
-    mavenCentral()
 }
 
 group='io.lattekit' 
-version='1.1-SNAPSHOT'
 
 android {
     compileSdkVersion 23
@@ -44,29 +61,22 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
         incremental false
     }
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
-
 }
+allprojects {
+    tasks.withType(Javadoc).all { enabled = false }
+}
+
 
 dependencies {
     provided "com.android.support:support-v4:23.0.+"
     compile "com.android.support:appcompat-v7:23.0.+"
     compile 'com.android.support:recyclerview-v7:23.0.+'
     compile 'com.github.bumptech.glide:glide:3.7.0'
-    provided "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'com.google.guava:guava:19.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
 }
 
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: uri('/Users/maan/.m2/repository'))
-        }
-    }
-}
-
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
