@@ -1,0 +1,69 @@
+buildscript {
+  ext.kotlin_version = '1.0.1-2'
+  repositories {
+      jcenter()
+  }
+  dependencies {
+    classpath "org.xtext:xtext-gradle-plugin:1.0.4"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
+    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+  }
+}
+
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: "org.xtext.xtend"
+apply plugin: 'antlr'
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'lattekit-gradle'
+
+    publishedGroupId = 'io.lattekit.tools'
+    libraryName = 'LatteKit'
+    artifact = 'gradle-plugin'
+
+    libraryDescription = 'LatteKit gradle plugin'
+
+    siteUrl = 'https://github.com/maannajjar/lattekit'
+    gitUrl = 'https://github.com/maannajjar/lattekit.git'
+
+    libraryVersion = '0.9.1'
+
+    developerId = 'maannajjar'
+    developerName = 'Maan Najjar'
+    developerEmail = 'maan.najjar@gmail.com'
+
+    licenseName = 'The MIT License (MIT)'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+}
+
+
+repositories {
+    jcenter()
+}
+
+
+dependencies {
+  compile gradleApi()
+  antlr "org.antlr:antlr4:4.5.1"
+  compile "org.antlr:antlr4:4.5.1"
+  compile 'com.android.tools.build:gradle:1.5.0'
+  compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.2'
+}
+
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ["-visitor", "-long-messages", "-package", "io.lattekit.parser"]
+}
+
+compileKotlin {
+    dependsOn generateXtext, generateGrammarSource
+}
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'

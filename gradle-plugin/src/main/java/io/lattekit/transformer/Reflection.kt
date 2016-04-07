@@ -12,10 +12,6 @@ import java.util.*
 /**
  * Created by maan on 4/1/16.
  */
-
-/**
- * Created by maan on 3/19/16.
- */
 @SuppressWarnings("all")
 object Reflection {
     private val LOOKUP_CACHE = HashMap<String, Class<*>>()
@@ -23,7 +19,6 @@ object Reflection {
     private var CLASSLOADER: URLClassLoader? = null
 
     fun loadJar(filePath: String) {
-        println("LOADING $filePath")
         if (CLASSLOADER == null) {
             CLASSLOADER =  URLClassLoader(emptyArray(), Reflection::class.java.classLoader)
         }
