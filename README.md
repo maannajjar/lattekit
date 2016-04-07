@@ -3,17 +3,10 @@ It's a gradle plugin + library that allows you to create a virtual Android views
 
 ### Example
 
+![Demo](http://i.imgur.com/g5vPDZF.gif)
+
 ```kotlin
 package io.lattekit.helloworld
-
-import android.app.Activity
-import android.os.Bundle
-import android.view.View
-import android.widget.EditText
-import io.lattekit.annotation.Bind
-import io.lattekit.plugin.css.declaration.css
-import io.lattekit.render
-import io.lattekit.view.LatteView
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,15 +27,16 @@ open class MyApp : LatteView() {
     }
 
     override fun layout() = xml("""
-        <LinearLayout padding="30dp">
+        <LinearLayout padding="30dp" orientation="vertical">
             <TextView class="question" text="What's your name?" />
-            <EditText class="input" id="@+id/myText" hint="Type your name here" onTextChanged=${{ notifyStateChanged() }}/>
-            <TextView class="answer" text=${"Hello ${myText?.text}"} visibility=${if (myText?.text?.toString() == "") View.GONE else View.VISIBLE} />
+            <EditText class="input" id="@+id/myText" hint="Type your name here"
+                onTextChanged=${{ notifyStateChanged() }}/>
+            <TextView class="answer" text=${"Hello ${myText?.text}"}
+                visibility=${if (myText?.text?.toString() == "") View.GONE else View.VISIBLE} />
         </LinearLayout>
     """)
 
 }
 ```
-![Sample](http://i.imgur.com/g5vPDZF.gif)
 
 
