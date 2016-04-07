@@ -43,7 +43,7 @@ open class MyApp : LatteView() {
 ## How It Works
 
 ### 1- Virtual LatteViews
-The core concept of LatteKit is to define virtual views. They are subclasses of LatteView that encapsulate their own layout. They also take properties passed to them from other virtual views in their layout. For example
+The core concept of LatteKit is to define virtual views. A virtual view is  subclass of LatteView that encapsulate its own layout. It can also take properties passed to it from other virtual views in their layout. For example
 
 ```kotlin
 open class MyApp : LatteView() {
@@ -72,11 +72,11 @@ Here UserDetailsView has its own layout and expects property *user*. Properties 
 
 ### 2- Maintaining View States
 
-Virtual views react to state changes which propagate down the virtual view tree. In the previous example, if the MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update it's layout. You can have as many nested virtual views and update as many states. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state from the perspecitve of the calling view.
+Virtual views react to state changes which propagate down the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state from the perspecitve of the notified view.
 
 
 ### Binding Views
-You can bind views in your layout code by using @Bind annotation. By default, **@Bind** annotation will look for view with the same id as the variable name. But you can specify the id in the annotation too:
+You can bind views in your layout code by using **@Bind** annotation. By default, the annotation will look for a view with the same id as the variable name. But you can specify the id in the annotation too:
 
 ```kotlin
 @Bind var saveButton : Button? = null;
