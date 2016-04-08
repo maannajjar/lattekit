@@ -2,12 +2,10 @@ package io.lattekit.view
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import io.lattekit.Latte
-import io.lattekit.activity.LatteActivity
 import io.lattekit.annotation.Bind
 import io.lattekit.annotation.Prop
 import java.lang.reflect.Field
@@ -135,8 +133,7 @@ open class LatteView {
         this.renderTree()
         this.buildAndroidViewTree(activity, lp);
         if (!isViewCreated) {
-            // This will update properties in layout that were dependent on bound views
-            // TODO: investigate if we can only call when a bound Android view within the same layout is being used in a property value
+            // TODO: investigate if we can call only when there's a referenced Android view in layout is being used in a property value
             notifyStateChanged();
             isViewCreated = true;
         }
@@ -174,15 +171,8 @@ open class LatteView {
         return originalValue
     }
 
-    fun show(activity: Activity) {
-        var myId = "${System.currentTimeMillis()}";
-        var intent = Intent(activity, LatteActivity::class.java);
-        intent.putExtra("_LATTE_KIT_OBJ_ID", myId)
-        Latte.SAVED_OBJECTS.put(myId, this)
-        activity.startActivity(intent);
-    }
-
     open fun onViewCreated() {}
+    open fun onViewWillDetach() {}
 
     fun buildAndroidViewTree(a: Context, lp: ViewGroup.LayoutParams?): View {
         // First build my view
@@ -342,7 +332,15 @@ open class LatteView {
         for (child in this.children) {
             render(child)
         }
+        (subViews-newRenderedViews).forEach {
+            it.notifyWillDetach()
+        }
         this.subViews = newRenderedViews;
+    }
+
+    open fun notifyWillDetach() {
+        subViews.forEach { it.notifyWillDetach() }
+        onViewWillDetach()
     }
 
     open fun onPropsUpdated(props: Map<String, Any?>): Boolean {
