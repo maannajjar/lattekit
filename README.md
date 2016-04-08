@@ -1,5 +1,5 @@
 ## What is LatteKit
-It's a gradle plugin + library that allows you to create virtual Android views components and manage Android Views in your Kotlin code  without having to create XML files
+It's a framework for building Android UI in Kotlin code by using the concept of virtual views and reactive data flow, the goal is to reduce boilerplate while retaining the same Android layout constructs.
 
 ### Quick Example
 
@@ -28,11 +28,11 @@ open class MyApp : LatteView() {
 
     override fun layout() = xml("""
         <LinearLayout padding="30dp" orientation="vertical">
-            <TextView text="What's your name?" />
+            <TextView text="What's your name?" class="question"/>
             <EditText id="@+id/myText" hint="Type your name here"
-                onTextChanged=${{ notifyStateChanged() }}/>
+                onTextChanged=${{ notifyStateChanged() }} class="input"/>
             <TextView text=${"Hello ${myText?.text}"}
-                visibility=${if (myText?.text?.toString() == "") View.GONE else View.VISIBLE} />
+                visibility=${if (myText?.text?.toString() == "") View.GONE else View.VISIBLE} class="answer"/>
         </LinearLayout>
     """)
 
@@ -42,22 +42,22 @@ open class MyApp : LatteView() {
 
 ## How It Works
 
-### 1- Virtual LatteViews
-The core concept of LatteKit is to define virtual views. A virtual view is  subclass of LatteView that encapsulate its own layout. It can also take properties passed to it from other virtual views in their layout. For example
+### 1- Virtual Views (LatteViews)
+The core concept of LatteKit is to define virtual views. A virtual view is  subclass of LatteView that defines its own layout. The layout may contain native Android views and other virtual views. It can also receive properties passed to it from the rendering view. For example
 
 ```kotlin
 open class MyApp : LatteView() {
     var currentUser : User? = null;
     override fun layout() = xml("""
         <LinearLayout padding="30dp" orientation="vertical">
-            <views.UserDetailsView username=${currentUser} />
+            <views.UserDetailsView user=${currentUser} />
         </LinearLayout>
     """)
 }
 
 open class UserDetailsView : LatteView() {
     @Prop var user : User? = null;
-    // Or @Prop("propertyName")
+    // Or @Prop("customPropertyName")
 
     override fun layout() = xml("""
         <LinearLayout orientation="horizontal" paddingTop="10dp" paddingBottom="10dp">
@@ -68,11 +68,11 @@ open class UserDetailsView : LatteView() {
 }
 ```
 
-Here UserDetailsView has its own layout and expects property *user*. Properties are automatically assigned to variables with *@Prop* annotation. In the above example, MyApp assigned user property to **currentUser** in UserDetailsView. 
+Here, MyApp & UserDetailsView are virtual views. MyApp contains UserDetailsView which expects property *user*. When the native view tree is built, UserDetailsView will be replaced by the actual layout. Properties are automatically assigned to variables with *@Prop* annotation. In the above example, MyApp passed **currentUser** as **user** propertiy in UserDetailsView. 
 
 ### 2- Maintaining View States
 
-Virtual views react to state changes which propagate down the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state from the perspecitve of the notified view.
+Virtual views react to state changes which will propagate throughout the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state of the notified view.
 
 
 ### Binding Views
@@ -91,7 +91,7 @@ override fun layout() = xml("""
 You can also refernece those views inside your layout, as demonstrated in the first example.
 
 ### ListView/RecyclerView/ViewPager
-Those views have special treatment inside the layout definition. LatteKit will create an adapter that will give you flexibility to define the views. You can basically think of them as a for loop that iterate through data set (it's not though, it just implements an Adapter behind the scene). For example:
+Those views have special treatment inside the layout definition. LatteKit will create an adapter for you, all you have to do is provide the views it should render. You can basically think of it as a for loop that iterates through data set (it's not for loop though, it just implements an Adapter behind the scene). For example:
 
 ```kotlin
 
@@ -99,10 +99,10 @@ open class MyListView : LatteView() {
  	 var myData : List<Any> = listOf(...)
  	 
     override fun layout() = xml("""
-        <android.support.v7.widget.RecyclerView data=${myData} layout_width="match_parent" layout_height="match_parent">
+        <ListView data=${myData} layout_width="match_parent" layout_height="match_parent">
 			<views.AdItemView when=${{ it is AdData }} />        
 			<views.FoodItemView when=${{ it is FoodData }} defaultView="true" />
-        </android.support.v7.widget.RecyclerView>
+        </ListView>
     """)
 }
 open class FoodItemView : LatteView() {
@@ -114,17 +114,19 @@ open class AdItemView : LatteView() {
    override fun layout() = xml(""" .... """)
 }
 ```
-Here, the recycler view will render myData dataset. The dataset contains two different kinds of objects. Either AdData or FoodData, each has their own template view (FoodItem or AdItem). The adapter will determine which template to use by calling the lambda specified via **when** property.  If none of the template matches, it will fallback to the first template that has defaultView=true. It will then render the template and pass the property **model** which will contain the corrospending item in the myData.
+Here, the ListView will render myData dataset. The dataset contains two different kinds of objects: AdData and FoodData. Each needs to have different view (FoodItemView or AdItemView). The adapter will determine which template to use by calling the lambda specified via **when** property.  If none of the templates matche, it will fallback to the first template that has defaultView=true. It will then render the template and pass the property **model** which will contain the corrospending item in the myData.
 
-Notice how templates use *model* property to render the layout, this is passed by the Adapter
+The template will use **model** property passed by the adapter.
 
 ### Lifecycle
 
-If you need to initialize your component, or need to initialize Android views outside the layout. You can override onViewCreated.
+If you need to initialize your component, or need to initialize Android views outside the layout. You can override onViewCreated. Also, if you need to need to perform any action before the view is removed from the layout tree, you can override onViewWillDetach().
 
 ```kotlin
 open class MyListView : LatteView() {
 	var myData : List<Any> = emptyList();
+	..
+	..
 	override fun onViewCreated() {
         ApiManager.getFeed()
 			  .subscribeOn(Schedulers.io())
@@ -133,6 +135,9 @@ open class MyListView : LatteView() {
                 myData = response
                 notifyStateChanged()
             }
+	}
+	override fun onViewWillDetach() {
+		backgroundMusic?.stop();
 	}
 	
     override fun layout() = xml("""
@@ -146,7 +151,7 @@ open class MyListView : LatteView() {
 
 
 ### CSS Styling
-TBD
+Coming Soon
 
 ## Getting Started
 
@@ -213,3 +218,32 @@ Latte.showActivity(this,"<com.package.UserProfile />", mutableMapOf("user" to us
 ```kotlin
 Latte.showDialog(this,"<com.package.UserProfile />", mutableMapOf("user" to user))
 ```
+
+License
+--------
+
+    The MIT License (MIT)
+
+    Copyright (c) 2016 Maan Najjar
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+
+
+
+
