@@ -201,7 +201,7 @@ class MyActivity : Activity() {
 
 ```kotlin
 var virtualView = Latte.render("<com.package.MyView />",props=mutableMapOf("title" to "MyApp"));
-virtualView(myActivity,LayoutParams)
+var androidView = virtualView.buildView(myActivity,LayoutParams(..))
 // You can later update props using:
 virtualView.props.put("prop",value);
 virtualView.notifyStateChanged();
