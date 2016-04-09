@@ -16,6 +16,8 @@ class CssPlugin : LattePlugin() {
     fun getStylesheetsFor(view: LatteView): List<Stylesheet> {
         var results = mutableListOf<Stylesheet>()
         findStylesheets(view, results)
+        var localCss = (view.renderingView?.data("localCss") ?: mutableListOf<Any>()) as MutableList<Any>
+        localCss.forEach { if (it is Stylesheet) { results.add(it) } }
         return results;
     }
 
@@ -24,17 +26,9 @@ class CssPlugin : LattePlugin() {
         if (stylesheetList != null && stylesheetList is List<*>) {
             results.addAll(0,stylesheetList as List<Stylesheet>)
         } else {
-            var cssFiles = view.data("css")
+            var cssFiles = (view.data("css") ?: mutableListOf<Any>()) as MutableList<Any>
             if (cssFiles != null) {
-                var files = if (cssFiles is String) {
-                    // Single CSS file
-                    listOf(cssFiles)
-                } else if (cssFiles is List<*>) {
-                    cssFiles as List<*>
-                } else {
-                    emptyList<String>()
-                }
-                files.forEach {
+                cssFiles.forEach {
                     if (it is String) {
                         results.add(Stylesheet.getStylesheet(it))
                     } else if (it is Stylesheet) {

@@ -9,7 +9,6 @@ import io.lattekit.Latte
 import io.lattekit.annotation.Bind
 import io.lattekit.annotation.Prop
 import java.lang.reflect.Field
-import kotlin.reflect.KClass
 
 /**
  * Created by maan on 2/15/16.
@@ -30,8 +29,6 @@ open class LatteView {
         }
     }
 
-
-
     var subViews: MutableList<LatteView> = mutableListOf()
     var newRenderedViews = mutableListOf<LatteView>()
     var androidView: View? = null
@@ -51,6 +48,8 @@ open class LatteView {
 
     var layoutFn : (LatteView.() -> Unit)? = null
     var isViewCreated = false;
+
+    var renderingView : LatteView? = null;
 
     val propFields: MutableMap<String, Field>
         get() {
@@ -262,14 +261,6 @@ open class LatteView {
             return true;
         }
         return false;
-    }
-
-    inline fun register(clazz: KClass<*>, crossinline init: LatteView.() -> Unit) : LatteView {
-        var view = Latte.create(clazz.java,mutableMapOf(), emptyMap(), { it ->
-            it.init()
-        })
-        addChild(view);
-        return view
     }
 
     fun addChild(child: LatteView) {

@@ -25,11 +25,12 @@ inline fun LatteView.css(stylesheet : Stylesheet)  {
 
 inline fun LatteView.css(stylesheet : String)  {
     var isFile = CSS_FILE_PATH_RE.matches(stylesheet.trim())
-    var cssList = dataOrPut("css", { mutableListOf<Any>() }) as MutableList<Any>
     if (isFile) {
+        var cssList = dataOrPut("css", { mutableListOf<Any>() }) as MutableList<Any>
         cssList.add(stylesheet)
     } else {
-        cssList.add(CssParser.parse(stylesheet))
+        var localCssList = dataOrPut("localCss", { mutableListOf<Any>() }) as MutableList<Any>
+        localCssList.add(CssParser.parse(stylesheet))
     }
 }
 

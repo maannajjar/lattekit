@@ -51,7 +51,7 @@ class KotlinTemplate {
     def renderPropOptions(XmlTag node) '''mutableMapOf(«FOR prop : node.props SEPARATOR ','» "«prop.propName»" to «IF prop.propModifier == "@"»Latte.PropOption.WAIT_LAYOUT«ELSE»Latte.PropOption.NO_OPTIONS«ENDIF»«ENDFOR»)'''
 
     def renderVirtualNode(XmlTag node) '''
-        __current.addChild(Latte.create(Latte.lookupClass("«node.tagName»"), «renderPropsMap(node)», «renderPropOptions(node)», { __it : LatteView ->
+        __current.addChild(Latte.create(this, Latte.lookupClass("«node.tagName»"), «renderPropsMap(node)», «renderPropOptions(node)», { __it : LatteView ->
             «FOR child : node.children»
             __current = __it;
             «renderLayoutNode(child)»
@@ -60,7 +60,7 @@ class KotlinTemplate {
     '''
 
     def renderNativeNode(XmlTag node) '''
-        __current.addChild(Latte.createNative(«node.viewClass.name»::class.java,  «renderPropsMap(node)», «renderPropOptions(node)», { __viewWrapper, __lprops ->
+        __current.addChild(Latte.createNative(this,«node.viewClass.name»::class.java,  «renderPropsMap(node)», «renderPropOptions(node)», { __viewWrapper, __lprops ->
             var __view = __viewWrapper.androidView as «node.viewClass.name»
             var __acceptedProps = mutableListOf<String>();
             __lprops.forEach {
