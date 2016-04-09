@@ -7,6 +7,14 @@ It's a framework for building Android UI in Kotlin code by using the concept of 
 
 ```kotlin
 package io.lattekit.helloworld
+import android.app.Activity
+import android.os.Bundle
+import android.view.View
+import android.widget.EditText
+import io.lattekit.annotation.Bind
+import io.lattekit.plugin.css.declaration.css
+import io.lattekit.render
+import io.lattekit.view.LatteView
 
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
