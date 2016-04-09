@@ -18,10 +18,11 @@ class Transformer {
     var warningLogger : (String)->Unit = {};
 
 
-    fun transformFile(androidPackageName: String, file: File, outDir: File?, generateSources: Boolean) {
+    fun transformFile(androidPackageName: String, file: File, outDir: File?, generateSources: Boolean) : List<String> {
         if (this.extensions.filter { it -> file.absolutePath.endsWith(it) }.isEmpty()) {
-            return
+            return emptyList();
         }
+        var generatedFiles = mutableListOf<String>();
         if (file.absolutePath.endsWith(".kt")) {
             val code = String(Files.readAllBytes(file.toPath()))
             println("Processing ${file.absolutePath}")
@@ -32,6 +33,8 @@ class Transformer {
                     if (!outDir.exists()) {
                         outDir.mkdirs()
                     }
+                    var fileName = outDir.absolutePath + File.separator + it.classNameImpl + ".kt";
+                    generatedFiles.add(fileName);
                     val writer = PrintWriter(File(outDir.absolutePath + File.separator + it.classNameImpl + ".kt"), "UTF-8")
                     println("Wrote ${outDir.absolutePath + File.separator + it.classNameImpl + ".kt"}")
                     writer.print(it.generatedSource)
@@ -53,23 +56,39 @@ class Transformer {
                 }
                 val writer = PrintWriter(File(outFileJava), "UTF-8")
                 println("Complied " + file.absolutePath + " to " + outFileJava)
+                generatedFiles.add(file.absolutePath)
                 writer.print(out)
                 writer.close()
             }
         }
+        return generatedFiles
     }
 
     fun transformDir(androidPackageName: String, dir: String, out: String?, generateSources: Boolean) {
         val sourceDir = File(dir)
+        if (out != null && sourceDir.absolutePath.contains("generated/source/latte")) {
+            return;
+        }
+        var generatedFiles = mutableListOf<String>();
         sourceDir.listFiles().forEach { it ->
             if (it.isDirectory) {
                 transformDir(androidPackageName, it.absolutePath, if (out != null) {
                     out + File.separator + it.name
                 } else null, generateSources)
             } else {
-                this.transformFile(androidPackageName, it.absoluteFile, if (out != null) {
+                generatedFiles.addAll(this.transformFile(androidPackageName, it.absoluteFile, if (out != null) {
                     File(out + File.separator)
-                } else null, generateSources)
+                } else null, generateSources))
+            }
+        }
+        if (out != null) {
+            var outDir = File(out);
+            if (outDir.exists()) {
+                outDir.listFiles().forEach {
+                    if (it.isFile && !generatedFiles.contains( it.absolutePath)) {
+                        it.delete()
+                    }
+                }
             }
         }
     }

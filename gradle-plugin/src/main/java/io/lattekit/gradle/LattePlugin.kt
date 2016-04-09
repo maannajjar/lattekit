@@ -34,18 +34,12 @@ open class LattePlugin: Plugin<Project> {
             }
             Reflection.loadAndroidSdk(android!!.sdkDirectory.absolutePath, android!!.compileSdkVersion)
             variants?.forEach { variant ->
-                var srcTaskName = "generate" + variant.name.substring(0,1).toUpperCase()+variant.name.substring(1) + "LatteSources"
-                var resTaskName = "generate" + variant.name.substring(0,1).toUpperCase()+variant.name.substring(1) + "LatteResources"
-                val javaDirs = variant.sourceSets.map { it.javaDirectories }.flatten().filter {it.isDirectory }
+                var variantName = variant.name.substring(0,1).toUpperCase()+variant.name.substring(1)
+                var srcTaskName = "generate" + variantName+ "LatteSources"
+                var resTaskName = "generate" + variantName + "LatteResources"
+                val javaDirs = variant.sourceSets.map { it.javaDirectories }.flatten().filter { it.isDirectory }
                 val sourceDirs = mutableListOf<File>()
                 sourceDirs += javaDirs
-                sourceDirs += listOf(
-                        variant.aidlCompile.sourceOutputDir,
-                        variant.generateBuildConfig.sourceOutputDir,
-                        variant.renderscriptCompile.sourceOutputDir
-                )
-                sourceDirs += variant.outputs.map { it.processResources.sourceOutputDir }
-
                 val srcDestination = File("""${project.buildDir}/generated/source/latte/${variant.dirName}""")
                 val resDestination =  File("""${project.buildDir}/generated/res/latte/${variant.dirName}""")
                 var srcTask = project.tasks.create(srcTaskName, LatteTransform::class.java) {
