@@ -5,6 +5,8 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
+import android.util.Log
+import android.widget.ImageView
 import io.lattekit.drawable.BorderDrawable
 import io.lattekit.plugin.css.CssAccessory
 import io.lattekit.plugin.css.NodeStyle
@@ -103,38 +105,19 @@ open class BorderRadiusCssProperty : CssProperty("border-radius") {
         var cornerRadii = getCornerRadii(borderDrawable)
         cssAccessory.shapeDrawable.shape = RoundRectShape(cornerRadii, null, null);
         cssAccessory.gradientDrawable.setCornerRadii(cornerRadii)
-
         if (borderDrawable.isRoundRect) {
-            if (!view.isAttached) {
-                view.onLayout  {
-                    cssAccessory.clipRadius = borderDrawable.bottomLeftRadiusH;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        view.androidView?.invalidateOutline()
-                    }
-                }
-            } else {
-                view.onLayout  {
-                    cssAccessory.clipRadius = borderDrawable.bottomLeftRadiusH;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        view.androidView?.invalidateOutline()
-                    }
+            cssAccessory.clipRadius = borderDrawable.bottomLeftRadiusH;
+            if (view.isAttached) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    view.androidView?.invalidateOutline()
                 }
             }
         } else {
             cssAccessory.clipRadius = 0f;
         }
-        if (view.androidView is ClippableImageView) {
-            if (!view.isAttached) {
-                view.onLayout  {
-                    var clipPath =  getOuterPath(RectF(0f,0f,view.androidView!!.width.toFloat(),view.androidView!!.height.toFloat()),borderDrawable.topLeftRadiusH,borderDrawable.topLeftRadiusV,borderDrawable.topRightRadiusH,borderDrawable.topLeftRadiusV,
-                        borderDrawable.bottomRightRadiusH, borderDrawable.bottomRightRadiusV, borderDrawable.bottomLeftRadiusH, borderDrawable.bottomLeftRadiusV
-                    )
 
-                    clipPath?.fillType = Path.FillType.INVERSE_WINDING
-                    (view.androidView as ClippableImageView).clipPath = clipPath
-                    (view.androidView as ClippableImageView).invalidate()
-                }
-            } else {
+        if (view.androidView is ClippableImageView) {
+            if (view.isAttached) {
                 var clipPath = getOuterPath(RectF(0f,0f,view.androidView!!.width.toFloat(),view.androidView!!.height.toFloat()),borderDrawable.topLeftRadiusH,borderDrawable.topLeftRadiusV,borderDrawable.topRightRadiusH,borderDrawable.topLeftRadiusV,
                     borderDrawable.bottomRightRadiusH, borderDrawable.bottomRightRadiusV, borderDrawable.bottomLeftRadiusH, borderDrawable.bottomLeftRadiusV
                 )
