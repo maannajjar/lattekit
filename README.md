@@ -50,7 +50,7 @@ open class MyApp : LatteView() {
 ### Other Samples
 ![Sample](https://imgur.com/JsNje1L.gif)
 
-For more samples, view the samples at [lattekit-samples](https://github.com/maannajjar/lattekit/tree/master/lattekit-samples) folder
+For more samples, view the samples at [lattekit-samples](https://github.com/maannajjar/lattekit/tree/master/lattekit-samples) folder. But before view the sample, please read the core concept below to understand the sample better.
 
 ## How It Works
 
