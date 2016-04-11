@@ -1,8 +1,10 @@
-# LatteKit Examples
+# LatteKit Samples
 
-This project will contain samples for using LatteKit. Currently, there's one small example called "People" app. Which shows a list of people. By clicking on a person, it will display his/her profile & friends.
+This project will contain samples for using LatteKit. Currently, there's one small example called "People" app.
 
 ## People App
+This is very simple app, it shows a list of People. When clicking on a person, it will show his/her profile & friend list.
+
 ![Screenshots](https://imgur.com/ZX0l0Aj.gif)
 
 ### Code Structure

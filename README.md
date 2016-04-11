@@ -84,11 +84,11 @@ Here, MyApp & UserDetailsView are virtual views. MyApp contains UserDetailsView 
 
 ### 2- Data Binding & Maintaining View States
 
-You can use any variable you want in your layout code. Just use string interpolation to pass run-time properties. You can even use lambdas. This is called data binding, because the values of those properties are bound to the passed variable. Any variables used in the layout are considered *state variables*. If the some variable value has changed, you need to notify the view about that so it re-sync the layout with the current state. Virtual views react to state changes will propagate throughout the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state of the notified view.
+As demonstrated in the quick example, you can use any variable you want in your layout code. Just use string interpolation to pass any value to properties. You can even use lambdas. This is called data binding, because the values of those properties are bound to the passed variable. Any variables used in the layout are considered *state variables*. If the some variable value has changed, you need to notify the view about that so it update its layout to the current state. Virtual views react to state changes will propagate throughout the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state of the notified view.
 
 
 ### Binding Views
-You can bind views in your layout code by using **@Bind** annotation. By default, the annotation will look for a view with the same id as the variable name. But you can specify the id in the annotation too:
+If you need to have reference to views from your layout code, you can use **@Bind** annotation. This is similar to what you do when you call *findViewById*. By default, the annotation will look for a view with the same id as the variable name. But you can specify the id in the annotation too:
 
 ```kotlin
 @Bind var saveButton : Button? = null;
