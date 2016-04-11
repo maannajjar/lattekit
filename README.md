@@ -168,7 +168,7 @@ Coming Soon
 ```
 buildscript {
     dependencies {
-        classpath 'io.lattekit.tools:gradle-plugin:0.9.1'
+        classpath 'io.lattekit.tools:gradle-plugin:0.9.3'
     }
 }
 ```
@@ -184,7 +184,7 @@ apply plugin: 'kotlin-android'
 ```
 3- Add runtime lib to dependency to build.gradle
 ```
-    compile 'io.lattekit:lattekit-core:0.9.1'
+    compile 'io.lattekit:lattekit-core:0.9.3'
 ```
 
 4- Define your virtual views as explained above
