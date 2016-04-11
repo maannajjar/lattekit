@@ -112,8 +112,8 @@ open class MyListView : LatteView() {
  	 
     override fun layout() = xml("""
         <ListView data=${myData} layout_width="match_parent" layout_height="match_parent">
-			<views.AdItemView when=${{ it is AdData }} />        
-			<views.FoodItemView when=${{ it is FoodData }} defaultView="true" />
+			<views.AdItemView when=${{ it : Any -> is AdData }} />        
+			<views.FoodItemView when=${{ it : Any -> is FoodData }} defaultView="true" />
         </ListView>
     """)
 }
