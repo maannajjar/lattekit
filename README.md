@@ -47,6 +47,10 @@ open class MyApp : LatteView() {
 }
 ```
 
+### Other Samples
+![Sample](https://imgur.com/JsNje1L.gif)
+
+For more samples, view the samples at [lattekit-samples](https://github.com/maannajjar/lattekit/tree/master/lattekit-samples) folder
 
 ## How It Works
 
@@ -159,7 +163,33 @@ open class MyListView : LatteView() {
 
 
 ### CSS Styling
-Coming Soon
+There are two ways to use CSS styling. 1) Local CSS, which are CSS delcarations that are defined inside LatteView. Those declarations don't cascade down to other virtual views. or 2) Global css, which are defined in a separate css file. The css file should be just inside any java package. Here how to use them:
+
+```kotlin
+open class MyView : LatteView() {
+    @Bind("@id/myText") var myText : EditText? = null;
+
+    init {
+    	 // Global CSS
+    	css("my.package.com/myfile.css")
+	    // Local CSS 
+        css("""
+            .myclass { padding: 20dp; }
+		  """)
+    }
+
+    override fun layout() = xml("""
+        <LinearLayout class="myclass">
+        </LinearLayout>
+    """)
+
+}
+```
+
+
+
+CSS styling is not 100% complete, most used properties are already implemented. I'll keep adding more support in later releases. I'll expand this section later to explain what special cases of CSS properties. For the meaning time, you can view more css examples at [lattekit-samples](https://github.com/maannajjar/lattekit/tree/master/lattekit-samples)
+
 
 ## Getting Started
 
