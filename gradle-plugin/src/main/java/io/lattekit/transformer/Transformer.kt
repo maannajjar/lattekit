@@ -56,7 +56,7 @@ class Transformer {
                 }
                 val writer = PrintWriter(File(outFileJava), "UTF-8")
                 println("Complied " + file.absolutePath + " to " + outFileJava)
-                generatedFiles.add(file.absolutePath)
+                generatedFiles.add(outFileJava)
                 writer.print(out)
                 writer.close()
             }
