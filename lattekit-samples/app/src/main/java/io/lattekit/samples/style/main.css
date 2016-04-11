@@ -1,0 +1,73 @@
+.profileHeader {
+    background-color: #3b99d8;
+    padding: 10dp;
+    elevation: 6dp;
+}
+
+.profileHeaderImage {
+    width: 90dp;
+    height: 90dp;
+    border-radius: 45dp;
+    border: 2dp solid #ffffff;
+
+}
+.profileHeaderName {
+    margin-left: 10dp;
+    color: #ffffff;
+    font-weight:bold;
+    font-size: 18sp;
+}
+
+
+.profileCard {
+    background-color: #3b99d8;
+    height: 360dp;
+    elevation: 5dp;
+ }
+.coverImage {
+    width: match_parent;
+    height: 280dp;
+    background-color:#000000;
+}
+.profileCardImage {
+    margin-top: -30dp;
+    margin-left: 20dp;
+    width: 100dp;
+    height: 100dp;
+    border-radius: 50dp;
+    border: 3dp solid #ffffff;
+}
+.profileCardName {
+    font-size: 22sp;
+    font-weight: bold;
+    margin-left: 20dp;
+    margin-top: 15dp;
+    color: #ffffff;
+    width: match_parent;
+    height: match_parent;
+}
+
+.personRowContainer {
+    padding: 10dp;
+    height: 100dp;
+    background-color:#ffffff;
+    ripple-color: #eeeeee;
+    border-bottom: 1dp solid #eeeeee;
+}
+.profileRowImage {
+    width: 70dp;
+    height: 70dp;
+    border-radius: 35dp;
+    margin-right: 15dp;
+    elevation: 2dp;
+    border: 2dp solid #ffffff;
+}
+.personRowName {
+    font-weight: bold;
+    font-size: 18sp;
+    margin-bottom: 5dp;
+    margin-top: 15dp;
+}
+.personRowJob {
+    font-size: 16sp;
+}
