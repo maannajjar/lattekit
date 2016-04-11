@@ -3,7 +3,7 @@
 This project will contain samples for using LatteKit. Currently, there's one small example called "People" app. Which shows a list of people. By clicking on a person, it will display his/her profile & friends.
 
 ## People App
-![Sample](https://imgur.com/JsNje1L.gif)
+![Screenshots](https://imgur.com/ZX0l0Aj.gif)
 
 ### Code Structure
 All the code related to the app is in [src/main/java/io/lattekit/samples](https://github.com/maannajjar/lattekit/tree/master/lattekit-samples/app/src/main/java/io/lattekit/samples). The folder contains the following:
