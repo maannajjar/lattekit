@@ -82,9 +82,9 @@ open class UserDetailsView : LatteView() {
 
 Here, MyApp & UserDetailsView are virtual views. MyApp contains UserDetailsView which expects property *user*. When the native view tree is built, UserDetailsView will be replaced by the actual layout. Properties are automatically assigned to variables with *@Prop* annotation. In the above example, MyApp passed **currentUser** as **user** propertiy in UserDetailsView. 
 
-### 2- Maintaining View States
+### 2- Data Binding & Maintaining View States
 
-Virtual views react to state changes which will propagate throughout the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state of the notified view.
+You can use any variable you want in your layout code. Just use string interpolation to pass run-time properties. You can even use lambdas. This is called data binding, because the values of those properties are bound to the passed variable. Any variables used in the layout are considered *state variables*. If the some variable value has changed, you need to notify the view about that so it re-sync the layout with the current state. Virtual views react to state changes will propagate throughout the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state of the notified view.
 
 
 ### Binding Views
