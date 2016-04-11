@@ -96,6 +96,7 @@ object Reflection {
         Reflection.loadJar(path + "/extras/android/support/v4/android-support-v4.jar")
         Reflection.loadJar(path + "/extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar")
         Reflection.loadJar(path + "/extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar")
+        Reflection.loadJar(path + "/extras/android/support/design/libs/android-support-design.jar")
     }
 
     fun lookupClass(className: String): Class<*>? {
