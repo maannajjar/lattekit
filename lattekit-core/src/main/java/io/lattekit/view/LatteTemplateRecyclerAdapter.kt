@@ -98,10 +98,15 @@ abstract class LatteViewHolder(view : View)  : RecyclerView.ViewHolder(view) {
 class LatteNullSafeViewHolder(template : LatteView) : LatteViewHolder(template.buildView(template.parentView?.activity!!,null)) {
     var template : LatteView = template
 
+    init {
+        itemView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    }
+
     override fun bindView(model : Any, modelIndex : Int) {
         template.props.put("model", model);
         template.props.put("modelIndex", modelIndex);
         template.notifyStateChanged();
+        itemView.layoutParams = ViewGroup.LayoutParams(template.rootAndroidView?.layoutParams)
     }
 }
 

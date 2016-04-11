@@ -275,6 +275,7 @@ open class LatteView {
                 var oldProps = oldView.props
                 oldView.children = newView.children
                 oldView.props = newView.props
+                injectProps()
                 Latte.PLUGINS.forEach { it.onPropsUpdated(oldView, oldProps) }
                 if (oldView.onPropsUpdated(oldProps)) {
                     oldView.renderTree()
