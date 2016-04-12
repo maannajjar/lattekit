@@ -50,7 +50,7 @@ open class MyApp : LatteView() {
 ### Other Samples
 ![Sample](https://imgur.com/JsNje1L.gif)
 
-For more samples, view the samples at [lattekit-samples](https://github.com/maannajjar/lattekit/tree/master/lattekit-samples) folder. But before view the sample, please read the core concept below to understand the sample better.
+For more samples, view the samples at [lattekit-samples](https://github.com/maannajjar/lattekit/tree/master/lattekit-samples) folder. But before viewing the sample, please read the core concept below to understand the sample better.
 
 ## How It Works
 
@@ -84,7 +84,7 @@ Here, MyApp & UserDetailsView are virtual views. MyApp contains UserDetailsView 
 
 ### 2- Data Binding & Maintaining View States
 
-As demonstrated in the quick example, you can use any variable you want in your layout code. Just use string interpolation to pass any value to properties. You can even use lambdas. This is called data binding, because the values of those properties are bound to the passed variable. Any variables used in the layout are considered *state variables*. If the some variable value has changed, you need to notify the view about that so it update its layout to the current state. Virtual views react to state changes will propagate throughout the virtual view tree. In the previous example, if MyApp needs to change **currentUser** for any reason (for example due to API call). All it needs to do is call **notifyStateChanged()** after changing currentUser. This will update user property in UserDetailsView which will then update its layout. You can have as many nested virtual views and change as many variables. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state of the notified view.
+As demonstrated in the quick example, you can use any variable you want in your layout code. Just use string interpolation to pass any value to properties. You can use lambdas and reference other views in the layout code. Any variables used in the layout is considered *state variable*. If some variable's value changes, you will need to notify the view to update its layout by calling **notifyStateChanged()**. When notified, the virtual view will update its layout and all property changes will flow through the virtual layout tree. In the previous example, if MyApp changes **currentUser** for any reason (for example due to API call), all it needs to do is call **notifyStateChanged()** after the change. This will update user property in UserDetailsView which will then update its layout. Calling **notifyStateChanged()** will always ensure that the layout tree reflects the correct state of the notified view.
 
 
 ### Binding Views
@@ -112,8 +112,8 @@ open class MyListView : LatteView() {
  	 
     override fun layout() = xml("""
         <ListView data=${myData} layout_width="match_parent" layout_height="match_parent">
-			<views.AdItemView when=${{ it : Any -> is AdData }} />        
-			<views.FoodItemView when=${{ it : Any -> is FoodData }} defaultView="true" />
+			<views.AdItemView when=${{ it : Any -> it is AdData }} />        
+			<views.FoodItemView when=${{ it : Any -> it is FoodData }} defaultView="true" />
         </ListView>
     """)
 }
