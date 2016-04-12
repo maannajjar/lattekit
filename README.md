@@ -122,7 +122,7 @@ open class FoodItemView : LatteView() {
    override fun layout() = xml("""<TextView text=${foodDeatils?.title} />""")
 }
 open class AdItemView : LatteView() {
-	@Prop("model") var foodDeatils: FoodData? = null;
+	@Prop("model") var adDetails: AdData? = null;
    override fun layout() = xml(""" .... """)
 }
 ```
