@@ -47,6 +47,7 @@ open class MyApp : LatteView() {
 
 }
 ```
+The above layout code is not "string", it's **layout representation**. The actual XML code will be parsed and compiled by the LatteKit gradle plugin. The use of string interpolation is to make it easier to reference scope variables in the layout. You can use any kotlin expression to set a property value, including lambdas.
 
 ### Other Samples
 ![Sample](https://imgur.com/JsNje1L.gif)
