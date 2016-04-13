@@ -32,6 +32,7 @@ open class MyApp : LatteView() {
             .input { font-size: 14sp; margin-top:8dp;  width: match_parent; }
             .answer { font-size: 20sp; font-weight: bold; margin-top: 10dp; color: #00AADE; }
         """)
+        // or: css("com.my.package/file.css") 
     }
 
     override fun layout() = xml("""
@@ -171,7 +172,8 @@ open class MyView : LatteView() {
 
     init {
     	 // Global CSS
-    	css("my.package.com/myfile.css")
+    	css("com.my.package/myfile.css")
+    	
 	    // Local CSS 
         css("""
             .myclass { padding: 20dp; }
