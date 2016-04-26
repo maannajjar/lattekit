@@ -2,6 +2,7 @@ package io.lattekit.view
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -341,6 +342,14 @@ open class LatteView {
 
     fun xml(layoutXml: String) {
         throw Exception("Using XML requires gradle plugin")
+    }
+
+    fun getColor(color : Int) : Int{
+        if (Build.VERSION.SDK_INT >= 23) {
+            return activity!!.resources.getColor(color, null);
+        } else {
+            return activity!!.getResources().getColor(color);
+        }
     }
 
 }
