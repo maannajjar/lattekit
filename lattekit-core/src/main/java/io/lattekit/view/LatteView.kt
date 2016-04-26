@@ -228,7 +228,7 @@ open class LatteView {
                     } else if (field.getType() == String::class.java) {
                         field.set(this, entry.value?.toString())
                     } else {
-                        LatteView.Companion.log("WARNING: Injected property ${entry.key} has different type from the value in props, it will be set to null")
+                        LatteView.Companion.log("WARNING: LatteView \"${this.javaClass.name.substring(0,this.javaClass.name.length-4)}\" retrieved incorrect value for property \"@Prop ${entry.key}\". Expected: ${field.type.name}, Got: ${entry.value?.javaClass?.name}. @Prop ${entry.key} is set to null.")
                     }
                 }
             }
