@@ -57,10 +57,10 @@ class LatteViewPager : NativeView() {
 
     private var adapter: FragmentPagerAdapter? = null
 
-    val data: List<*>
+    val data: List<*>?
         get() {
             val _get = this.props["data"]
-            return _get as List<*>
+            return _get as List<*>?
         }
 
 
@@ -74,15 +74,15 @@ class LatteViewPager : NativeView() {
         this.adapter = object : FragmentPagerAdapter((this.activity as FragmentActivity).supportFragmentManager) {
 
             override fun getCount(): Int {
-                return data.size
+                return data?.size ?: children.size
             }
 
             override fun getItem(position: Int): Fragment {
-                val item = data[position]
-                var defaultView = -1
-                var selectedTemplate = -1
-                for (i in 0..children.size-1) {
-                    run {
+                if (data != null) {
+                    val item = data!![position]
+                    var defaultView = -1
+                    var selectedTemplate = -1
+                    for (i in 0..children.size - 1) {
                         val child = children[i]
                         if (isMatch(child, item!!, position)!!) {
                             selectedTemplate = i
@@ -91,19 +91,23 @@ class LatteViewPager : NativeView() {
                             defaultView = i
                         }
                     }
-                }
-                if (defaultView == -1 && selectedTemplate == -1) {
-                    throw Exception("Couldn't find template for psoition " + Integer.valueOf(position)!!)
-                } else {
-                    if (selectedTemplate == -1) {
-                        selectedTemplate = defaultView
+                    if (defaultView == -1 && selectedTemplate == -1) {
+                        throw Exception("Couldn't find template for psoition " + Integer.valueOf(position)!!)
+                    } else {
+                        if (selectedTemplate == -1) {
+                            selectedTemplate = defaultView
+                        }
                     }
+                    val template = children[selectedTemplate].copy()
+                    template.props.put("modelIndex", Integer.valueOf(position))
+                    template.props.put("model", item)
+                    template.parentView = this@LatteViewPager
+                    return LatteViewPager.PagerFragment.Companion.newInstance(template)
+                } else {
+                    var subView = children[position]
+                    subView.parentView = this@LatteViewPager
+                    return LatteViewPager.PagerFragment.Companion.newInstance(subView)
                 }
-                val template = children[selectedTemplate].copy()
-                template.props.put("modelIndex", Integer.valueOf(position))
-                template.props.put("model", item)
-                template.parentView = this@LatteViewPager
-                return LatteViewPager.PagerFragment.Companion.newInstance(template)
             }
         }
         val view = this.androidView as android.support.v4.view.ViewPager
@@ -118,25 +122,31 @@ class LatteViewPager : NativeView() {
             return false;
         }
         if (testLambda !is kotlin.Function1<*, *> && testLambda !is kotlin.Function2<*, *, *>) {
-            // TODO: Warn about wrong "when" variable
             log("Latte", "Warning 'when' should be a lambda ")
             return false;
         }
-        var isMatch = false;
-        if (testLambda is kotlin.Function2<*,*,*>) {
-            var modelType = (testLambda.javaClass.genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class<*>
-            if (modelType.isAssignableFrom(item.javaClass)) {
-                var test = (testLambda as kotlin.Function2<Any,Any,Any>).invoke(item,position);
-                if (test is Boolean) {
-                    return test;
-                } else {
-                    log("Latte", "Warning 'when' should return boolean ")
+        var isFn2 = testLambda is kotlin.Function2<*, *, *>
+        var modelType = (testLambda.javaClass.genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(0) as Class<*>
+
+        if (modelType.isAssignableFrom(item.javaClass)) {
+            var secondParamType: Class<*>? = null
+            if (isFn2) {
+                secondParamType = (testLambda.javaClass.genericInterfaces.get(0) as ParameterizedType).actualTypeArguments.get(1) as Class<*>;
+                if (!secondParamType.isAssignableFrom(Integer::class.java)) {
+                    LatteView.log("Warning: second parameter's type is " + secondParamType.name + ". It must be an integer which will contain model index")
+                    return false;
                 }
-            } else {
-                log("Latte", "Skipping $template : $testLambda ")
             }
+            var isMatch = if (!isFn2) {
+                (testLambda as Function1<Any,Any>).invoke(item) as Boolean
+            } else {
+                (testLambda as Function2<Any,Any,Any>).invoke(item,position) as Boolean
+            }
+            return isMatch;
+        } else {
+            LatteView.log("Warning: model of type " + item.javaClass.name + " is not assignable to " + modelType)
         }
-        return isMatch;
+        return false;
     }
 
 }
