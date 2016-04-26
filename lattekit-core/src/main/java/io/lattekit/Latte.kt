@@ -46,14 +46,21 @@ object Latte {
         ImageView::class.java to LatteImageView::class.java,
         AdapterView::class.java to LatteListView::class.java,
         RelativeLayout::class.java to LatteRelativeLayout::class.java,
-        LinearLayout::class.java to LatteLinearLayout::class.java,
-        ViewPager::class.java to LatteViewPager::class.java,
-        android.support.v7.widget.RecyclerView::class.java to LatteRecyclerView::class.java
+        LinearLayout::class.java to LatteLinearLayout::class.java
     )
 
     var LOOKUP_CACHE: MutableMap<String, Class<out Any>> = mutableMapOf(
         "WebView" to android.webkit.WebView::class.java
     )
+
+    init {
+        try {
+            ADAPTERS.put(android.support.v7.widget.RecyclerView::class.java, LatteRecyclerView::class.java)
+        } catch (e: NoClassDefFoundError) { }
+        try {
+            ADAPTERS.put(ViewPager::class.java, LatteViewPager::class.java)
+        } catch (e: NoClassDefFoundError) { }
+    }
 
     fun props(vararg objects: Any?): MutableMap<String, Any?> {
         var map = mutableMapOf<String, Any?>()
