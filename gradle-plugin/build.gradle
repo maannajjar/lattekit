@@ -13,9 +13,13 @@ buildscript {
 
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'java'
-apply plugin: 'kotlin'
 apply plugin: "org.xtext.xtend"
+apply plugin: 'kotlin'
 apply plugin: 'antlr'
+//apply plugin: 'maven'
+
+//group='io.lattekit.tools'
+//version='0.9.4'
 
 ext {
     bintrayRepo = 'maven'
@@ -49,8 +53,8 @@ repositories {
 
 dependencies {
     compile gradleApi()
-    antlr "org.antlr:antlr4:4.5.1"
-    compile "org.antlr:antlr4:4.5.1"
+    antlr "com.tunnelvisionlabs:antlr4:4.5"
+    compile "com.tunnelvisionlabs:antlr4:4.5"
     compile 'com.android.tools.build:gradle:1.5.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.9.2'
@@ -65,5 +69,12 @@ compileKotlin {
     dependsOn generateXtext, generateGrammarSource
 }
 
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            repository(url: uri('/Users/maan/.m2/repository'))
+//        }
+//    }
+//}
 apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
 apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'

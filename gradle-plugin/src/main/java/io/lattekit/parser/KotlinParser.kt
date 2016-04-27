@@ -20,7 +20,7 @@ class KotlinParser : AstVisitor {
     var errors = mutableListOf<String>();
 
     var errorListener = object : BaseErrorListener() {
-        override fun syntaxError(recognizer: Recognizer<*, *>?, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String?, e: RecognitionException?) {
+        override fun <T : Token?> syntaxError(recognizer: Recognizer<T, *>?, offendingSymbol: T, line: Int, charPositionInLine: Int, msg: String?, e: RecognitionException?) {
             errors.add("($line, $charPositionInLine): $msg at  ($line,$charPositionInLine) ")
         }
     }
@@ -187,7 +187,7 @@ class KotlinParser : AstVisitor {
         var parser = LatteParser(tokens)
         parser.removeErrorListeners()
         lexer.removeErrorListeners()
-        lexer.addErrorListener(errorListener);
+        lexer.addErrorListener(errorListener as ANTLRErrorListener<in Int>);
         parser.addErrorListener(errorListener);
         try {
             latteFile = LatteFile();
