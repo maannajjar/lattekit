@@ -1,23 +1,29 @@
 package databinding.util
 
+import android.databinding.tool.reflection.ModelClass
+import android.databinding.tool.store.SetterStore
 import android.databinding.tool.util.GenerationalClassUtil
+import databinding.java.JavaAnalyzer
+import io.lattekit.parser.Prop
+import io.lattekit.transformer.Reflection
 import java.io.Serializable
 import java.util.*
 
 /**
  * Created by maan on 4/27/16.
  */
-
 object AndroidSetterStore {
     var store = IntermediateV2()
-
+    var classAnalyzer = JavaAnalyzer(Reflection.CLASSLOADER)
     fun init() {
         val stores = GenerationalClassUtil.loadObjects<Serializable>(GenerationalClassUtil.ExtensionFilter.SETTER_STORE)
+        var i = 0;
         for (intermediate in stores) {
             var intermediate = readObject(intermediate) as IntermediateV2;
             merge(store, intermediate);
         }
     }
+
 
 
     fun readObject(fromObject: Any) : Any {
@@ -80,6 +86,8 @@ object AndroidSetterStore {
             } else {
                 for (key2 in secondVals!!.keys) {
                     if (!firstVals.containsKey(key2)) {
+                        println("First values doesn't contain $key2");
+                        println(firstVals.keys)
                         firstVals.put(key2, secondVals[key2]!!)
                     }
                 }
@@ -87,6 +95,72 @@ object AndroidSetterStore {
         }
     }
 
+
+    fun getMatchingMultiAttributeSetters(props: Array<Prop>, viewType : ModelClass) : List<MultiSetter>{
+
+        val results = mutableListOf<MultiSetter>()
+        for ( adapter in store.multiValueAdapters.keys) {
+            if (adapter.requireAll!! && adapter.attributes.size > props.size) {
+                continue;
+            }
+            var viewClass = classAnalyzer.findClass(adapter.viewType, null);
+            if (viewClass.isGeneric()) {
+                viewClass = viewClass.erasure();
+            }
+            if (!viewClass.isAssignableFrom(viewType)) {
+                continue;
+            }
+
+            var matchingAttributes = mutableListOf<String>();
+            var matchingProps = mutableListOf<Prop>()
+            var attrPropMapping = mutableMapOf<String,Prop>();
+            for (prop in props) {
+                var matchingAttribute = adapter.attributes.find { it == prop.namespace+":"+prop.propName || (prop.namespace == null && it.startsWith("android:") && it.substring("android:".length) == prop.propName) }
+                if (matchingAttribute != null) {
+                    matchingAttributes.add(matchingAttribute)
+                    matchingProps.add(prop);
+                    attrPropMapping.put(matchingAttribute, prop)
+                }
+            }
+            if ((adapter.requireAll && matchingAttributes.size == adapter.attributes.size) || (!adapter.requireAll && !matchingAttributes.isEmpty())) {
+                val method = store.multiValueAdapters.get(adapter);
+                var attrsTypes = matchingAttributes.map { adapter.parameterTypes[adapter.attributeIndices[it]!!] }
+                var result = MultiSetter(matchingAttributes,attrsTypes,matchingProps,attrPropMapping,adapter,method!!);
+                results.add(result);
+            }
+        }
+        return results;
+    }
+
+
+    fun getMatchingSetters(prop: Prop, viewType : ModelClass) : List<SingleSetter> {
+        var matchingAttributes = store.adapterMethods.filterKeys {  it == prop.namespace+":"+prop.propName || (prop.namespace == null && it.startsWith("android:") && it.substring("android:".length) == prop.propName) }
+        return matchingAttributes.map { var (attrName, adapters) = it;
+            var matchingAdapters = adapters.filterKeys {
+                var viewClass = classAnalyzer.findClass(it.viewType, null);
+                if (viewClass.isGeneric()) {
+                    viewClass = viewClass.erasure();
+                }
+                viewClass.isAssignableFrom(viewType)
+            }
+            matchingAdapters.map { SingleSetter(it.key,it.value, prop) }
+        }.flatten()
+    }
+}
+
+
+data class SingleSetter(val accessorKey: AccessorKey,
+                   val method: MethodDescription, var prop : Prop) {
+    var variable : String? = null;
+}
+
+
+data class MultiSetter(val matchingAttrs : List<String>,
+                       val attrTypes : List<String>,
+                       val matchingProps : List<Prop>,
+                       val attrPropsMapping : Map<String,Prop>,
+                        val adapterKey : MultiValueAdapterKey,
+                        val method: MethodDescription) {
 }
 
 class IntermediateV2 {
@@ -99,11 +173,26 @@ class IntermediateV2 {
     val inverseMethods = HashMap<String, HashMap<String, InverseDescription>>()
 }
 class AccessorKey() {
-    val viewType : String? = null;
-    val valueType : String? = null
+    var viewType : String? = null;
+    var valueType : String? = null
+
     override fun toString(): String {
         return "AK($viewType, $valueType)"
     }
+
+    override fun hashCode(): Int {
+        return mergedHashCode(viewType!!, valueType!!)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other is AccessorKey) {
+            return viewType == other.viewType && valueType == other.valueType;
+        } else {
+            return false;
+        }
+    }
+
+
 }
 
 class MultiValueAdapterKey() {
@@ -134,6 +223,10 @@ class MultiValueAdapterKey() {
         return true
     }
 
+    override fun hashCode(): Int {
+        return Arrays.hashCode(arrayOf<Any>(this.viewType!!, this.attributeIndices.keys))
+    }
+
 }
 open class MethodDescription() {
     val type: String? = null;
@@ -142,11 +235,22 @@ open class MethodDescription() {
     val isStatic: Boolean? = null;
     val componentClass: String? = null;
     override fun toString(): String {
-        return "$type.$method()"
+        return "$type.$method() requiresOldValue=$requiresOldValue, isStatic=$isStatic, componentClass=$componentClass"
     }
 
-}
+    override fun equals(other: Any?): Boolean {
+        if (other is MethodDescription) {
+            return other.type.equals(this.type) && other.method.equals(this.method);
+        } else {
+            return false;
+        }
 
+    }
+
+    override fun hashCode(): Int {
+        return mergedHashCode(type!!, method!!);
+    }
+}
 
 class InverseDescription : MethodDescription() {
     val event: String? = null;
@@ -159,7 +263,8 @@ class InverseDescription : MethodDescription() {
     override fun hashCode(): Int {
         return mergedHashCode(type!!, method!!, event!!)
     }
-    private fun mergedHashCode(vararg objects: Any): Int {
-        return Arrays.hashCode(objects)
-    }
+}
+
+fun mergedHashCode(vararg objects: Any): Int {
+    return Arrays.hashCode(objects)
 }
