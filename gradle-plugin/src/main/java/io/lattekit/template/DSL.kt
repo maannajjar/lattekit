@@ -45,13 +45,13 @@ open class KotlinElement( var parent : KotlinElement?) {
         }
     }
 
-    open fun apply(sourceBuilder : SourceBuilder) {
+    open fun build(sourceBuilder : SourceBuilder) {
     }
 
     override fun toString(): String {
         if (outputString == null) {
             var sourceBuilder : SourceBuilder = SourceBuilder()
-            apply(sourceBuilder)
+            build(sourceBuilder)
             outputString = sourceBuilder.toString();
         }
         return outputString!!
@@ -94,12 +94,12 @@ class KotlinTopLevel : KotlinElement(null) {
         this.currentContext = this;
     }
 
-    override fun apply(sourceBuilder: SourceBuilder) {
+    override fun build(sourceBuilder: SourceBuilder) {
         sourceBuilder.append("package $packageName;\n")
         imports.forEach {
             sourceBuilder.append("import $packageName;\n")
         }
-        children.forEach { it.apply(sourceBuilder) }
+        children.forEach { it.build(sourceBuilder) }
     }
 }
 
@@ -116,7 +116,7 @@ class KotlinClass(var topLevel : KotlinTopLevel,var className : String, var exte
 
 
 
-    override fun apply(sourceBuilder: SourceBuilder) {
+    override fun build(sourceBuilder: SourceBuilder) {
         if (!extendList.isEmpty()) {
             sourceBuilder.append("class $className : ${extendList.joinToString(",")} {")
             sourceBuilder.indent()
@@ -125,7 +125,7 @@ class KotlinClass(var topLevel : KotlinTopLevel,var className : String, var exte
             sourceBuilder.indent()
         }
         children.forEach {
-            it.apply(sourceBuilder);
+            it.build(sourceBuilder);
         }
         sourceBuilder.unindent()
         sourceBuilder.append("}")
@@ -167,7 +167,7 @@ open class KotlinBlock(kotlinClass : KotlinElement, var methodName : String? = n
         BLOCK("for ($condition)",body)
     }
 
-    override fun apply(sourceBuilder: SourceBuilder) {
+    override fun build(sourceBuilder: SourceBuilder) {
         if (isBlock) {
             if (methodName != null) {
                 if (!modifiers.isEmpty()) {
@@ -187,7 +187,7 @@ open class KotlinBlock(kotlinClass : KotlinElement, var methodName : String? = n
             }
             sourceBuilder.indent()
             children.forEach {
-                it.apply(sourceBuilder);
+                it.build(sourceBuilder);
             }
             sourceBuilder.unindent()
             sourceBuilder.append("}")
@@ -228,7 +228,7 @@ class KotlinIf(parent : KotlinElement,var condition : String) : KotlinBlock(pare
         return this
     }
 
-    override fun apply(sourceBuilder: SourceBuilder) {
+    override fun build(sourceBuilder: SourceBuilder) {
         if (isElseBranch) {
             if (condition == "") {
                 sourceBuilder.append(" else {", addIndent = false)
@@ -241,13 +241,13 @@ class KotlinIf(parent : KotlinElement,var condition : String) : KotlinBlock(pare
 
         sourceBuilder.indent()
         children.forEach {
-            it.apply(sourceBuilder);
+            it.build(sourceBuilder);
         }
         sourceBuilder.unindent()
         sourceBuilder.append("}",newLine = false)
         elseBranches.forEach {
             var (cond,ifEl) = it
-            ifEl.apply(sourceBuilder);
+            ifEl.build(sourceBuilder);
         }
         if (this.rootIf == null) {
             sourceBuilder.append("",addIndent = false)
