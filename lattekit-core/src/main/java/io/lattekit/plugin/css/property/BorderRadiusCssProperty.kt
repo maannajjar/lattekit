@@ -104,7 +104,9 @@ open class BorderRadiusCssProperty : CssProperty("border-radius") {
 
         var cornerRadii = getCornerRadii(borderDrawable)
         cssAccessory.shapeDrawable.shape = RoundRectShape(cornerRadii, null, null);
-        cssAccessory.gradientDrawable.setCornerRadii(cornerRadii)
+        if (cornerRadii.reduce { fl, fr -> if (fl > fr) fl else fr } > 0) {
+            cssAccessory.gradientDrawable.setCornerRadii(cornerRadii)
+        }
         if (borderDrawable.isRoundRect) {
             cssAccessory.clipRadius = borderDrawable.bottomLeftRadiusH;
             if (view.isAttached) {
