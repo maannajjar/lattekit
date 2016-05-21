@@ -36,7 +36,6 @@ open class NativeView : LatteView(), View.OnClickListener, View.OnTouchListener,
     }
 
     override fun onPropsUpdated(oldProps :Map<String, Any?>) : Boolean {
-        props.filter { props[it.component1()] != oldProps[it.component1()] }
         applyProps(props);
         return false
     }

@@ -114,8 +114,8 @@ open class LatteView {
         get() {
             if (this.androidView != null) {
                 return this.androidView
-            } else if (this.subViews.get(0) != null) {
-                return this.subViews.get(0).rootAndroidView;
+            } else if (this.subViews.isNotEmpty() && this.subViews[0] != null) {
+                return this.subViews[0].rootAndroidView;
             }
             return null
         }
@@ -130,6 +130,7 @@ open class LatteView {
 
     fun buildView(activity: Activity, lp: ViewGroup.LayoutParams?): View {
         this.activity = activity;
+        this.injectProps()
         this.renderTree()
         this.buildAndroidViewTree(activity, lp);
         if (!isViewCreated) {
@@ -276,7 +277,7 @@ open class LatteView {
                 var oldProps = oldView.props
                 oldView.children = newView.children
                 oldView.props = newView.props
-                injectProps()
+                oldView.injectProps()
                 Latte.PLUGINS.forEach { it.onPropsUpdated(oldView, oldProps) }
                 if (oldView.onPropsUpdated(oldProps)) {
                     oldView.renderTree()
@@ -285,6 +286,7 @@ open class LatteView {
             } else {
                 newView.parentView = this
                 newView.activity = activity;
+                newView.injectProps()
                 newView.renderTree()
                 newRenderedViews.add(newView)
 
@@ -292,6 +294,7 @@ open class LatteView {
         } else {
             newView.parentView = this
             newView.activity = activity;
+            newView.injectProps()
             newView.renderTree()
             newRenderedViews.add(newView)
         }
@@ -310,7 +313,6 @@ open class LatteView {
 
     fun renderTree() {
         newRenderedViews = mutableListOf()
-        injectProps()
         if (this !is NativeView) {
             // Virtual view:
             __current = this;
