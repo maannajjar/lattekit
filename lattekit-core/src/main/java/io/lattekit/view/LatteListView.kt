@@ -40,7 +40,9 @@ class LatteListView : NativeView(), AdapterView.OnItemClickListener {
         }
         adapter.data = data
         adapter.templates = children
-        view.adapter = adapter
+        if (view.adapter != adapter) {
+            view.adapter = adapter
+        }
         adapter.notifyDataSetChanged()
     }
 

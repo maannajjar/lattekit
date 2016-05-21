@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AbsListView
 import android.widget.BaseAdapter
+import io.lattekit.Latte
 import java.lang.reflect.ParameterizedType
 
 /**
@@ -54,10 +55,18 @@ class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
         var type = getItemViewType(position);
         var template = templates.get(type);
         if (convertView != null) {
-            template = convertView.getTag() as LatteView;
-            template.props.put("model", getItem(position));
-            template.props.put("modelIndex", position);
-            template.notifyStateChanged();
+            var oldTemplate = convertView.getTag() as LatteView;
+            var oldProps = oldTemplate.props
+            var newTemplate = template.copy()
+            oldTemplate.children = newTemplate.children
+            oldTemplate.props = newTemplate.props
+            oldTemplate.props.put("modelIndex", position);
+            oldTemplate.props.put("model", getItem(position));
+            oldTemplate.injectProps()
+            Latte.PLUGINS.forEach { it.onPropsUpdated(oldTemplate, oldProps) }
+            if (oldTemplate.onPropsUpdated(oldProps)) {
+                oldTemplate.notifyStateChanged()
+            }
             return convertView;
         }
 
@@ -65,9 +74,10 @@ class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
         template.props.put("modelIndex", position);
         template.props.put("model", getItem(position));
         template.parentView = parentView
+        template.renderingView = parentView.renderingView
         var lp = AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.WRAP_CONTENT);
         var v = template.buildView(parentView.activity!!, lp)
-        v.setTag(template)
+        v.tag = template
         return v;
     }
 
