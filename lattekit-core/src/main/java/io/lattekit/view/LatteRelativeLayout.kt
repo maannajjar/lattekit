@@ -67,6 +67,12 @@ class LatteRelativeLayout : NativeViewGroup() {
                 if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);
             } else if (key == "layout_alignParentBottom") {
                 if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM);
+            } else if (key == "layout_centerInParent") {
+                if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.CENTER_IN_PARENT);
+            } else if (key == "layout_centerHorizontal") {
+                if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.CENTER_HORIZONTAL);
+            } else if (key == "layout_centerVertical") {
+                if (value == true || value == "true") params.addRule(android.widget.RelativeLayout.CENTER_VERTICAL);
             }
         }
         rootAndroidView?.layoutParams = params
