@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.support.v4.view.ViewPager
 import android.util.Xml
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +21,6 @@ import java.io.StringReader
 import java.lang.reflect.Field
 import java.lang.reflect.Proxy
 import java.util.*
-import kotlin.jvm.functions.Function0
 
 /**
  * Created by maan on 2/27/16.
@@ -58,7 +56,7 @@ object Latte {
             ADAPTERS.put(android.support.v7.widget.RecyclerView::class.java, LatteRecyclerView::class.java)
         } catch (e: NoClassDefFoundError) { }
         try {
-            ADAPTERS.put(ViewPager::class.java, LatteViewPager::class.java)
+            ADAPTERS.put(android.support.v4.view.ViewPager::class.java, LatteViewPager::class.java)
         } catch (e: NoClassDefFoundError) { }
     }
 
@@ -124,7 +122,12 @@ object Latte {
 
     fun create(renderingView : LatteView?, clazz: Class<*>, props: MutableMap<String, Any?>,  propsOptions: Map<String,Int>,childrenProc: (LatteView)->Unit): LatteView {
         var layout: LatteView?;
-        if (ViewGroup::class.java.isAssignableFrom(clazz)) {
+        var adaptableClass = ADAPTERS.filterKeys { it.isAssignableFrom(clazz) }.keys.sortedWith(CLASS_ORDER).getOrNull(0);
+        if (adaptableClass != null) {
+            var adapter = ADAPTERS.get(adaptableClass)!!;
+            layout = adapter.newInstance()
+            layout.nativeViewClass = clazz as Class<out View>
+        } else if (ViewGroup::class.java.isAssignableFrom(clazz)) {
             layout = NativeViewGroup();
             layout.nativeViewClass = clazz as Class<out View>
         } else if (View::class.java.isAssignableFrom(clazz)) {
@@ -140,7 +143,7 @@ object Latte {
             }
             layout = implClass.newInstance() as LatteView;
         }
-        layout.props = props;
+        layout?.props = props;
         layout!!.propsOptions = propsOptions;
         layout.children = mutableListOf()
         layout.renderingView = renderingView;
@@ -151,13 +154,22 @@ object Latte {
 
     fun createLambdaProxyInstance(receiverClass : Class<*> , value: Object ) : Any {
         var instance = Proxy.newProxyInstance(receiverClass.getClassLoader(), arrayOf(receiverClass),
-            { any, invokedMethod, arrayOfAnys ->
-                if (value is Function0<*>) {
+            { any, invokedMethod, args ->
+                if (value is kotlin.Function0<*>) {
+                    value.invoke()
+                } else if (args.size == 1 && value is Function1<*,*>) {
+                    (value as Function1<Any?,Any?>).invoke(args[0])
+                } else if (args.size == 2 && value is Function2<*,*,*>) {
+                    (value as Function2<Any?,Any?,Any?>).invoke(args[0],args[1])
+                } else if (args.size == 3 && value is Function3<*,*,*,*>) {
+                    (value as Function3<Any?,Any?,Any?,Any?>).invoke(args[0],args[1],args[2])
+                } else if (args.size == 4 && value is Function4<*,*,*,*,*>) {
+                    (value as Function4<Any?,Any?,Any?,Any?,Any?>).invoke(args[0],args[1],args[2],args[3])
+                } else if (args.size == 0 && value is kotlin.Function0<*>) {
                     value.invoke()
                 } else {
                     null
-                }
-            })
+                }            })
         return instance;
     }
 
