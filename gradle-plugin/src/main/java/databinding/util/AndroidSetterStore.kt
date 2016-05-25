@@ -19,7 +19,7 @@ object AndroidSetterStore {
         val stores = GenerationalClassUtil.loadObjects<Serializable>(GenerationalClassUtil.ExtensionFilter.SETTER_STORE)
         var i = 0;
         for (intermediate in stores) {
-            var intermediate = readObject(intermediate) as IntermediateV2;
+            var intermediate = readObject(intermediate) as IntermediateV1;
             merge(store, intermediate);
         }
     }
@@ -67,14 +67,16 @@ object AndroidSetterStore {
     }
 
 
-    private fun merge(store: IntermediateV2, dumpStore: IntermediateV2) {
+    private fun merge(store: IntermediateV1, dumpStore: IntermediateV1) {
         merge(store.adapterMethods, dumpStore.adapterMethods)
         merge(store.renamedMethods, dumpStore.renamedMethods)
         merge(store.conversionMethods, dumpStore.conversionMethods)
         store.multiValueAdapters.putAll(dumpStore.multiValueAdapters)
         store.untaggableTypes.putAll(dumpStore.untaggableTypes)
-        merge<String, AccessorKey, InverseDescription>(store.inverseAdapters, dumpStore.inverseAdapters)
-        merge<String, String, InverseDescription>(store.inverseMethods, dumpStore.inverseMethods)
+        if (store is IntermediateV2 && dumpStore is IntermediateV2) {
+            merge<String, AccessorKey, InverseDescription>(store.inverseAdapters, dumpStore.inverseAdapters)
+            merge<String, String, InverseDescription>(store.inverseMethods, dumpStore.inverseMethods)
+        }
     }
 
     private fun <K, V, D> merge(first: HashMap<K, HashMap<V, D>>, second: HashMap<K, HashMap<V, D>>) {
@@ -163,12 +165,17 @@ data class MultiSetter(val matchingAttrs : List<String>,
                         val method: MethodDescription) {
 }
 
-class IntermediateV2 {
+interface Intermediate {
+
+}
+open class IntermediateV1 : Intermediate {
     val adapterMethods = HashMap<String, HashMap<AccessorKey, MethodDescription>>()
     val renamedMethods = HashMap<String, HashMap<String, MethodDescription>>()
     val conversionMethods = HashMap<String, HashMap<String, MethodDescription>>()
     val untaggableTypes = HashMap<String, String>()
     val multiValueAdapters = HashMap<MultiValueAdapterKey, MethodDescription>()
+}
+class IntermediateV2 : IntermediateV1() {
     val inverseAdapters = HashMap<String, HashMap<AccessorKey, InverseDescription>>()
     val inverseMethods = HashMap<String, HashMap<String, InverseDescription>>()
 }
