@@ -1,9 +1,11 @@
 package io.lattekit.transformer
 
+import android.databinding.tool.reflection.SdkUtil
 import com.google.common.base.Objects
 import com.google.common.collect.Iterables
 import org.eclipse.xtext.xbase.lib.*
 import java.io.File
+import java.io.FilenameFilter
 import java.lang.reflect.Method
 import java.net.URL
 import java.net.URLClassLoader
@@ -16,11 +18,11 @@ import java.util.*
 object Reflection {
     private val LOOKUP_CACHE = HashMap<String, Class<*>>()
 
-    private var CLASSLOADER: URLClassLoader? = null
+    var CLASSLOADER: URLClassLoader? = null
 
     fun loadJar(filePath: String) {
         if (CLASSLOADER == null) {
-            CLASSLOADER =  URLClassLoader(emptyArray(), Reflection::class.java.classLoader)
+            CLASSLOADER =  Reflection::class.java.classLoader as URLClassLoader;//URLClassLoader(emptyArray(), Reflection::class.java.classLoader)
         }
         var file = File(filePath)
         try {
@@ -90,13 +92,21 @@ object Reflection {
         return clazz
     }
 
+    fun listJars(dir : File) : List<File> = dir.listFiles().flatMap { file ->
+        if (file.isDirectory)
+            listJars(file)
+        else if (file.name.endsWith(".jar") && !file.name.endsWith("-javadoc.jar") && !file.name.endsWith("-sources.jar") && !file.name.contains("support-annotations")) listOf(file)
+        else listOf(null)
+    }.filterNotNull()
+
     fun loadAndroidSdk(path: String, version: String)  {
         println("LOADING $path/platforms/$version/android.jar")
         Reflection.loadJar("$path/platforms/$version/android.jar")
-        Reflection.loadJar(path + "/extras/android/support/v4/android-support-v4.jar")
-        Reflection.loadJar(path + "/extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar")
-        Reflection.loadJar(path + "/extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar")
-        Reflection.loadJar(path + "/extras/android/support/design/libs/android-support-design.jar")
+        var extrasFolder = File(path + "/extras/")
+        listJars(extrasFolder).forEach {
+            Reflection.loadJar(it.absolutePath)
+        }
+        SdkUtil.initialize(8, File(path))
     }
 
     fun lookupClass(className: String): Class<*>? {
