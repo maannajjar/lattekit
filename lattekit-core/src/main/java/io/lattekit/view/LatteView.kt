@@ -217,7 +217,9 @@ open class LatteView {
                 // Remove deleted property
                 injectedProps.remove(it.key)
                 var field = propFields.get(it.key)
-                field?.set(this, null)
+                if (!(field?.type?.isPrimitive?:false)) {
+                    field?.set(this, null)
+                }
             }
         }
 
