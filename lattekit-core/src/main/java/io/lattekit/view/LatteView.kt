@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import io.lattekit.Latte
+import io.lattekit.activity.LatteActivity
 import io.lattekit.annotation.Bind
 import io.lattekit.annotation.Prop
 import java.lang.reflect.Field
@@ -28,6 +29,7 @@ open class LatteView {
         fun log(tag: String, message: String) {
             Log.d(tag, message)
         }
+
     }
 
     var subViews: MutableList<LatteView> = mutableListOf()
@@ -229,6 +231,8 @@ open class LatteView {
                         field.set(this, entry.value)
                     } else if (field.getType() == String::class.java) {
                         field.set(this, entry.value?.toString())
+                    } else if (field.type.isPrimitive  || entry.value?.javaClass!!.isAssignableFrom(field.type)) {
+                        field.set(this, entry.value)
                     } else {
                         LatteView.Companion.log("WARNING: LatteView \"${this.javaClass.name.substring(0,this.javaClass.name.length-4)}\" retrieved incorrect value for property \"@Prop ${entry.key}\". Expected: ${field.type.name}, Got: ${entry.value?.javaClass?.name}. @Prop ${entry.key} is set to null.")
                     }
@@ -338,7 +342,7 @@ open class LatteView {
         onViewWillDetach()
     }
 
-    open fun onPropsUpdated(props: Map<String, Any?>): Boolean {
+    open fun onPropsUpdated(oldProps: Map<String, Any?>): Boolean {
         return true;
     }
 
@@ -352,6 +356,53 @@ open class LatteView {
         } else {
             return activity!!.getResources().getColor(color);
         }
+    }
+
+
+
+
+    //-------------------
+    // Activity Listeners
+    fun activityOnBackPressed(fn : ()->Boolean) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onBackPressed listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onBackPressed(fn)
+    }
+
+    fun activityOnResume(fn : ()->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onResume listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onResume(fn)
+    }
+
+    fun activityOnPause(fn : ()->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onPause listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onPause(fn)
+    }
+
+    fun activityOnStart(fn : ()->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onStart listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onStart(fn)
+    }
+
+    fun activityOnStop(fn : ()->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onStop listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onStop(fn)
+    }
+
+    fun activityOnDestroy(fn : ()->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onDestroy listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onDestroy(fn)
     }
 
 }

@@ -5,7 +5,6 @@ import android.support.v4.app.FragmentActivity
 import android.view.View
 import android.widget.FrameLayout
 import io.lattekit.Latte
-import io.lattekit.plugin.css.declaration.Stylesheet
 import io.lattekit.view.LatteView
 
 /**
@@ -16,7 +15,7 @@ open class LatteActivity : FragmentActivity()  {
     var latteView : LatteView? = null;
     var androidView  : View? = null;
 
-    var onBackPress : ()->Boolean = { false }
+    var listeners : MutableMap<String,MutableList<Function0<*>>> = mutableMapOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -29,20 +28,90 @@ open class LatteActivity : FragmentActivity()  {
         }
     }
 
+    //-------------------
+    // onBackPressed Listeners
+
+    fun onBackPressed(fn : ()->Boolean) {
+        listeners.getOrPut("onBackPressed", { mutableListOf() }).add(fn)
+    }
+
     override fun onBackPressed() {
-        if (!this.onBackPress()) {
+        var shortCircuit = listeners["onBackPressed"]?.map {
+            var result = it.invoke()
+            if (result != null && result is Boolean) result else false
+        }?.reduce { c, b -> c || b } ?: false
+
+        if (!shortCircuit) {
             super.onBackPressed()
         }
     }
 
-    fun onViewMounted() {
+    //-------------------
+    // onResume Listeners
 
+    fun onResume(fn : ()->Unit) {
+        listeners.getOrPut("onResume", { mutableListOf() }).add(fn)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        listeners["onResume"]?.forEach {
+            var result = it.invoke()
+        }
+    }
+
+    //-------------------
+    // onPause Listeners
+    fun onPause(fn : ()->Unit) {
+        listeners.getOrPut("onPause", { mutableListOf() }).add(fn)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        listeners["onPause"]?.forEach {
+            var result = it.invoke()
+        }
+    }
+
+    //-------------------
+    // onStart Listeners
+    fun onStart(fn : ()->Unit) {
+        listeners.getOrPut("onStart", { mutableListOf() }).add(fn)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        listeners["onStart"]?.forEach {
+            var result = it.invoke()
+        }
+    }
+
+    //-------------------
+    // onStop Listeners
+    fun onStop(fn : ()->Unit) {
+        listeners.getOrPut("onStop", { mutableListOf() }).add(fn)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        listeners["onStop"]?.forEach {
+            var result = it.invoke()
+        }
+    }
+
+    //-------------------
+    // onStop Listeners
+    fun onDestroy(fn : ()->Unit) {
+        listeners.getOrPut("onDestroy", { mutableListOf() }).add(fn)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        var myId = getIntent().getStringExtra("_LATTE_KIT_OBJ_ID");
+        listeners["onDestroy"]?.forEach {
+            var result = it.invoke()
+        }
 
+        var myId = intent.getStringExtra("_LATTE_KIT_OBJ_ID");
         if (myId != null) {
             Latte.SAVED_OBJECTS.remove(myId)
         }
