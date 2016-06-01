@@ -247,6 +247,9 @@ fun parseXml(layoutXml: String): LatteView {
 
 fun Activity.render(xml: String, props : MutableMap<String,Any?> = mutableMapOf()): LatteView {
     var latteView = Latte.render(xml,props)
+    if (this is LatteActivity) {
+        this.latteView = latteView
+    }
     setContentView(latteView.buildView(this,WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT,WindowManager.LayoutParams.MATCH_PARENT)))
     return latteView;
 }

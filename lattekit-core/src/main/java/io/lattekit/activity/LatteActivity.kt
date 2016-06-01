@@ -107,6 +107,7 @@ open class LatteActivity : FragmentActivity()  {
 
     override fun onDestroy() {
         super.onDestroy()
+        latteView?.notifyWillDetach()
         listeners["onDestroy"]?.forEach {
             var result = it.invoke()
         }

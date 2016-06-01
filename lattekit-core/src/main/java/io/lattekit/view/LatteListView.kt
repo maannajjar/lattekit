@@ -46,6 +46,15 @@ class LatteListView : NativeView(), AdapterView.OnItemClickListener {
         adapter.notifyDataSetChanged()
     }
 
+    override fun notifyWillDetach() {
+        super.notifyWillDetach()
+        var view = androidView as AdapterView<Adapter>;
+
+        for (i in 0..view.childCount-1) {
+            var latteView = view.getChildAt(i).tag as? LatteView
+            latteView?.notifyWillDetach()
+        }
+    }
     override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
         var handlerLambda: Any? = props.get("onItemClick");
         if (handlerLambda == null) {
