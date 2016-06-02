@@ -18,10 +18,10 @@ open class MarginCssProperty : CssProperty("margin") {
     override val INITIAL_VALUE: String? = "0px"
 
 
-    var marginLeft: Int = 0
-    var marginTop: Int = 0
-    var marginRight: Int = 0
-    var marginBottom: Int = 0
+    var marginLeft: Int? = null
+    var marginTop: Int? = null
+    var marginRight: Int? = null
+    var marginBottom: Int? = null
 
     fun readShorthand(values: List<LengthValue>, context: Context) {
 
@@ -49,10 +49,10 @@ open class MarginCssProperty : CssProperty("margin") {
     }
 
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
-        marginLeft = 0
-        marginTop = 0
-        marginRight = 0
-        marginBottom = 0
+        marginLeft = null
+        marginTop = null
+        marginRight = null
+        marginBottom = null
 
         var declarations = style.getDeclarations("margin", "margin-top", "margin-right", "margin-bottom", "margin-left")
         declarations.forEach {
@@ -71,10 +71,10 @@ open class MarginCssProperty : CssProperty("margin") {
     override fun apply(view: NativeView, style: NodeStyle) {
         var marginLayoutParams = view.androidView?.layoutParams
         if (marginLayoutParams is ViewGroup.MarginLayoutParams) {
-            marginLayoutParams.topMargin = marginTop
-            marginLayoutParams.leftMargin = marginLeft
-            marginLayoutParams.rightMargin = marginRight
-            marginLayoutParams.bottomMargin = marginBottom
+            if (marginTop != null) marginLayoutParams.topMargin = marginTop!!
+            if (marginLeft != null)  marginLayoutParams.leftMargin = marginLeft!!
+            if (marginRight != null) marginLayoutParams.rightMargin = marginRight!!
+            if (marginBottom != null) marginLayoutParams.bottomMargin = marginBottom!!
         }
     }
 }

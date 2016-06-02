@@ -50,13 +50,6 @@ open class PaddingCssProperty : CssProperty("padding") {
     }
 
     override fun computeValue(context: Context, view: NativeView, style : NodeStyle) {
-        if (defaultPaddingLeft == null) {
-            defaultPaddingLeft = view.androidView!!.paddingLeft;
-            defaultPaddingTop = view.androidView!!.paddingTop;
-            defaultPaddingRight = view.androidView!!.paddingRight;
-            defaultPaddingBottom = view.androidView!!.paddingBottom;
-        }
-
         paddingLeft = defaultPaddingLeft
         paddingTop = defaultPaddingTop
         paddingRight = defaultPaddingRight
