@@ -42,6 +42,7 @@ open class LatteView {
     var injectedProps: MutableMap<String,Any?> = mutableMapOf();
     var parentView: LatteView? = null
 
+    var childTree = mutableListOf<LatteView>()
     var children = mutableListOf<LatteView>()
 
     var activity: Activity? = null
@@ -87,7 +88,7 @@ open class LatteView {
                     cls.declaredFields.forEach { f ->
                         if (f.isAnnotationPresent(Bind::class.java)) {
                             var anno = f.getAnnotation(Bind::class.java);
-                            val idName = if (anno.value == "") f.name else if (anno.value.startsWith("@")) anno.value.substring(1) else anno.value
+                            val idName = if (anno.value == "") f.name else if (anno.value.startsWith("@") && anno.value.split("/").size > 1) anno.value.split("/",limit=2)[1] else anno.value
                             val packageName = activity!!.applicationContext.packageName
                             var mappedResource = activity!!.getResources().getIdentifier(idName,"id",packageName)
                             f.setAccessible(true);
@@ -206,8 +207,8 @@ open class LatteView {
         var copyProps = mutableMapOf<String,Any?>();
         this.props.forEach { entry -> copyProps.put(entry.key, entry.value) }
         copy.props = copyProps
-        copy.children = mutableListOf()
-        children.forEach { copy.children.add(it.copy()) }
+        copy.childTree = mutableListOf()
+        childTree.forEach { copy.childTree.add(it.copy()) }
         return copy;
     }
 
@@ -258,7 +259,7 @@ open class LatteView {
                     }
                 }
             }
-            this.bindViews(it.children)
+            this.bindViews(it.subViews)
         }
     }
 
@@ -272,16 +273,23 @@ open class LatteView {
     }
 
     fun addChild(child: LatteView) {
-        children.add(child)
+        childTree.add(child)
     }
 
+    fun renderChild(index : Int) {
+        __current.addChild(children[index])
+    }
+
+    fun renderChildren(index : Int) {
+        children.forEach {  __current.addChild(it) }
+    }
     fun render(newView : LatteView) {
         var i = newRenderedViews.size
         if (i < subViews.size) {
             var oldView: LatteView = subViews[i]
             if (sameView(oldView, newView)) {
                 var oldProps = oldView.props
-                oldView.children = newView.children
+                oldView.childTree = newView.childTree
                 oldView.props = newView.props
                 oldView.injectProps()
                 Latte.PLUGINS.forEach { it.onPropsUpdated(oldView, oldProps) }
@@ -313,6 +321,8 @@ open class LatteView {
     open fun layout() {
         if (this.layoutFn != null) {
             this.children.clear()
+            this.children.addAll(this.childTree)
+            this.childTree.clear()
             this.layoutFn!!()
         }
     }
@@ -323,6 +333,8 @@ open class LatteView {
             // Virtual view:
             __current = this;
             this.children.clear()
+            this.children.addAll(this.childTree)
+            this.childTree.clear()
             this.layout();
         } else {
             if (this.androidView == null) {
@@ -330,7 +342,7 @@ open class LatteView {
             }
             this.layout();
         }
-        for (child in this.children) {
+        for (child in this.childTree) {
             render(child)
         }
         (subViews-newRenderedViews).forEach {

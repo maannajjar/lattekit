@@ -16,7 +16,7 @@ class LatteRecyclerView : NativeView() {
     override fun applyProps(props: Map<String, Any?>) {
         super.applyProps(props)
         adapter.data = data
-        adapter.templates = children
+        adapter.templates = childTree
         var recyclerView = (this.androidView as RecyclerView)
         recyclerView.adapter = adapter;
         if (recyclerView.layoutManager == null) {

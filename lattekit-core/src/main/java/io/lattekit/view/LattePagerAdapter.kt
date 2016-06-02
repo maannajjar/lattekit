@@ -51,7 +51,7 @@ class LattePagerAdapter(var parentView : LatteView) {
 
 
     fun getCount(): Int {
-        return data?.size ?: parentView.children.size
+        return data?.size ?: parentView.childTree.size
     }
 
     fun getPageTitle(position: Int): CharSequence? {
@@ -68,8 +68,8 @@ class LattePagerAdapter(var parentView : LatteView) {
             val item = data!![position]
             var defaultView = -1
             var selectedTemplate = -1
-            for (i in 0..parentView.children.size - 1) {
-                val child = parentView.children[i]
+            for (i in 0..parentView.childTree.size - 1) {
+                val child = parentView.childTree[i]
                 if (isMatch(child, item!!, position)!!) {
                     selectedTemplate = i
                 }
@@ -84,10 +84,10 @@ class LattePagerAdapter(var parentView : LatteView) {
                     selectedTemplate = defaultView
                 }
             }
-            val template = parentView.children[selectedTemplate]
+            val template = parentView.childTree[selectedTemplate]
             return template
         } else {
-            return parentView.children[position]
+            return parentView.childTree[position]
         }
     }
 

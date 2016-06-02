@@ -58,7 +58,7 @@ class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
             var oldTemplate = convertView.getTag() as LatteView;
             var oldProps = oldTemplate.props
             var newTemplate = template.copy()
-            oldTemplate.children = newTemplate.children
+            oldTemplate.childTree = newTemplate.childTree
             oldTemplate.props = newTemplate.props
             oldTemplate.props.put("modelIndex", position);
             oldTemplate.props.put("model", getItem(position));

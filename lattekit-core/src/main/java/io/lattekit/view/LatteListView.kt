@@ -39,7 +39,7 @@ class LatteListView : NativeView(), AdapterView.OnItemClickListener {
             view.onItemClickListener = this;
         }
         adapter.data = data
-        adapter.templates = children
+        adapter.templates = childTree
         if (view.adapter != adapter) {
             view.adapter = adapter
         }

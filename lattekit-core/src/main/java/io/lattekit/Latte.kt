@@ -114,7 +114,7 @@ object Latte {
         layout!!.renderingView = renderingView;
         layout!!.props = props;
         layout!!.propsOptions = propsOptions;
-        layout!!.children = mutableListOf()
+        layout!!.childTree = mutableListOf()
         childrenProc?.invoke(layout)
 
         return layout!!;
@@ -145,7 +145,7 @@ object Latte {
         }
         layout?.props = props;
         layout!!.propsOptions = propsOptions;
-        layout.children = mutableListOf()
+        layout.childTree = mutableListOf()
         layout.renderingView = renderingView;
         childrenProc?.invoke(layout)
 
@@ -227,7 +227,7 @@ fun parseXml(layoutXml: String): LatteView {
             myView.renderingView = myView;
             if (currentView != null) {
                 viewStack.add(currentView)
-                currentView.children.add(myView)
+                currentView.childTree.add(myView)
             }
             for (i in 0..parser.attributeCount-1) {
                 myView.prop(parser.getAttributeName(i),parser.getAttributeValue(i))
