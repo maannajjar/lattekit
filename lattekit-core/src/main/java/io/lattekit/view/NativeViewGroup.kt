@@ -75,6 +75,7 @@ open class NativeViewGroup : NativeView() {
                 var childLP = createLayoutParams();
                 var childView = v.buildAndroidViewTree(this.activity as Context, childLP);
                 applyChildLayoutProps(v.rootNativeView!!, childView.layoutParams)
+                childView.layoutParams = childView.layoutParams
                 if (i >= managedViews.size) {
                     myContainer.addView(childView);
                 } else if (managedViews[i] != childView) {
@@ -130,6 +131,7 @@ open class NativeViewGroup : NativeView() {
                     params.height = if (value is String) {
                         NativeViewGroup.Companion.parseSize(value, ViewGroup.LayoutParams.WRAP_CONTENT, child.activity!!)
                     } else { value as Int }
+
                 }
 
                 "layout_weight" -> {
