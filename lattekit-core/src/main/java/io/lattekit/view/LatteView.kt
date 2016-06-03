@@ -273,15 +273,16 @@ open class LatteView {
     }
 
     fun addChild(child: LatteView) {
+        if (renderingView != __current) this.children.add(child)
         childTree.add(child)
     }
 
     fun renderChild(index : Int) {
-        __current.addChild(children[index])
+        __current.childTree.add(children[index])
     }
 
     fun renderChildren(index : Int) {
-        children.forEach {  __current.addChild(it) }
+        children.forEachIndexed { i, latteView -> renderChild(i) }
     }
     fun render(newView : LatteView) {
         var i = newRenderedViews.size
@@ -290,6 +291,7 @@ open class LatteView {
             if (sameView(oldView, newView)) {
                 var oldProps = oldView.props
                 oldView.childTree = newView.childTree
+                oldView.children = newView.children
                 oldView.props = newView.props
                 oldView.injectProps()
                 Latte.PLUGINS.forEach { it.onPropsUpdated(oldView, oldProps) }
@@ -320,8 +322,6 @@ open class LatteView {
 
     open fun layout() {
         if (this.layoutFn != null) {
-            this.children.clear()
-            this.children.addAll(this.childTree)
             this.childTree.clear()
             this.layoutFn!!()
         }
@@ -332,8 +332,6 @@ open class LatteView {
         if (this !is NativeView) {
             // Virtual view:
             __current = this;
-            this.children.clear()
-            this.children.addAll(this.childTree)
             this.childTree.clear()
             this.layout();
         } else {
