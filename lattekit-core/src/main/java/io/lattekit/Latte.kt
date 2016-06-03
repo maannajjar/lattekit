@@ -208,6 +208,7 @@ object Latte {
         renderedView.parentView = latteView
         var view = renderedView.buildView(latteView.activity!!,null)
         var window = PopupWindow(view,ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        window.isFocusable = true
         renderedView.popupWindow = window
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             window.showAsDropDown(anchor, xOffset, yOffset, gravity)
