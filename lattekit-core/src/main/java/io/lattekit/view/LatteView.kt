@@ -6,6 +6,7 @@ import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupWindow
 import io.lattekit.Latte
 import io.lattekit.activity.LatteActivity
 import io.lattekit.annotation.Bind
@@ -36,6 +37,7 @@ open class LatteView {
     var newRenderedViews = mutableListOf<LatteView>()
     var androidView: View? = null
     var __current : LatteView = this;
+    var popupWindow : PopupWindow? = null
 
     var props: MutableMap<String, Any?> = mutableMapOf()
     var propsOptions: Map<String, Int> = emptyMap()
@@ -54,6 +56,7 @@ open class LatteView {
     var isViewCreated = false;
 
     var renderingView : LatteView? = null;
+    var isDatached = false
 
     val propFields: MutableMap<String, Field>
         get() {
@@ -177,6 +180,12 @@ open class LatteView {
 
     open fun onViewCreated() {}
     open fun onViewWillDetach() {}
+
+    fun dismiss() {
+        if (popupWindow != null) {
+            popupWindow?.dismiss()
+        }
+    }
 
     fun buildAndroidViewTree(a: Context, lp: ViewGroup.LayoutParams?): View {
         // First build my view
@@ -352,6 +361,7 @@ open class LatteView {
     open fun notifyWillDetach() {
         subViews.forEach { it.notifyWillDetach() }
         onViewWillDetach()
+        isDatached = true
     }
 
     open fun onPropsUpdated(oldProps: Map<String, Any?>): Boolean {

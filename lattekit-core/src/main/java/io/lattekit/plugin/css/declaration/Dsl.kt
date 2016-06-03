@@ -49,6 +49,9 @@ inline fun Stylesheet.selector(selector : String, init: RuleSet.() -> Unit): Rul
     return ruleSet
 }
 
+
+inline fun LatteView.inPx(value : String)  = LengthValue(value).inPixels(this.activity!!)
+
 inline fun RuleSet.margin( value: String) = add("margin", value)
 inline fun RuleSet.marginLeft( value: String) = add("margin-left", value)
 inline fun RuleSet.marginTop( value: String) = add("margin-top", value)

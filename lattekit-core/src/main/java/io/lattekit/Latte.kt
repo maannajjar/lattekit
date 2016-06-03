@@ -4,14 +4,13 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Xml
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.AdapterView
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
+import android.widget.*
 import io.lattekit.activity.LatteActivity
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.CssPlugin
@@ -202,6 +201,18 @@ object Latte {
         lp.height = height;
         dialog.show();
         dialog.getWindow().setAttributes(lp);
+    }
+
+    fun showDropdown(latteView : LatteView,viewXml: String, anchor : View, props: MutableMap<String,Any?> = mutableMapOf(), xOffset : Int= 0, yOffset : Int = 0, gravity : Int= Gravity.TOP or Gravity.LEFT) {
+        var renderedView = Latte.render(viewXml,props);
+        var view = renderedView.buildView(latteView.activity!!,null)
+        var window = PopupWindow(view,ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        renderedView.popupWindow = window
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            window.showAsDropDown(anchor, xOffset, yOffset, gravity)
+        } else {
+            window.showAsDropDown(anchor, xOffset, yOffset)
+        }
 
     }
 

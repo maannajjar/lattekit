@@ -83,6 +83,7 @@ data class GravityValue(val valueString : String) : CssValue {
         value = valueString.split(",").map { GRAVITY_MAPPING[it] }.filterNotNull().reduce { accum, right ->  accum or right }
     }
 }
+
 data class LengthValue(val valueString : String) : CssValue {
     var number : Float
     var unit : String? = null
