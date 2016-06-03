@@ -205,6 +205,7 @@ object Latte {
 
     fun showDropdown(latteView : LatteView,viewXml: String, anchor : View, props: MutableMap<String,Any?> = mutableMapOf(), xOffset : Int= 0, yOffset : Int = 0, gravity : Int= Gravity.TOP or Gravity.LEFT) {
         var renderedView = Latte.render(viewXml,props);
+        renderedView.parentView = latteView
         var view = renderedView.buildView(latteView.activity!!,null)
         var window = PopupWindow(view,ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         renderedView.popupWindow = window
