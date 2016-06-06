@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.view.View
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.Key
 
 /**
  * Created by maan on 2/15/16.
@@ -21,6 +22,9 @@ class LatteImageView : NativeView() {
     }
     fun loadWithGlide(view : android.widget.ImageView) {
         var glideRequest = Glide.with(activity).load(props.get("src") as String);
+        if (props.containsKey("glideSignature")) {
+            glideRequest.signature(props["glideSignature"] as Key)
+        }
         if (props.containsKey("placeholder")) {
             glideRequest.placeholder(props.get("placeholder") as Int)
         }
