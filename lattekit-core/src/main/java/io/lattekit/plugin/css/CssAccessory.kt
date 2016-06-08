@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.Button
+import android.widget.Switch
 import io.lattekit.R
 import io.lattekit.drawable.BorderDrawable
 import io.lattekit.view.ClippableImageView
@@ -111,7 +112,7 @@ class CssAccessory(view : NativeView)  {
 
                 }
             }
-            view.androidView?.clipToOutline = true
+            view.androidView?.clipToOutline = view.androidView !is Switch
             if (view.androidView is ViewGroup) {
                 (view.androidView as ViewGroup).clipToPadding = false;
             }
