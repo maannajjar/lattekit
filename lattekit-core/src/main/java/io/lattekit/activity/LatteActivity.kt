@@ -16,6 +16,8 @@ open class LatteActivity : FragmentActivity()  {
     var androidView  : View? = null;
 
     var listeners : MutableMap<String,MutableList<Function0<*>>> = mutableMapOf()
+    var permissionListeners : MutableMap<String,MutableList<Function3<*,*,*,*>>> = mutableMapOf()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -115,6 +117,20 @@ open class LatteActivity : FragmentActivity()  {
         var myId = intent.getStringExtra("_LATTE_KIT_OBJ_ID");
         if (myId != null) {
             Latte.SAVED_OBJECTS.remove(myId)
+        }
+
+    }
+
+    //-----------------
+    // onRequestPermissionsResult
+    fun onRequestPermissionsResult(fn : (Int,Array<out String>,IntArray)->Unit) {
+        permissionListeners.getOrPut("onRequestPermissionsResult", { mutableListOf() }).add(fn)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        permissionListeners["onRequestPermissionsResult"]?.forEach {
+            (it as (Int,Array<out String>,IntArray)->Unit).invoke(requestCode,permissions,grantResults)
         }
 
     }

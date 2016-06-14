@@ -385,6 +385,13 @@ open class LatteView {
 
     //-------------------
     // Activity Listeners
+    fun activityOnRequestPermissionsResult(fn: (Int,Array<out String>,IntArray)->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onBackPressed listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onRequestPermissionsResult(fn)
+
+    }
     fun activityOnBackPressed(fn : ()->Boolean) {
         if (activity !is LatteActivity) {
             throw Exception("Attempted to attach onBackPressed listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
