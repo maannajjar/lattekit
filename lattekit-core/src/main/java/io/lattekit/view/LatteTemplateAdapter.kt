@@ -12,15 +12,16 @@ import java.lang.reflect.ParameterizedType
  */
 class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
     var data : List<Any> = emptyList()
+    var noData : Boolean = false
     var templates : List<LatteView> = emptyList()
     var parentView = parentView;
 
     override fun getCount(): Int {
-        return data.size
+        return if (noData) templates.size else data.size
     }
 
     override fun getItem(position: Int): Any {
-        return data.get(position)!!
+        return if (noData) templates.get(position) else data.get(position)!!
     }
 
     override fun getItemId(position: Int): Long {
@@ -32,8 +33,10 @@ class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
     }
 
     override fun getItemViewType(position: Int): Int {
+        if (noData) {
+            return position
+        }
         var item = getItem(position);
-
         var defaultView: Int = -1;
         for (i in 0..templates.size - 1) {
             var child = templates.get(i);

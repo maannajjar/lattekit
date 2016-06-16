@@ -40,7 +40,11 @@ fun testLastChild(view : NativeView) : Boolean {
     return if (parentGroup is NativeViewGroup ) {
         parentGroup?.managedViews?.last() == view.androidView
     } else if (parentGroup is LatteListView ) {
-        parentGroup.getModelIndex(view) == parentGroup.data.size-1
+        if (parentGroup.adapter.noData) {
+            parentGroup.getModelIndex(view) == parentGroup.adapter.templates.size - 1
+        } else {
+            parentGroup.getModelIndex(view) == parentGroup.adapter.data!!.size - 1
+        }
     } else {
         false
     }

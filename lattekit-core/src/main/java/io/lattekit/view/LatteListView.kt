@@ -13,8 +13,8 @@ import java.lang.reflect.ParameterizedType
 class LatteListView : NativeView(), AdapterView.OnItemClickListener {
 
     var adapter = LatteTemplateAdapter(this)
-    var data : List<Any> = emptyList()
-        get() = props["data"] as List<Any>
+    var data : List<Any>? = emptyList()
+        get() = props["data"] as? List<Any>
 
     fun getModelIndex(view : LatteView) : Int {
         var topMost : LatteView? = view;
@@ -38,7 +38,11 @@ class LatteListView : NativeView(), AdapterView.OnItemClickListener {
             view.setSelector(R.color.transparent)
             view.onItemClickListener = this;
         }
-        adapter.data = data
+        if (data != null) {
+            adapter.data = data!!
+        } else {
+            adapter.noData = true
+        }
         adapter.templates = childTree
         if (view.adapter != adapter) {
             view.adapter = adapter
