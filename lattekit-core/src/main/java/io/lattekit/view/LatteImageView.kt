@@ -45,6 +45,8 @@ class LatteImageView : NativeView() {
             loadWithGlide(view);
         } else if (getSrc() is Int) {
             view.setImageResource(getSrc() as Int);
+        } else if (getSrc() is Drawable) {
+            view.setImageDrawable(getSrc() as Drawable)
         }
 
         if (getScaleType() != null) {
