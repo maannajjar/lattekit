@@ -1,5 +1,6 @@
 package io.lattekit.activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.FragmentActivity
 import android.view.View
@@ -17,7 +18,6 @@ open class LatteActivity : FragmentActivity()  {
 
     var listeners : MutableMap<String,MutableList<Function0<*>>> = mutableMapOf()
     var permissionListeners : MutableMap<String,MutableList<Function3<*,*,*,*>>> = mutableMapOf()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
@@ -134,4 +134,20 @@ open class LatteActivity : FragmentActivity()  {
         }
 
     }
+
+
+    //-----------------
+    // onActivityResult
+    fun onActivityResult(fn : (Int,Int,Intent?)->Unit) {
+        permissionListeners.getOrPut("onActivityResult", { mutableListOf() }).add(fn)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        permissionListeners["onActivityResult"]?.forEach {
+            (it as (Int,Int,Intent?)->Unit).invoke(requestCode,resultCode,data)
+        }
+    }
+
+
 }
