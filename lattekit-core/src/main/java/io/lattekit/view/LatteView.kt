@@ -2,6 +2,7 @@ package io.lattekit.view
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import android.view.View
@@ -387,7 +388,7 @@ open class LatteView {
     // Activity Listeners
     fun activityOnRequestPermissionsResult(fn: (Int,Array<out String>,IntArray)->Unit) {
         if (activity !is LatteActivity) {
-            throw Exception("Attempted to attach onBackPressed listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+            throw Exception("Attempted to attach onRequestPermission listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
         }
         (activity as LatteActivity).onRequestPermissionsResult(fn)
 
@@ -432,6 +433,13 @@ open class LatteView {
             throw Exception("Attempted to attach onDestroy listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
         }
         (activity as LatteActivity).onDestroy(fn)
+    }
+
+    fun activityOnActivityResult(fn: (Int, Int, Intent?)->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onActivityResult listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onActivityResult(fn)
     }
 
 }
