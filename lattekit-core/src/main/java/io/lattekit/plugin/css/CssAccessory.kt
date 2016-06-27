@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.Switch
 import io.lattekit.R
 import io.lattekit.drawable.BorderDrawable
@@ -100,7 +101,7 @@ class CssAccessory(view : NativeView)  {
             view.androidView?.outlineProvider = object: ViewOutlineProvider() {
                 override fun getOutline(v: View, outline: Outline) {
                     var padding = Rect(0,0,0,0);
-                    if (v is Button) {
+                    if (v is Button || view.androidView?.javaClass?.name == "android.support.design.widget.FloatingActionButton") {
                         nativeBackground?.getOutline(outline);
                     } else {
                         outline?.setRoundRect(Rect(padding.left,

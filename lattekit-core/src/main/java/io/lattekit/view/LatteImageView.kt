@@ -63,7 +63,10 @@ class LatteImageView : NativeView() {
     }
 
     override fun getViewClass() : Class<out View> {
-        return ClippableImageView::class.java;
+        if (nativeViewClass == ImageView::class.java) {
+            return ClippableImageView::class.java;
+        }
+        return super.getViewClass()
     }
 }
 
