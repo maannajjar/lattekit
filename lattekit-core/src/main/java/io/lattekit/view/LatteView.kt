@@ -57,7 +57,7 @@ open class LatteView {
     var isViewCreated = false;
 
     var renderingView : LatteView? = null;
-    var isDatached = false
+    var isDetached = false
 
     val propFields: MutableMap<String, Field>
         get() {
@@ -185,7 +185,7 @@ open class LatteView {
     fun dismiss() {
         if (popupWindow != null) {
             popupWindow?.dismiss()
-            isDatached = true
+            isDetached = true
         }
     }
 
@@ -363,7 +363,7 @@ open class LatteView {
     open fun notifyWillDetach() {
         subViews.forEach { it.notifyWillDetach() }
         onViewWillDetach()
-        isDatached = true
+        isDetached = true
     }
 
     open fun onPropsUpdated(oldProps: Map<String, Any?>): Boolean {
