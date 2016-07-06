@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.util.Xml
 import android.view.Gravity
@@ -209,6 +210,9 @@ object Latte {
         var view = renderedView.buildView(latteView.activity!!,null)
         var window = PopupWindow(view,ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         window.isFocusable = true
+        window.setBackgroundDrawable(BitmapDrawable());
+        window.setOutsideTouchable(true);
+
         renderedView.popupWindow = window
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             window.showAsDropDown(anchor, xOffset, yOffset, gravity)

@@ -185,6 +185,7 @@ open class LatteView {
     fun dismiss() {
         if (popupWindow != null) {
             popupWindow?.dismiss()
+            isDatached = true
         }
     }
 
