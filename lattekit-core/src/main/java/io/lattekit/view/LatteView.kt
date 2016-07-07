@@ -239,16 +239,20 @@ open class LatteView {
             var previousValue = injectedProps.get(entry.key)
             if ( previousValue != entry.value) {
                 var field: Field? = this.propFields[entry.key]
-                if ( field != null) {
-                    if (field.getType().isAssignableFrom(entry.value?.javaClass)) {
-                        injectedProps.put(entry.key,entry.value)
-                        field.set(this, entry.value)
-                    } else if (field.getType() == String::class.java) {
-                        field.set(this, entry.value?.toString())
-                    } else if (field.type.isPrimitive  || entry.value?.javaClass!!.isAssignableFrom(field.type)) {
-                        field.set(this, entry.value)
+                if (field != null) {
+                    if (entry.value != null) {
+                        if (field.getType().isAssignableFrom(entry.value?.javaClass)) {
+                            injectedProps.put(entry.key, entry.value)
+                            field.set(this, entry.value)
+                        } else if (field.getType() == String::class.java) {
+                            field.set(this, entry.value?.toString())
+                        } else if (field.type.isPrimitive || entry.value?.javaClass!!.isAssignableFrom(field.type)) {
+                            field.set(this, entry.value)
+                        } else {
+                            LatteView.Companion.log("WARNING: LatteView \"${this.javaClass.name.substring(0, this.javaClass.name.length - 4)}\" retrieved incorrect value for property \"@Prop ${entry.key}\". Expected: ${field.type.name}, Got: ${entry.value?.javaClass?.name}. @Prop ${entry.key} is set to null.")
+                        }
                     } else {
-                        LatteView.Companion.log("WARNING: LatteView \"${this.javaClass.name.substring(0,this.javaClass.name.length-4)}\" retrieved incorrect value for property \"@Prop ${entry.key}\". Expected: ${field.type.name}, Got: ${entry.value?.javaClass?.name}. @Prop ${entry.key} is set to null.")
+                        field?.set(this, null)
                     }
                 }
             }
