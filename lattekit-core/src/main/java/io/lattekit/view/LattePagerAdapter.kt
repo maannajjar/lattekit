@@ -4,6 +4,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.app.FragmentStatePagerAdapter
+import android.view.ViewGroup
+import io.lattekit.Latte
 import java.lang.reflect.ParameterizedType
 
 /**
@@ -11,6 +13,7 @@ import java.lang.reflect.ParameterizedType
  */
 
 class LattePagerAdapter(var parentView : LatteView) {
+    var childItems : MutableMap<Int, LatteView> = mutableMapOf()
     val data: List<*>?
         get() {
             val _get = parentView.props["data"]
@@ -100,12 +103,37 @@ class LattePagerAdapter(var parentView : LatteView) {
             template.props.put("modelIndex", Integer.valueOf(position))
             template.props.put("model", item)
             template.parentView = parentView
+            childItems.put(position,template)
             return LatteViewPager.PagerFragment.Companion.newInstance(template)
         } else {
             selectedTemplate.parentView = parentView
+            childItems.put(position,selectedTemplate)
             return LatteViewPager.PagerFragment.Companion.newInstance(selectedTemplate)
         }
     }
+
+    fun destroyItem(position: Int) {
+        childItems[position]?.onViewWillDetach()
+        childItems.remove(position)
+    }
+    fun notifyDataSetChanged() {
+        childItems.keys.forEach { position ->
+            var view = childItems[position]
+            var selectedTemplate = getMatchingTemplate(position);
+            if (view != null && selectedTemplate.javaClass == view!!.javaClass) {
+                var oldProps = view!!.props
+                var newTemplate = selectedTemplate!!.copy()
+                view.childTree = newTemplate.childTree
+                view.props = newTemplate.props
+                view?.injectProps()
+                Latte.PLUGINS.forEach { it.onPropsUpdated(view, oldProps) }
+                if (view.onPropsUpdated(oldProps)) {
+                    view.notifyStateChanged()
+                }
+            }
+        }
+    }
+
 }
 
 class LatteFragmentPagerAdapter(var latteView : LatteView) : FragmentPagerAdapter((latteView.activity!! as FragmentActivity).supportFragmentManager) {
@@ -113,6 +141,11 @@ class LatteFragmentPagerAdapter(var latteView : LatteView) : FragmentPagerAdapte
     override fun getCount(): Int = pagerAdapter.getCount()
     override fun getItem(position: Int): Fragment? = pagerAdapter.getItem(position)
     override fun getPageTitle(position: Int) = pagerAdapter.getPageTitle(position) ?: super.getPageTitle(position)
+    override fun destroyItem(container: ViewGroup?, position: Int, `object`: Any?) = pagerAdapter.destroyItem(position)
+    override fun notifyDataSetChanged() {
+        pagerAdapter?.notifyDataSetChanged()
+        super.notifyDataSetChanged()
+    }
 }
 
 class LatteFragmentStatePagerAdapter(var latteView : LatteView) : FragmentStatePagerAdapter((latteView.activity!! as FragmentActivity).supportFragmentManager) {
@@ -120,4 +153,10 @@ class LatteFragmentStatePagerAdapter(var latteView : LatteView) : FragmentStateP
     override fun getCount(): Int = pagerAdapter.getCount()
     override fun getItem(position: Int): Fragment? = pagerAdapter.getItem(position)
     override fun getPageTitle(position: Int) = pagerAdapter.getPageTitle(position) ?: super.getPageTitle(position)
+    override fun destroyItem(container: ViewGroup?, position: Int, `object`: Any?) = pagerAdapter.destroyItem(position)
+    override fun notifyDataSetChanged() {
+        pagerAdapter?.notifyDataSetChanged()
+        super.notifyDataSetChanged()
+    }
+
 }
