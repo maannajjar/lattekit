@@ -48,8 +48,13 @@ class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
             }
         }
 
-        if (defaultView == -1) {
+        if (defaultView == -1 && (templates.size != 1 || templates[0].props.containsKey("when"))) {
+            // When we don't have selected view AND :
+            // 1- Have exactly one child that has "when"
+            // 2- Have more than child
             throw Exception("Couldn't find template matching for item " + position);
+        } else {
+            defaultView = 0
         }
         return defaultView;
     }

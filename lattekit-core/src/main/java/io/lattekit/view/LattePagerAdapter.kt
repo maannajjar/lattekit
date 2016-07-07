@@ -80,8 +80,11 @@ class LattePagerAdapter(var parentView : LatteView) {
                     defaultView = i
                 }
             }
-            if (defaultView == -1 && selectedTemplate == -1) {
+
+            if (data!!.size != 1 && defaultView == -1 && selectedTemplate == -1) {
                 throw Exception("Couldn't find template for psoition " + Integer.valueOf(position)!!)
+            } else if (defaultView == -1 && selectedTemplate == -1 && data!!.size == 1 && !(data!![0] as LatteView).props.containsKey("when")) {
+                selectedTemplate = 0
             } else {
                 if (selectedTemplate == -1) {
                     selectedTemplate = defaultView
