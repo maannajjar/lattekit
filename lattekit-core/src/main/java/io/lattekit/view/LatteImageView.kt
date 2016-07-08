@@ -21,20 +21,22 @@ class LatteImageView : NativeView() {
         return props.get("scaleType") as String?
     }
     fun loadWithGlide(view : android.widget.ImageView) {
-        var glideRequest = Glide.with(activity).load(props.get("src") as String);
-        if (props.containsKey("glideSignature")) {
-            glideRequest.signature(props["glideSignature"] as Key)
+        if (activity != null && !activity!!.isDestroyed) {
+            var glideRequest = Glide.with(activity).load(props.get("src") as String);
+            if (props.containsKey("glideSignature")) {
+                glideRequest.signature(props["glideSignature"] as Key)
+            }
+            if (props.containsKey("placeholder")) {
+                glideRequest.placeholder(props.get("placeholder") as Int)
+            }
+            if (props.get("crossFade") == "true" || props.get("crossFade") == true) {
+                glideRequest.crossFade();
+            }
+            if (props.get("centerCrop") == "true" || props.get("centerCrop") == true) {
+                glideRequest.centerCrop();
+            }
+            glideRequest.into(view);
         }
-        if (props.containsKey("placeholder")) {
-            glideRequest.placeholder(props.get("placeholder") as Int)
-        }
-        if (props.get("crossFade") == "true" || props.get("crossFade") == true) {
-            glideRequest.crossFade();
-        }
-        if (props.get("centerCrop") == "true" || props.get("centerCrop") == true) {
-            glideRequest.centerCrop();
-        }
-        glideRequest.into(view);
 
     }
 

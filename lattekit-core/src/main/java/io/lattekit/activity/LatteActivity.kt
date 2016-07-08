@@ -26,7 +26,9 @@ open class LatteActivity : FragmentActivity()  {
         if (myId != null) {
             latteView = Latte.getSavedObject(myId)
             androidView = latteView?.buildView(this, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-            setContentView(androidView);
+            if (androidView != null) {
+                setContentView(androidView)
+            }
         }
     }
 
