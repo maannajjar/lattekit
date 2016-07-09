@@ -288,7 +288,9 @@ open class LatteView {
     }
 
     fun addChild(child: LatteView) {
-        if (renderingView != __current) this.children.add(child)
+        if (renderingView != __current) {
+            this.children.add(child)
+        }
         childTree.add(child)
     }
 
@@ -299,6 +301,7 @@ open class LatteView {
     fun renderChildren(index : Int) {
         children.forEachIndexed { i, latteView -> renderChild(i) }
     }
+
     fun render(newView : LatteView) {
         var i = newRenderedViews.size
         if (i < subViews.size) {
@@ -349,10 +352,12 @@ open class LatteView {
             __current = this;
             this.childTree.clear()
             this.layout();
+            children.removeAt(children.lastIndex)
         } else {
             if (this.androidView == null) {
                 this.androidView = this.renderNative(this.activity!!);
             }
+            __current = this;
             this.layout();
         }
         for (child in this.childTree) {
