@@ -287,10 +287,15 @@ open class LatteView {
         return false;
     }
 
+    // NOTE: addChild is also called by layout() top level.. So root views will also
+    // be add to children which is not right (children array represents children passed by
+    // other views).. I.e:
+    // <CustomView><TextView></CustomView>
+    // TextView is here the passed children to CustomView
+    // Since we know there is only ONE root child added in layout().. we will remove last element in children
+    // array after layout() is called
     fun addChild(child: LatteView) {
-        if (renderingView != __current) {
-            this.children.add(child)
-        }
+        this.children.add(child)
         childTree.add(child)
     }
 
@@ -301,7 +306,6 @@ open class LatteView {
     fun renderChildren(index : Int) {
         children.forEachIndexed { i, latteView -> renderChild(i) }
     }
-
     fun render(newView : LatteView) {
         var i = newRenderedViews.size
         if (i < subViews.size) {
@@ -352,6 +356,7 @@ open class LatteView {
             __current = this;
             this.childTree.clear()
             this.layout();
+            // Remove last child (root view), see addChild for more info
             children.removeAt(children.lastIndex)
         } else {
             if (this.androidView == null) {
