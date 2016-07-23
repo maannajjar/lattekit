@@ -11,6 +11,10 @@ import io.lattekit.view.NativeView
 class SizeCssProperty : CssProperty("height") {
     var height : Int? = null;
     var width : Int? = null;
+
+    var minHeight : Int? = null;
+    var minWidth : Int? = null;
+
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
         var declaration = style.getDeclaration("height");
         height = if (declaration != null) {
@@ -20,10 +24,21 @@ class SizeCssProperty : CssProperty("height") {
         width = if (declaration != null) {
             (declaration.value as LengthValue).inPixels(context).toInt()
         } else null
+        declaration = style.getDeclaration("min-height");
+        minHeight = if (declaration != null) {
+            (declaration.value as LengthValue).inPixels(context).toInt()
+        } else null
+        declaration = style.getDeclaration("min-width");
+        minWidth = if (declaration != null) {
+            (declaration.value as LengthValue).inPixels(context).toInt()
+        } else null
     }
 
     override fun apply(view: NativeView, style: NodeStyle) {
         if (width != null) view.androidView?.layoutParams?.width = width
         if (height != null) view.androidView?.layoutParams?.height = height
+        if (minWidth != null) view.androidView?.minimumWidth = minWidth!!
+        if (minHeight != null) view.androidView?.minimumHeight = minHeight!!
+
     }
 }

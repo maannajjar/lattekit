@@ -48,6 +48,8 @@ fun getCssValue(propertyName : String, valueString : String) : CssValue = when(p
     "elevation" -> LengthValue(valueString)
     "height" ->  LengthValue(valueString)
     "width" ->  LengthValue(valueString)
+    "min-height" ->  LengthValue(valueString)
+    "min-width" ->  LengthValue(valueString)
     "gravity" ->  GravityValue(valueString)
     else -> StringValue(valueString)
 }
