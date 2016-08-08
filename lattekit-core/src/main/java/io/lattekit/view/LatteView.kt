@@ -303,7 +303,7 @@ open class LatteView {
         __current.childTree.add(children[index])
     }
 
-    fun renderChildren(index : Int) {
+    fun renderChildren() {
         children.forEachIndexed { i, latteView -> renderChild(i) }
     }
     fun render(newView : LatteView) {
