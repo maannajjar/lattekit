@@ -204,7 +204,7 @@ object Latte {
         dialog.getWindow().setAttributes(lp);
     }
 
-    fun showDropdown(latteView : LatteView,viewXml: String, anchor : View, props: MutableMap<String,Any?> = mutableMapOf(), xOffset : Int= 0, yOffset : Int = 0, gravity : Int= Gravity.TOP or Gravity.LEFT) {
+    fun showDropdown(latteView : LatteView,viewXml: String, anchor : View, props: MutableMap<String,Any?> = mutableMapOf(), xOffset : Int= 0, yOffset : Int = 0, gravity : Int= Gravity.TOP or Gravity.LEFT, animStyle : Int = 0) {
         var renderedView = Latte.render(viewXml,props);
         renderedView.parentView = latteView
         var view = renderedView.buildView(latteView.activity!!,null)
@@ -212,6 +212,9 @@ object Latte {
         window.isFocusable = true
         window.setBackgroundDrawable(BitmapDrawable());
         window.setOutsideTouchable(true);
+        if (animStyle != 0) {
+            window.animationStyle = animStyle
+        }
 
         renderedView.popupWindow = window
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
