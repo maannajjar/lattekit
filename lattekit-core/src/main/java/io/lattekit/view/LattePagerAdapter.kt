@@ -4,6 +4,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.app.FragmentStatePagerAdapter
+import android.util.Log
 import android.view.ViewGroup
 import io.lattekit.Latte
 import java.lang.reflect.ParameterizedType
@@ -125,7 +126,16 @@ class LattePagerAdapter(var parentView : LatteView) {
             var selectedTemplate = getMatchingTemplate(position);
             if (view != null && selectedTemplate.javaClass == view!!.javaClass) {
                 var oldProps = view!!.props
-                var newTemplate = selectedTemplate!!.copy()
+                var newTemplate : LatteView?;
+                if (data != null) {
+                    newTemplate = selectedTemplate!!.copy()
+                    val item = data!![position]
+                    newTemplate.props.put("modelIndex", Integer.valueOf(position))
+                    newTemplate.props.put("model", item)
+                } else {
+                    newTemplate = selectedTemplate
+                }
+
                 view.childTree = newTemplate.childTree
                 view.props = newTemplate.props
                 view?.injectProps()
