@@ -51,8 +51,8 @@ class LatteListView : NativeView(), AdapterView.OnItemClickListener {
     }
 
     override fun notifyWillDetach() {
-        super.notifyWillDetach()
         var view = androidView as AdapterView<Adapter>;
+        super.notifyWillDetach()
 
         for (i in 0..view.childCount-1) {
             var latteView = view.getChildAt(i).tag as? LatteView

@@ -18,8 +18,7 @@ import java.lang.reflect.Field
  * Created by maan on 2/15/16.
  */
 
-
-open class LatteView {
+open class LatteView  {
 
     companion object {
         @JvmStatic
@@ -377,9 +376,9 @@ open class LatteView {
     open fun notifyWillDetach() {
         subViews.forEach { it.notifyWillDetach() }
         onViewWillDetach()
+        androidView = null;
         isDetached = true
     }
-
     open fun onPropsUpdated(oldProps: Map<String, Any?>): Boolean {
         return true;
     }
