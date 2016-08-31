@@ -376,7 +376,6 @@ open class LatteView  {
     open fun notifyWillDetach() {
         subViews.forEach { it.notifyWillDetach() }
         onViewWillDetach()
-        androidView = null;
         isDetached = true
     }
     open fun onPropsUpdated(oldProps: Map<String, Any?>): Boolean {
