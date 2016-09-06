@@ -4,6 +4,7 @@ import android.R
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.view.PagerAdapter
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +34,14 @@ class LatteViewPager : NativeView() {
         override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
             val lp = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
             val _activity = this.activity
+            val _arguments = this.arguments
+            val _string = _arguments.getString("_LATTE_KIT_OBJ_ID")
+            val _get = LatteViewPager.PagerFragment.Companion.SAVED_OBJECTS[_string]
+            this.templateView = _get
+
+            if (this.templateView == null) {
+                return View(this.activity)
+            }
             return this.templateView!!.buildView(_activity, lp)
         }
 
@@ -40,7 +49,7 @@ class LatteViewPager : NativeView() {
             private val SAVED_OBJECTS = HashMap<String, LatteView>()
 
             fun newInstance(template: LatteView): LatteViewPager.PagerFragment {
-                val myId = "" + Math.random()!! + System.currentTimeMillis()
+                val myId = "" + 100*Math.random()!! + System.currentTimeMillis()
                 val args = Bundle()
                 args.putString("_LATTE_KIT_OBJ_ID", myId)
                 LatteViewPager.PagerFragment.Companion.SAVED_OBJECTS.put(myId, template)
@@ -71,11 +80,12 @@ class LatteViewPager : NativeView() {
             this.androidView?.id = Util.makeResId("io.lattekit", "id", "viewPager")
         }
 
-        if (this.props.containsKey("data")) {
-            this.adapter = LatteFragmentStatePagerAdapter(this);
-        } else {
-            this.adapter = LatteFragmentPagerAdapter(this);
-        }
+//        if (this.props.containsKey("data")) {
+//            this.adapter = LatteFragmentStatePagerAdapter(this);
+//        } else {
+//            this.adapter = LatteFragmentPagerAdapter(this);
+//        }
+        this.adapter = LattePlainPagerAdapter(this);
         val view = this.androidView as android.support.v4.view.ViewPager
         view.adapter = this.adapter
         this.adapter!!.notifyDataSetChanged()

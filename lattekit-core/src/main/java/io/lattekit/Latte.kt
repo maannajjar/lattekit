@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
+import android.os.Bundle
+import android.util.Log
 import android.util.Xml
 import android.view.Gravity
 import android.view.View
@@ -15,6 +17,7 @@ import android.widget.*
 import io.lattekit.activity.LatteActivity
 import io.lattekit.plugin.LattePlugin
 import io.lattekit.plugin.css.CssPlugin
+import io.lattekit.util.Util
 import io.lattekit.view.*
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
@@ -181,13 +184,20 @@ object Latte {
         showActivity(latteView.activity!!, viewXml,props)
     }
 
-
     fun showActivity(context: Context,viewXml: String, props: MutableMap<String,Any?> = mutableMapOf()) {
-        var latteView = Latte.render(viewXml,props);
-        var myId = "${System.currentTimeMillis()}";
+        var bundle = Bundle()
+        var hasInvalidValues = Util.toBundle(props,bundle)
         var intent = Intent(context, LatteActivity::class.java);
-        intent.putExtra("_LATTE_KIT_OBJ_ID", myId)
-        Latte.SAVED_OBJECTS.put(myId, latteView)
+        if (hasInvalidValues) {
+            Log.d("Latte", "Warning: ${viewXml} with props has non-serializable values. Please make sure they're serializables or pacelable")
+            var latteView = Latte.render(viewXml,props);
+            var myId = "${System.currentTimeMillis()}";
+            intent.putExtra("_LATTE_KIT_OBJ_ID", myId)
+            Latte.SAVED_OBJECTS.put(myId, latteView)
+        } else {
+            intent.putExtra("_LATTE_XML", viewXml)
+            intent.putExtra("_LATTE_PROPS",bundle);
+        }
         context.startActivity(intent);
     }
 

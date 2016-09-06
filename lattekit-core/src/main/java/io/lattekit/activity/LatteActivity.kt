@@ -3,9 +3,12 @@ package io.lattekit.activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.FragmentActivity
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import io.lattekit.Latte
+import io.lattekit.render
+import io.lattekit.util.Util
 import io.lattekit.view.LatteView
 
 /**
@@ -21,15 +24,27 @@ open class LatteActivity : FragmentActivity()  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
-        var myId = getIntent().getStringExtra("_LATTE_KIT_OBJ_ID");
+        renderContent()
+    }
 
-        if (myId != null) {
-            latteView = Latte.getSavedObject(myId)
-            androidView = latteView?.buildView(this, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
-            if (androidView != null) {
-                setContentView(androidView)
+    fun renderContent() {
+        if (this.javaClass != LatteActivity::class.java) return;
+        var viewXml = intent.getStringExtra("_LATTE_XML");
+        var props = intent.getBundleExtra("_LATTE_PROPS");
+        if (viewXml != null) {
+            render(viewXml, Util.toMap(props))
+            return;
+        } else {
+            var myId = intent.getStringExtra("_LATTE_KIT_OBJ_ID");
+            if (myId != null) {
+                latteView = Latte.getSavedObject(myId)
+                androidView = latteView?.buildView(this, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+                if (androidView != null) {
+                    setContentView(androidView)
+                }
             }
         }
+
     }
 
     //-------------------

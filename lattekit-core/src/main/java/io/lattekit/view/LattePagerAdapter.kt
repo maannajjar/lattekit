@@ -4,8 +4,11 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
 import android.support.v4.app.FragmentPagerAdapter
 import android.support.v4.app.FragmentStatePagerAdapter
+import android.support.v4.view.PagerAdapter
 import android.util.Log
+import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import io.lattekit.Latte
 import java.lang.reflect.ParameterizedType
 
@@ -98,6 +101,26 @@ class LattePagerAdapter(var parentView : LatteView) {
         }
     }
 
+    fun getItemView(position: Int): View {
+        var selectedTemplate = getMatchingTemplate(position);
+        if (data != null) {
+            // When data set is provided, the template will be shared by multiple items. So we should make a copy of it
+            val item = data!![position]
+            val template = selectedTemplate.copy()
+            template.props.put("modelIndex", Integer.valueOf(position))
+            template.props.put("model", item)
+            template.parentView = parentView
+            childItems.put(position,template)
+            val lp = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+            return template.buildView(parentView.activity!!!!, lp)
+        } else {
+            selectedTemplate.parentView = parentView
+            childItems.put(position,selectedTemplate)
+            val lp = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+            return selectedTemplate.buildView(parentView.activity!!!!, lp)
+        }
+    }
+
     fun getItem(position: Int): Fragment {
         var selectedTemplate = getMatchingTemplate(position);
         if (data != null) {
@@ -149,12 +172,40 @@ class LattePagerAdapter(var parentView : LatteView) {
 
 }
 
+class LattePlainPagerAdapter(var latteView : LatteView) : PagerAdapter() {
+    var pagerAdapter = LattePagerAdapter(latteView);
+    override fun getCount(): Int = pagerAdapter.getCount()
+    override fun instantiateItem(container: ViewGroup?, position: Int): Any {
+        var view = pagerAdapter.getItemView(position)
+        container?.addView(view)
+        return view;
+    }
+    override fun getItemPosition(`object`: Any?): Int {
+        return super.getItemPosition(`object`)
+    }
+
+    override fun isViewFromObject(view: View?, obj: Any?): Boolean {
+        return view == obj
+    }
+
+    override fun getPageTitle(position: Int) = pagerAdapter.getPageTitle(position) ?: super.getPageTitle(position)
+    override fun destroyItem(container: ViewGroup?, position: Int, `object`: Any?) = pagerAdapter.destroyItem(position)
+    override fun notifyDataSetChanged() {
+        pagerAdapter?.notifyDataSetChanged()
+        super.notifyDataSetChanged()
+    }
+}
+
+
 class LatteFragmentPagerAdapter(var latteView : LatteView) : FragmentPagerAdapter((latteView.activity!! as FragmentActivity).supportFragmentManager) {
     var pagerAdapter = LattePagerAdapter(latteView);
     override fun getCount(): Int = pagerAdapter.getCount()
     override fun getItem(position: Int): Fragment? = pagerAdapter.getItem(position)
     override fun getPageTitle(position: Int) = pagerAdapter.getPageTitle(position) ?: super.getPageTitle(position)
-    override fun destroyItem(container: ViewGroup?, position: Int, `object`: Any?) = pagerAdapter.destroyItem(position)
+    override fun destroyItem(container: ViewGroup?, position: Int, `object`: Any?) {
+        pagerAdapter.destroyItem(position)
+        container?.removeViewAt(position)
+    }
     override fun notifyDataSetChanged() {
         pagerAdapter?.notifyDataSetChanged()
         super.notifyDataSetChanged()
