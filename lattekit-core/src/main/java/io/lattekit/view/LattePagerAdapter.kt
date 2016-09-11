@@ -189,7 +189,10 @@ class LattePlainPagerAdapter(var latteView : LatteView) : PagerAdapter() {
     }
 
     override fun getPageTitle(position: Int) = pagerAdapter.getPageTitle(position) ?: super.getPageTitle(position)
-    override fun destroyItem(container: ViewGroup?, position: Int, `object`: Any?) = pagerAdapter.destroyItem(position)
+    override fun destroyItem(container: ViewGroup?, position: Int, `object`: Any?) {
+        pagerAdapter.destroyItem(position)
+        container?.removeView(`object` as View)
+    }
     override fun notifyDataSetChanged() {
         pagerAdapter?.notifyDataSetChanged()
         super.notifyDataSetChanged()
