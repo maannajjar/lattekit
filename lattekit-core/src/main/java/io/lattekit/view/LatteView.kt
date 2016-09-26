@@ -419,6 +419,22 @@ open class LatteView  {
         }
         (activity as LatteActivity).onResume(fn)
     }
+    fun activityOnResumeOnce(fn : ()->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onResume listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onResumeOnce(fn)
+    }
+
+
+    fun activityOnPauseOnce(fn : ()->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onPause listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onPause(fn)
+    }
+
+
 
     fun activityOnPause(fn : ()->Unit) {
         if (activity !is LatteActivity) {

@@ -75,11 +75,21 @@ open class LatteActivity : FragmentActivity()  {
         listeners.getOrPut("onResume", { mutableListOf() }).add(fn)
     }
 
+    fun onResumeOnce(fn : ()->Unit) {
+        listeners.getOrPut("onResumeOnce", { mutableListOf() }).add(fn)
+    }
+
+
+
     override fun onResume() {
         super.onResume()
         listeners["onResume"]?.forEach {
             var result = it.invoke()
         }
+        listeners["onResumeOnce"]?.forEach {
+            var result = it.invoke()
+        }
+        listeners["onResumeOnce"]?.clear()
     }
 
     //-------------------
@@ -87,12 +97,19 @@ open class LatteActivity : FragmentActivity()  {
     fun onPause(fn : ()->Unit) {
         listeners.getOrPut("onPause", { mutableListOf() }).add(fn)
     }
+    fun onPauseOnce(fn : ()->Unit) {
+        listeners.getOrPut("onPauseOnce", { mutableListOf() }).add(fn)
+    }
 
     override fun onPause() {
         super.onPause()
         listeners["onPause"]?.forEach {
             var result = it.invoke()
         }
+        listeners["onPauseOnce"]?.forEach {
+            var result = it.invoke()
+        }
+        listeners["onPauseOnce"]?.clear()
     }
 
     //-------------------
