@@ -154,7 +154,7 @@ open class LatteView  {
         onViewCreated();
     }
 
-    fun notifyStateChanged() {
+    open fun notifyStateChanged() {
         this.renderTree()
         this.buildAndroidViewTree(activity as Context, rootAndroidView?.layoutParams!!);
     }

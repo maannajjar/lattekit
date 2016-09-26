@@ -149,6 +149,7 @@ open class LatteActivity : FragmentActivity()  {
         permissionListeners["onRequestPermissionsResult"]?.forEach {
             (it as (Int,Array<out String>,IntArray)->Unit).invoke(requestCode,permissions,grantResults)
         }
+        permissionListeners["onRequestPermissionsResult"]?.clear()
 
     }
 
