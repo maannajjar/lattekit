@@ -24,6 +24,9 @@ open class LatteActivity : FragmentActivity()  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState);
+        if (intent != null && intent.getIntExtra("activityTheme",-1) != -1) {
+            setTheme(intent.getIntExtra("activityTheme",-1))
+        }
         renderContent()
     }
 

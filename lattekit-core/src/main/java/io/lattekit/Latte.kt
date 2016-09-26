@@ -180,11 +180,11 @@ object Latte {
         ADAPTERS.put(androidClass, adapterClass)
     }
 
-    fun showActivity(latteView : LatteView, viewXml: String, props: MutableMap<String,Any?> = mutableMapOf()) {
-        showActivity(latteView.activity!!, viewXml,props)
+    fun showActivity(latteView : LatteView, viewXml: String, props: MutableMap<String,Any?> = mutableMapOf(),theme : Int = -1) {
+        showActivity(latteView.activity!!, viewXml,props,theme)
     }
 
-    fun showActivity(context: Context,viewXml: String, props: MutableMap<String,Any?> = mutableMapOf()) {
+    fun showActivity(context: Context,viewXml: String, props: MutableMap<String,Any?> = mutableMapOf(),theme : Int = -1) {
         var bundle = Bundle()
         var hasInvalidValues = Util.toBundle(props,bundle)
         var intent = Intent(context, LatteActivity::class.java);
@@ -197,6 +197,9 @@ object Latte {
         } else {
             intent.putExtra("_LATTE_XML", viewXml)
             intent.putExtra("_LATTE_PROPS",bundle);
+        }
+        if (theme != -1) {
+            intent.putExtra("activityTheme",theme);
         }
         context.startActivity(intent);
     }
