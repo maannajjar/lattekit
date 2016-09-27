@@ -471,5 +471,12 @@ open class LatteView  {
         (activity as LatteActivity).onActivityResult(fn)
     }
 
+    fun activityOnActivityResultOnce(fn: (Int, Int, Intent?)->Unit) {
+        if (activity !is LatteActivity) {
+            throw Exception("Attempted to attach onActivityResult listener in LatteView that is not hosted by LatteActivity. Please make sure top level activity is instance of LatteActivity")
+        }
+        (activity as LatteActivity).onActivityResultOnce(fn)
+    }
+
 }
 
