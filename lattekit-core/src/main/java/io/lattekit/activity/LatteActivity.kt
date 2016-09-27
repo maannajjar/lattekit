@@ -180,12 +180,24 @@ open class LatteActivity : FragmentActivity()  {
         permissionListeners.getOrPut("onActivityResult", { mutableListOf() }).add(fn)
     }
 
+    fun onActivityResultOnce(fn : (Int,Int,Intent?)->Unit) {
+        permissionListeners.getOrPut("onActivityResultOnce", { mutableListOf() }).add(fn)
+    }
+    
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         permissionListeners["onActivityResult"]?.forEach {
             (it as (Int,Int,Intent?)->Unit).invoke(requestCode,resultCode,data)
         }
+
+        permissionListeners["onActivityResultOnce"]?.forEach {
+            (it as (Int,Int,Intent?)->Unit).invoke(requestCode,resultCode,data)
+        }
+        permissionListeners["onActivityResultOnce"]?.clear()
+
     }
+
+
 
 
 }
