@@ -52,7 +52,7 @@ class LatteImageView : NativeView() {
         }
 
         if (getScaleType() != null) {
-            view.scaleType = if (getScaleType() == "fitXY") {
+            var scale = if (getScaleType() == "fitXY") {
                 android.widget.ImageView.ScaleType.FIT_XY;
             } else {
                 try {
@@ -60,6 +60,9 @@ class LatteImageView : NativeView() {
                 } catch ( ex : Exception) {
                     null;
                 }
+            }
+            if (scale != null) {
+                view.scaleType = scale
             }
         }
     }
