@@ -42,13 +42,15 @@ open class LattePlugin: Plugin<Project> {
                 sourceDirs += javaDirs
                 val srcDestination = File("""${project.buildDir}/generated/source/latte/${variant.dirName}""")
                 val resDestination =  File("""${project.buildDir}/generated/res/latte/${variant.dirName}""")
+                var defaultApplicationId = android?.defaultConfig?.applicationId
+                System.out.println("USING ${defaultApplicationId}")
                 var srcTask = project.tasks.create(srcTaskName, LatteTransform::class.java) {
                     it.taskType = LatteTransform.TaskType.SRC_GENERATOR
                     it.from = sourceDirs.toSet()
                     it.outputSourceDir = srcDestination
                     it.outputResDir = resDestination
                     it.project = project;
-                    it.applicationId = variant.applicationId
+                    it.applicationId = if (defaultApplicationId != null) defaultApplicationId else variant.applicationId
                 }
                 var resTask = project.tasks.create(resTaskName, LatteTransform::class.java) {
                     it.taskType = LatteTransform.TaskType.RES_GENERATOR
@@ -56,7 +58,7 @@ open class LattePlugin: Plugin<Project> {
                     it.outputSourceDir = srcDestination
                     it.outputResDir = resDestination
                     it.project = project;
-                    it.applicationId = variant.applicationId
+                    it.applicationId = if (defaultApplicationId != null) defaultApplicationId else variant.applicationId
                 }
 
                 variant.registerJavaGeneratingTask(srcTask, srcDestination)
