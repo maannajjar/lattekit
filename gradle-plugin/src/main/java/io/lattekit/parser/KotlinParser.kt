@@ -3,10 +3,13 @@
  */
 package io.lattekit.parser
 
+import freemarker.cache.ClassTemplateLoader
+import freemarker.template.Configuration
 import io.lattekit.evaluator.Resolver
 import io.lattekit.template.KotlinTemplate
 import io.lattekit.transformer.Reflection
 import org.antlr.v4.runtime.*
+import java.io.OutputStreamWriter
 
 /**
  * Created by maan on 4/2/16.
@@ -215,32 +218,41 @@ val MQ = "\"\"\"";
 
 fun main(args : Array<String>) {
     Reflection.loadAndroidSdk("/Users/maan/Library/Android/sdk","android-23");
-    var parsed = KotlinParser().parseSource("""
-package mobi.yummyfood.android
-import io.lattekit.hello;
 
-open class MyApp : LatteView() {
-    init {
-        css("com.myapp.style/main.css")
-    }
+    var cfg = Configuration(Configuration.VERSION_2_3_25);
+//cfg.setClassForTemplateLoading(KotlinP)
+    cfg.templateLoader = ClassTemplateLoader(Object().javaClass, "/")
+    var temp = cfg.getTemplate("templates/test.ftl");
 
-    fun shouldAddToolbarBorder () = Build.VERSION.SDK_INT < 21
+    var out = OutputStreamWriter(System.out);
+    temp.process(Object(), out);
 
-    override fun layout() = lxml($MQ
-        <LinearLayout orientation="vertical" layout_width=match_parent" layout_height="match_parent">
-            <android.support.v7.widget.Toolbar class="toolbar" logo="@drawable/home_logo" layout_width="match_parent" layout_height="wrap_content"/>
-            $DOLLAR{IF (shouldAddToolbarBorder()) { $MQ<View class="toolbar_border" />$MQ }}
-            <my.HomeFeed />
-         </LinearLayout>
-    $MQ)
-
-}
-    """)
-    Resolver("mobi.yummyfood.android").evaluate(parsed);
-
-    parsed.classes.forEach {
-        print( KotlinTemplate().renderClass(it, parsed))
-    }
+//    var parsed = KotlinParser().parseSource("""
+//package mobi.yummyfood.android
+//import io.lattekit.hello;
+//
+//open class MyApp : LatteView() {
+//    init {
+//        css("com.myapp.style/main.css")
+//    }
+//
+//    fun shouldAddToolbarBorder () = Build.VERSION.SDK_INT < 21
+//
+//    override fun layout() = lxml($MQ
+//        <LinearLayout orientation="vertical" layout_width=match_parent" layout_height="match_parent">
+//            <android.support.v7.widget.Toolbar class="toolbar" logo="@drawable/home_logo" layout_width="match_parent" layout_height="wrap_content"/>
+//            $DOLLAR{IF (shouldAddToolbarBorder()) { $MQ<View class="toolbar_border" />$MQ }}
+//            <my.HomeFeed />
+//         </LinearLayout>
+//    $MQ)
+//
+//}
+//    """)
+//    Resolver("mobi.yummyfood.android").evaluate(parsed);
+//
+//    parsed.classes.forEach {
+//        print( KotlinTemplate().renderClass(it, parsed))
+//    }
 
 
 //    println(parsed.packageName)

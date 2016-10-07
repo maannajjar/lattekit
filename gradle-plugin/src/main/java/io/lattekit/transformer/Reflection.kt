@@ -1,6 +1,5 @@
 package io.lattekit.transformer
 
-import android.databinding.tool.reflection.SdkUtil
 import com.google.common.base.Objects
 import com.google.common.collect.Iterables
 import org.eclipse.xtext.xbase.lib.*
@@ -106,7 +105,7 @@ object Reflection {
         listJars(extrasFolder).forEach {
             Reflection.loadJar(it.absolutePath)
         }
-        SdkUtil.initialize(8, File(path))
+//        SdkUtil.initialize(8, File(path))
     }
 
     fun lookupClass(className: String): Class<*>? {
