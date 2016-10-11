@@ -61,16 +61,21 @@ class KotlinParser : AstVisitor {
 
     fun visitLayoutFunction(ctx : LatteParser.LayoutFunctionContext) : LayoutFunction {
         var layoutFunction = LayoutFunction();
-        var funWords = if (ctx.LAYOUT_FUN() != null) {
+        var text = if (ctx.LAYOUT_FUN() != null) {
             ctx.LAYOUT_FUN()
         } else {
             ctx.LAYOUT_FUN_BLOCK()
-        }.text.replace(Regex("\\s+")," ").split(" ");
+        }.text.replace(Regex("\\s+")," ")
+        var funWords = text.substring(0,text.indexOf("=")).split(" ");
         var keywords = mutableListOf<String>()
-        var functionNameWithParams = funWords.find { if (!it.contains("(")) { keywords.add(it); false } else true; }
+        funWords.forEach { if (!it.contains("(")) { keywords.add(it); } }
+        var functionNameStartIndex = funWords.indexOfFirst{ it.contains("(") }
+        var functionNameWithParams = funWords.filterIndexed { i, s -> i >= functionNameStartIndex  }.joinToString("")
+        var functionName = functionNameWithParams!!.split("(")[0]
+
         layoutFunction.functionModifiers = keywords;
         layoutFunction.functionName = functionNameWithParams!!.split("(")[0]
-        layoutFunction.functionParams = functionNameWithParams.substring(layoutFunction.functionName.length)
+        layoutFunction.functionParams = functionNameWithParams.substring(functionName.length)
         layoutFunction.children = visitLayoutBody(ctx.layoutString().layoutBody())
         return layoutFunction;
     }
