@@ -144,30 +144,38 @@ class LattePagerAdapter(var parentView : LatteView) {
         childItems.remove(position)
     }
     fun notifyDataSetChanged() {
+        var removeViews = mutableListOf<View>()
         childItems.keys.forEach { position ->
             var view = childItems[position]
-            var selectedTemplate = getMatchingTemplate(position);
-            if (view != null && selectedTemplate.javaClass == view!!.javaClass) {
-                var oldProps = view!!.props
-                var newTemplate : LatteView?;
-                if (data != null) {
-                    newTemplate = selectedTemplate!!.copy()
-                    val item = data!![position]
-                    newTemplate.props.put("modelIndex", Integer.valueOf(position))
-                    newTemplate.props.put("model", item)
-                } else {
-                    newTemplate = selectedTemplate
-                }
+            if (data != null) {
+                if (position < data?.size?:0) {
+                    var selectedTemplate = getMatchingTemplate(position);
+                    if (view != null && selectedTemplate.javaClass == view!!.javaClass) {
+                        var oldProps = view!!.props
+                        var newTemplate: LatteView?;
+                        if (data != null) {
+                            newTemplate = selectedTemplate!!.copy()
+                            val item = data!![position]
+                            newTemplate.props.put("modelIndex", Integer.valueOf(position))
+                            newTemplate.props.put("model", item)
+                        } else {
+                            newTemplate = selectedTemplate
+                        }
 
-                view.childTree = newTemplate.childTree
-                view.props = newTemplate.props
-                view?.injectProps()
-                Latte.PLUGINS.forEach { it.onPropsUpdated(view, oldProps) }
-                if (view.onPropsUpdated(oldProps)) {
-                    view.notifyStateChanged()
+                        view.childTree = newTemplate.childTree
+                        view.props = newTemplate.props
+                        view?.injectProps()
+                        Latte.PLUGINS.forEach { it.onPropsUpdated(view, oldProps) }
+                        if (view.onPropsUpdated(oldProps)) {
+                            view.notifyStateChanged()
+                        }
+                    }
+                } else {
+                    removeViews.add(view?.rootAndroidView!!)
                 }
             }
         }
+
     }
 
 }
@@ -194,7 +202,7 @@ class LattePlainPagerAdapter(var latteView : LatteView) : PagerAdapter() {
         container?.removeView(`object` as View)
     }
     override fun notifyDataSetChanged() {
-        pagerAdapter?.notifyDataSetChanged()
+        pagerAdapter.notifyDataSetChanged()
         super.notifyDataSetChanged()
     }
 }
