@@ -2,9 +2,11 @@ package io.lattekit.plugin.css.declaration
 
 import android.content.Context
 import android.graphics.Color
+import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
+import io.lattekit.Latte
 import java.util.regex.Pattern
 
 /**
@@ -164,7 +166,8 @@ data class FontSizeValue(val valueString : String) : CssValue {
 }
 
 data class ColorValue(val valueString : String) : CssValue {
-    var color : Int;
+    internal var color : Int;
+    var isColorRef = false
     companion object {
         val PREDEFINED_VALUES = mapOf(
             "white" to "#ffffff",
@@ -175,8 +178,33 @@ data class ColorValue(val valueString : String) : CssValue {
     init {
         if (PREDEFINED_VALUES[valueString.toLowerCase()] != null) {
             color = Color.parseColor(PREDEFINED_VALUES.get(valueString.toLowerCase()))
+        } else if (valueString.startsWith("@")) {
+            isColorRef = true;
+            color = 0;
         } else {
             color = Color.parseColor(valueString)
+        }
+    }
+
+    fun resolveColor(context : Context) : Int {
+        if (isColorRef) {
+            try {
+                var split = valueString.split("/");
+                var idType = split[0].substring(1); // Strip off '@'
+                var packageName = if (idType.contains(":")) {
+                    idType.split(":")[0]
+                } else {
+                    context.packageName
+                }
+                val colorRes = context.resources.getIdentifier(split[1], "color", packageName);
+                color = context.resources.getColor(colorRes)
+                isColorRef = false;
+            } catch (exception: Exception) {
+                Log.d("Latte", "WARNING: Couldn't resolve color ${valueString}")
+            }
+            return color
+        } else {
+            return color
         }
     }
 }

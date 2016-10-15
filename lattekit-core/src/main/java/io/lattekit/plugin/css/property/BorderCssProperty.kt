@@ -55,12 +55,12 @@ open class BorderCssProperty : CssProperty("border") {
             setBorderWidth(borderName, value.borderWidth!!.inPixels(context))
         }
         if (value.borderColor != null) {
-            setBorderColor(borderName, value.borderColor!!.color)
+            setBorderColor(borderName, value.borderColor!!.resolveColor(context))
         } else {
             // TODO: use 'color' value
         }
         if (value.borderStyle != null) {
-            setBorderColor(borderName, value.borderColor!!.color)
+            setBorderColor(borderName, value.borderColor!!.resolveColor(context))
         }
     }
 

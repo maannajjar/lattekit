@@ -27,15 +27,15 @@ class BackgroundCssProperty : CssProperty("background") {
 
         var bgDeclaration = style.getDeclaration("background-color")
         if (bgDeclaration != null) {
-            backgroundColor = (bgDeclaration.value as ColorValue).color
+            backgroundColor = (bgDeclaration.value as ColorValue).resolveColor(context)
         }
         var rippleDeclaration = style.getDeclaration("ripple-color")
         if (rippleDeclaration != null) {
-            rippleColor = (rippleDeclaration.value as ColorValue).color
+            rippleColor = (rippleDeclaration.value as ColorValue).resolveColor(context)
         }
         var touchedBg = style.getTouchedDeclaration("background-color")
         if (touchedBg != null) {
-            touchedBackgroundColor = (touchedBg?.value as ColorValue).color
+            touchedBackgroundColor = (touchedBg?.value as ColorValue).resolveColor(context)
         }
     }
 

@@ -21,7 +21,7 @@ class ColorCssProperty : CssProperty("color") {
     override fun computeValue(context: Context, view: NativeView, style: NodeStyle) {
         var declaration = style.getDeclaration("color")
         if (declaration != null) {
-            color = (declaration.value as ColorValue).color
+            color = (declaration.value as ColorValue).resolveColor(context)
         }
     }
 
