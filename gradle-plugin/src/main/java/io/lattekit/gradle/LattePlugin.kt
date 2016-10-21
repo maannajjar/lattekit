@@ -32,7 +32,8 @@ open class LattePlugin: Plugin<Project> {
                 is LibraryExtension -> (android as LibraryExtension).libraryVariants
                 else -> throw GradleException("""Unknown packaging type ${android!!.javaClass.simpleName}""")
             }
-            Reflection.loadAndroidSdk(android!!.sdkDirectory.absolutePath, android!!.compileSdkVersion)
+            Reflection.loadAndroidSdk(android!!.sdkDirectory.absolutePath, "android-${android!!.defaultConfig.minSdkVersion?.apiLevel?.toString()}")
+
             variants?.forEach { variant ->
                 var variantName = variant.name.substring(0,1).toUpperCase()+variant.name.substring(1)
                 var srcTaskName = "generate" + variantName+ "LatteSources"
