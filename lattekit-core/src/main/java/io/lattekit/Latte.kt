@@ -9,10 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.Xml
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
+import android.view.*
 import android.widget.*
 import io.lattekit.activity.LatteActivity
 import io.lattekit.plugin.LattePlugin
@@ -204,17 +201,24 @@ object Latte {
         context.startActivity(intent);
     }
 
-    fun showDialog(activity: Activity,viewXml: String,  props: MutableMap<String,Any?> = mutableMapOf(), width : Int = WindowManager.LayoutParams.MATCH_PARENT, height: Int = WindowManager.LayoutParams.WRAP_CONTENT) {
+    fun showDialog(activity: Activity,viewXml: String,  props: MutableMap<String,Any?> = mutableMapOf(), width : Int = WindowManager.LayoutParams.MATCH_PARENT, height: Int = WindowManager.LayoutParams.WRAP_CONTENT, theme :Int = -1,gravity :Int = -1) : AlertDialog {
         var latteView = Latte.render(viewXml,props);
-        var dialogBuilder = AlertDialog.Builder(activity)
+        var dialogBuilder = if (theme == -1) AlertDialog.Builder(activity) else AlertDialog.Builder(activity,theme)
+
         dialogBuilder.setView(latteView.buildView(activity,null))
         var dialog = dialogBuilder.create()
+        latteView.dialog = dialog
         var lp = WindowManager.LayoutParams();
-        lp.copyFrom(dialog.getWindow().getAttributes());
+        lp.copyFrom(dialog.window.attributes);
         lp.width = width;
         lp.height = height;
+        if (gravity != -1) lp.gravity = gravity
         dialog.show();
-        dialog.getWindow().setAttributes(lp);
+        dialog.window.attributes = lp;
+        if (gravity != -1) {
+            dialog.window.setGravity(gravity)
+        }
+        return dialog
     }
 
     fun showDropdown(latteView : LatteView,viewXml: String, anchor : View, props: MutableMap<String,Any?> = mutableMapOf(), xOffset : Int= 0, yOffset : Int = 0, gravity : Int= Gravity.TOP or Gravity.LEFT, animStyle : Int = 0) {
