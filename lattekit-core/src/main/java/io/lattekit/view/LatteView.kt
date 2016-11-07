@@ -1,6 +1,7 @@
 package io.lattekit.view
 
 import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -38,6 +39,7 @@ open class LatteView  {
     var androidView: View? = null
     var __current : LatteView = this;
     var popupWindow : PopupWindow? = null
+    var dialog : Dialog? = null
 
     var props: MutableMap<String, Any?> = mutableMapOf()
     var propsOptions: Map<String, Int> = emptyMap()
@@ -183,7 +185,12 @@ open class LatteView  {
 
     fun dismiss() {
         if (popupWindow != null) {
+            notifyWillDetach()
             popupWindow?.dismiss()
+            isDetached = true
+        } else if (dialog != null) {
+            notifyWillDetach()
+            dialog?.dismiss()
             isDetached = true
         }
     }
