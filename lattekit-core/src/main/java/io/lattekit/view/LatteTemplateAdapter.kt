@@ -1,5 +1,6 @@
 package io.lattekit.view
 
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AbsListView
@@ -53,7 +54,7 @@ class LatteTemplateAdapter(parentView : LatteView) : BaseAdapter() {
             // 1- Have exactly one child that has "when"
             // 2- Have more than child
             throw Exception("Couldn't find template matching for item " + position);
-        } else {
+        } else if (defaultView == -1) {
             defaultView = 0
         }
         return defaultView;
