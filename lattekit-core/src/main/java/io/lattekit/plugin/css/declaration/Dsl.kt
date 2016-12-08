@@ -1,5 +1,7 @@
 package io.lattekit.plugin.css.declaration
 
+import android.app.Application
+import android.util.Log
 import io.lattekit.plugin.css.CssParser
 import io.lattekit.view.LatteView
 
@@ -15,6 +17,22 @@ inline fun css( init: Stylesheet.() -> Unit)  : Stylesheet {
     GLOBAL_STYLESHEETS.add(stylesheet)
     return stylesheet
 }
+inline fun Application.css(cssFile : String)  {
+    var isFile = CSS_FILE_PATH_RE.matches(cssFile.trim())
+    if (isFile) {
+        var cssList = GLOBAL_STYLESHEETS
+        try {
+            var stylesheet = Stylesheet.getStylesheet(cssFile.trim())
+            GLOBAL_STYLESHEETS.add(stylesheet)
+        } catch (e :Exception) {
+            Log.d("Latte", "WARNING: COULDN'T FIND STYLESHEET ${cssFile}")
+        }
+    } else {
+        Log.d("Latte", "WARNING: INVALID CSS FILE PATH ${cssFile}")
+    }
+}
+
+
 
 var CSS_FILE_PATH_RE = Regex("""([a-zA-Z0-9]+)(\.[a-zA-Z0-9]+)*\/([a-zA-Z0-9]+)\.css""")
 

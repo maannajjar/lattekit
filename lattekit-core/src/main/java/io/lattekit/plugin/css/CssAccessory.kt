@@ -67,6 +67,7 @@ class CssAccessory(view : NativeView)  {
     var gradientDrawable : GradientDrawable = GradientDrawable()
     var borderDrawable : BorderDrawable = BorderDrawable()
     var rippleDrawable : Drawable? = null;
+    var layerDrawable : LayerDrawable? = null
     var clipRadius : Float = 0f;
 
 
@@ -165,6 +166,7 @@ class CssAccessory(view : NativeView)  {
             }
 
         }
+        this.layerDrawable = layerDrawable
         view.androidView?.background = rippleDrawable;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             view.androidView?.foreground = borderDrawable;
@@ -174,6 +176,29 @@ class CssAccessory(view : NativeView)  {
 
     }
 
+    fun setBackgroundDrawable(drawable: Drawable) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            (rippleDrawable as RippleDrawable).setDrawableByLayerId(R.id.native_background_layer, drawable)
+            rippleDrawable?.invalidateSelf()
+        } else {
+            layerDrawable?.setDrawableByLayerId(R.id.native_background_layer, drawable)
+            layerDrawable?.invalidateSelf()
+        }
+
+    }
+
+    fun setRadius(radius : Float) {
+        borderDrawable.topLeftRadiusV = radius
+        borderDrawable.topLeftRadiusH = radius
+        borderDrawable.topRightRadiusV = radius
+        borderDrawable.topRightRadiusH = radius
+        borderDrawable.bottomLeftRadiusV = radius
+        borderDrawable.bottomLeftRadiusH = radius
+        borderDrawable.bottomRightRadiusV = radius
+        borderDrawable.bottomRightRadiusH = radius
+        clipRadius = radius
+//        rippleDrawable?.invalidateSelf()
+    }
     fun setRippleColor(color : Int) {
         var rippleColor = ColorStateList(arrayOf(intArrayOf()), intArrayOf(color));
 
