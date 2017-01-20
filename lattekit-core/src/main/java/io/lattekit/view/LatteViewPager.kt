@@ -1,17 +1,12 @@
 package io.lattekit.view
 
-import android.R
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.view.PagerAdapter
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Adapter
-import android.widget.AdapterView
 import android.widget.FrameLayout
-import android.widget.ListView
 import io.lattekit.util.Util
 import java.util.*
 
@@ -70,9 +65,6 @@ class LatteViewPager : NativeView() {
         }
         adapter?.notifyDataSetChanged()
 
-    }
-    override fun getViewClass(): Class<out View> {
-        return android.support.v4.view.ViewPager::class.java
     }
 
     override fun onViewCreated() {
