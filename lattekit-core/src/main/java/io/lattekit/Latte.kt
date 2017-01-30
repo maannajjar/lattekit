@@ -9,7 +9,10 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.Xml
-import android.view.*
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.*
 import io.lattekit.activity.LatteActivity
 import io.lattekit.plugin.LattePlugin
@@ -111,6 +114,7 @@ object Latte {
             layout.nativeViewClass = clazz as Class<out View>
             layout.propsSetter = propsSetter;
         }
+
         layout!!.renderingView = renderingView;
         layout!!.props = props;
         layout!!.propsOptions = propsOptions;
@@ -219,6 +223,26 @@ object Latte {
             dialog.window.setGravity(gravity)
         }
         return dialog
+    }
+
+    fun showDropdown(activity: Activity,viewXml: String, anchor : View, props: MutableMap<String,Any?> = mutableMapOf(), xOffset : Int= 0, yOffset : Int = 0, gravity : Int= Gravity.TOP or Gravity.LEFT, animStyle : Int = 0) {
+        var renderedView = Latte.render(viewXml,props);
+        var view = renderedView.buildView(activity,null)
+        var window = PopupWindow(view,ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        window.isFocusable = true
+        window.setBackgroundDrawable(BitmapDrawable());
+        window.setOutsideTouchable(true);
+        if (animStyle != 0) {
+            window.animationStyle = animStyle
+        }
+
+        renderedView.popupWindow = window
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            window.showAsDropDown(anchor, xOffset, yOffset, gravity)
+        } else {
+            window.showAsDropDown(anchor, xOffset, yOffset)
+        }
+
     }
 
     fun showDropdown(latteView : LatteView,viewXml: String, anchor : View, props: MutableMap<String,Any?> = mutableMapOf(), xOffset : Int= 0, yOffset : Int = 0, gravity : Int= Gravity.TOP or Gravity.LEFT, animStyle : Int = 0) {
